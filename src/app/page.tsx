@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Phone, Search, Zap, Shield, Activity, ArrowRight, CheckCircle2, BarChart3, Globe2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LandingNavbar } from '@/components/landing-navbar'
 
 export default function Home() {
   return (
@@ -11,32 +12,7 @@ export default function Home() {
         <div className="absolute left-0 right-0 top-[-10%] h-[1000px] w-[1000px] rounded-full bg-indigo-500/10 blur-[100px] mx-auto" />
       </div>
 
-      {/* Navbar */}
-      <header className="fixed top-0 z-50 w-full border-b border-white/5 bg-background/60 backdrop-blur-xl">
-        <div className="container mx-auto flex h-14 items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/10">
-              <Phone className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-bold text-lg tracking-tight text-white">SatuPintu</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-            <Link href="#features" className="hover:text-white transition-colors">Fitur</Link>
-            <Link href="#how-it-works" className="hover:text-white transition-colors">Cara Kerja</Link>
-            <Link href="/track/SP-20251203-0001" className="hover:text-white transition-colors">Lacak Laporan</Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="hidden sm:flex text-muted-foreground hover:text-white">
-                Login Dinas
-              </Button>
-            </Link>
-            <Button size="sm" className="bg-white text-black hover:bg-white/90 font-medium">
-              Lapor Sekarang
-            </Button>
-          </div>
-        </div>
-      </header>
+      <LandingNavbar />
 
       <main className="flex-1 pt-24 sm:pt-32">
         {/* Hero Section */}
