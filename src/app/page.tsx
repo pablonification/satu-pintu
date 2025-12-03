@@ -1,172 +1,230 @@
 import Link from 'next/link'
-import { Phone, Search, Users, MessageSquare, ArrowRight, CheckCircle } from 'lucide-react'
+import { Phone, Search, Zap, Shield, Activity, ArrowRight, CheckCircle2, BarChart3, Globe2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Hero Section */}
-      <header className="container mx-auto px-4 py-6">
-        <nav className="flex items-center justify-between">
+    <div className="relative flex min-h-screen flex-col overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 -z-10 h-full w-full bg-background">
+        <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+        <div className="absolute left-0 right-0 top-[-10%] h-[1000px] w-[1000px] rounded-full bg-indigo-500/10 blur-[100px] mx-auto" />
+      </div>
+
+      {/* Navbar */}
+      <header className="fixed top-0 z-50 w-full border-b border-white/5 bg-background/60 backdrop-blur-xl">
+        <div className="container mx-auto flex h-14 items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-2">
-            <Phone className="h-6 w-6 text-blue-600" />
-            <span className="font-bold text-xl">SatuPintu</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/10">
+              <Phone className="h-4 w-4 text-white" />
+            </div>
+            <span className="font-bold text-lg tracking-tight text-white">SatuPintu</span>
           </div>
-          <Link 
-            href="/login"
-            className="text-sm text-gray-600 hover:text-blue-600"
-          >
-            Login Dinas
-          </Link>
-        </nav>
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+            <Link href="#features" className="hover:text-white transition-colors">Fitur</Link>
+            <Link href="#how-it-works" className="hover:text-white transition-colors">Cara Kerja</Link>
+            <Link href="/track/SP-20251203-0001" className="hover:text-white transition-colors">Lacak Laporan</Link>
+          </nav>
+          <div className="flex items-center gap-4">
+            <Link href="/login">
+              <Button variant="ghost" size="sm" className="hidden sm:flex text-muted-foreground hover:text-white">
+                Login Dinas
+              </Button>
+            </Link>
+            <Button size="sm" className="bg-white text-black hover:bg-white/90 font-medium">
+              Lapor Sekarang
+            </Button>
+          </div>
+        </div>
       </header>
 
-      <main>
-        {/* Hero */}
-        <section className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 max-w-3xl mx-auto">
-            Satu Nomor untuk{' '}
-            <span className="text-blue-600">Semua Keluhan Kota</span>
+      <main className="flex-1 pt-24 sm:pt-32">
+        {/* Hero Section */}
+        <section className="container mx-auto px-4 text-center relative z-10 pb-24">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Layanan Pengaduan Aktif 24/7
+          </div>
+          
+          <h1 className="mx-auto max-w-4xl text-5xl font-bold tracking-tight text-white sm:text-7xl mb-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+            Satu Nomor untuk <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40">
+              Semua Keluhan Kota
+            </span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Laporkan masalah kota via telepon, AI kami yang akan mengkategorikan dan meneruskan 
-            ke dinas terkait. Lacak status laporan Anda kapan saja.
+          
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground mb-10 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-400 leading-relaxed">
+            Revolusi layanan publik dengan kecerdasan buatan. Laporkan masalah via telepon, 
+            AI kami akan mengurus sisanya. Cepat, tepat, dan transparan.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link
-              href="/track/SP-20251203-0001"
-              className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition"
-            >
-              <Search className="h-5 w-5" />
-              Lacak Laporan
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
+            <Link href="tel:+6281234567890">
+              <Button size="lg" className="h-12 px-8 bg-white text-black hover:bg-white/90 text-base rounded-full">
+                <Phone className="mr-2 h-4 w-4" />
+                Hubungi 0812-3456-7890
+              </Button>
             </Link>
-            <a
-              href="tel:+6281234567890"
-              className="inline-flex items-center justify-center gap-2 border border-gray-300 px-6 py-3 rounded-lg font-medium hover:border-blue-600 hover:text-blue-600 transition"
-            >
-              <Phone className="h-5 w-5" />
-              Hubungi Sekarang
-            </a>
+            <Link href="/track/SP-20251203-0001">
+              <Button variant="outline" size="lg" className="h-12 px-8 border-white/10 bg-transparent text-white hover:bg-white/5 text-base rounded-full">
+                <Search className="mr-2 h-4 w-4" />
+                Lacak Status
+              </Button>
+            </Link>
           </div>
 
-          {/* Demo Phone Number */}
-          <div className="bg-blue-600 text-white rounded-2xl p-8 max-w-md mx-auto">
-            <p className="text-blue-100 mb-2">Nomor Pengaduan Terpadu</p>
-            <p className="text-3xl font-bold mb-4">0812-3456-7890</p>
-            <p className="text-blue-200 text-sm">
-              Tersedia 24/7 untuk semua keluhan kota
+          {/* Dashboard Preview / Hero Image Placeholder */}
+          <div className="mt-20 relative max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-24 duration-1000 delay-700">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-20"></div>
+            <div className="relative rounded-xl border border-white/10 bg-black/50 backdrop-blur-sm overflow-hidden aspect-[16/9] shadow-2xl">
+              <div className="absolute inset-0 flex items-center justify-center bg-grid-white/[0.02]">
+                 {/* Abstract representation of a dashboard */}
+                 <div className="w-full h-full p-8 flex flex-col gap-6 opacity-80">
+                    <div className="w-full h-8 bg-white/10 rounded-lg w-1/3"></div>
+                    <div className="grid grid-cols-3 gap-6">
+                        <div className="h-32 bg-white/5 rounded-lg border border-white/5"></div>
+                        <div className="h-32 bg-white/5 rounded-lg border border-white/5"></div>
+                        <div className="h-32 bg-white/5 rounded-lg border border-white/5"></div>
+                    </div>
+                    <div className="flex-1 bg-white/5 rounded-lg border border-white/5 flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                            <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>Real-time Analytics Dashboard</p>
+                        </div>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Grid (Bento Style) */}
+        <section id="features" className="container mx-auto px-4 py-24 relative">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight text-white mb-4">Dibangun untuk Efisiensi</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Teknologi canggih yang bekerja di belakang layar untuk memastikan setiap laporan
+              ditangani dengan prioritas yang tepat.
             </p>
           </div>
-        </section>
 
-        {/* How It Works */}
-        <section className="container mx-auto px-4 py-16">
-          <h2 className="text-3xl font-bold text-center mb-12">Cara Kerja</h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Phone className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">1. Telepon</h3>
-              <p className="text-gray-600">
-                Hubungi satu nomor SatuPintu dan sampaikan keluhan Anda
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">2. AI Proses</h3>
-              <p className="text-gray-600">
-                AI kami memahami keluhan dan meneruskan ke dinas yang tepat
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">3. Lacak</h3>
-              <p className="text-gray-600">
-                Terima SMS konfirmasi dan lacak status laporan kapan saja
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section className="bg-gray-50 py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Keunggulan SatuPintu</h2>
-            <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-              {[
-                'Satu nomor untuk semua jenis keluhan',
-                'AI memahami Bahasa Indonesia',
-                'Tiket otomatis diteruskan ke dinas terkait',
-                'Lacak status via web atau SMS',
-                'Notifikasi realtime setiap ada update',
-                'Tersedia 24 jam sehari, 7 hari seminggu',
-              ].map((feature, i) => (
-                <div key={i} className="flex items-center gap-3 bg-white p-4 rounded-lg">
-                  <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>{feature}</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {/* Large Card */}
+            <div className="md:col-span-2 row-span-2 rounded-3xl border border-white/10 bg-white/5 p-8 hover:bg-white/[0.08] transition-colors group relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center mb-6">
+                    <Zap className="h-6 w-6 text-indigo-400" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-white mb-3">AI-Powered Routing</h3>
+                  <p className="text-muted-foreground text-lg">
+                    Sistem kami secara otomatis menganalisis isi percakapan, mendeteksi urgensi,
+                    dan meneruskan laporan ke dinas terkait dalam hitungan detik. Tanpa operator manual.
+                  </p>
                 </div>
-              ))}
+                <div className="mt-8 flex gap-2">
+                    <div className="px-3 py-1 rounded-full bg-white/10 text-xs text-indigo-300 border border-indigo-500/30">NLP</div>
+                    <div className="px-3 py-1 rounded-full bg-white/10 text-xs text-indigo-300 border border-indigo-500/30">Voice Recognition</div>
+                    <div className="px-3 py-1 rounded-full bg-white/10 text-xs text-indigo-300 border border-indigo-500/30">Auto-Triage</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Small Card 1 */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-8 hover:bg-white/[0.08] transition-colors group relative overflow-hidden">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-6">
+                <Activity className="h-6 w-6 text-emerald-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Real-time Tracking</h3>
+              <p className="text-muted-foreground text-sm">
+                Pantau status laporan Anda secara langsung. Transparansi penuh dari awal hingga selesai.
+              </p>
+            </div>
+
+            {/* Small Card 2 */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-8 hover:bg-white/[0.08] transition-colors group relative overflow-hidden">
+               <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center mb-6">
+                <Shield className="h-6 w-6 text-orange-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Verified & Secure</h3>
+              <p className="text-muted-foreground text-sm">
+                Setiap laporan diverifikasi untuk mencegah spam. Data pelapor dilindungi dengan enkripsi standar industri.
+              </p>
+            </div>
+
+             {/* Wide Card */}
+             <div className="md:col-span-3 rounded-3xl border border-white/10 bg-white/5 p-8 hover:bg-white/[0.08] transition-colors group relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
+                <div className="flex-1">
+                     <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-6">
+                        <Globe2 className="h-6 w-6 text-blue-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-2">Multi-Channel Support</h3>
+                    <p className="text-muted-foreground">
+                        Selain telepon, SatuPintu terintegrasi dengan WhatsApp dan Web Portal. 
+                        Semua saluran bermuara ke satu sistem manajemen terpusat.
+                    </p>
+                </div>
+                <div className="flex-1 w-full">
+                    <div className="grid grid-cols-2 gap-4">
+                        {['Layanan Darurat', 'Perbaikan Jalan', 'Lampu PJU', 'Sampah & Kebersihan'].map((item, i) => (
+                            <div key={i} className="flex items-center gap-2 p-3 rounded-lg bg-black/20 border border-white/5">
+                                <CheckCircle2 className="h-4 w-4 text-blue-400" />
+                                <span className="text-sm text-gray-300">{item}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
           </div>
         </section>
 
-        {/* Categories */}
-        <section className="container mx-auto px-4 py-16">
-          <h2 className="text-3xl font-bold text-center mb-12">Jenis Laporan</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto">
-            {[
-              { name: 'Darurat', desc: 'Kecelakaan, kebakaran, kejahatan', color: 'bg-red-100 text-red-800' },
-              { name: 'Infrastruktur', desc: 'Jalan rusak, lampu mati', color: 'bg-orange-100 text-orange-800' },
-              { name: 'Kebersihan', desc: 'Sampah, limbah, polusi', color: 'bg-green-100 text-green-800' },
-              { name: 'Sosial', desc: 'ODGJ, lansia, anak terlantar', color: 'bg-purple-100 text-purple-800' },
-              { name: 'Lainnya', desc: 'Keluhan lain', color: 'bg-gray-100 text-gray-800' },
-            ].map((cat, i) => (
-              <div key={i} className={`p-4 rounded-lg text-center ${cat.color}`}>
-                <p className="font-semibold">{cat.name}</p>
-                <p className="text-xs mt-1 opacity-80">{cat.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="bg-blue-600 text-white py-16">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-4">Punya Keluhan?</h2>
-            <p className="text-blue-100 mb-8 text-lg">
-              Hubungi SatuPintu sekarang. Kami siap membantu.
-            </p>
-            <a
-              href="tel:+6281234567890"
-              className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition"
-            >
-              <Phone className="h-6 w-6" />
-              0812-3456-7890
-              <ArrowRight className="h-5 w-5" />
-            </a>
-          </div>
+        {/* CTA Section */}
+        <section className="py-24 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-indigo-950/20 pointer-events-none" />
+            <div className="container mx-auto px-4 relative z-10">
+                <div className="max-w-4xl mx-auto text-center">
+                    <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+                        Siap untuk melaporkan masalah?
+                    </h2>
+                    <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+                        Jangan biarkan masalah kota berlarut-larut. Hubungi kami sekarang dan
+                        jadilah bagian dari perubahan.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <Link href="tel:+6281234567890" className="w-full sm:w-auto">
+                             <Button size="lg" className="w-full h-14 px-8 bg-white text-black hover:bg-white/90 text-lg rounded-full shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] transition-all duration-300">
+                                Hubungi Sekarang
+                                <ArrowRight className="ml-2 h-5 w-5" />
+                            </Button>
+                        </Link>
+                    </div>
+                    <p className="mt-6 text-sm text-muted-foreground">
+                        Bebas pulsa untuk operator tertentu • Tersedia 24 Jam
+                    </p>
+                </div>
+            </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 text-center text-gray-500 text-sm">
-        <div className="flex items-center justify-center gap-2 mb-4">
-          <Phone className="h-4 w-4" />
-          <span className="font-medium">SatuPintu</span>
-        </div>
-        <p>Layanan Pengaduan Terpadu Kota Bandung</p>
-        <p className="mt-2">
-          Ekraf Tech Summit 2025 - Tech Innovation Challenge
-        </p>
-        <div className="mt-4 flex justify-center gap-4">
-          <Link href="/login" className="hover:text-blue-600">Login Dinas</Link>
-          <span>|</span>
-          <Link href="/track/SP-20251203-0001" className="hover:text-blue-600">Lacak Laporan</Link>
+      <footer className="border-t border-white/10 bg-black py-12">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2">
+                <div className="flex h-6 w-6 items-center justify-center rounded bg-white/10 border border-white/10">
+                    <Phone className="h-3 w-3 text-white" />
+                </div>
+                <span className="font-semibold text-white">SatuPintu</span>
+            </div>
+            
+            <div className="text-sm text-muted-foreground">
+                © 2025 Pemerintah Kota Bandung • Ekraf Tech Summit
+            </div>
+
+            <div className="flex gap-6 text-sm font-medium text-muted-foreground">
+                <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
+                <Link href="#" className="hover:text-white transition-colors">Terms</Link>
+                <Link href="#" className="hover:text-white transition-colors">Contact</Link>
+            </div>
         </div>
       </footer>
     </div>

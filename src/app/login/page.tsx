@@ -43,59 +43,64 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-background">
+         <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+      </div>
+      <Card className="w-full max-w-md border-white/10 bg-black/40 backdrop-blur-xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Phone className="h-8 w-8 text-blue-600" />
+            <div className="p-3 bg-white/10 rounded-xl border border-white/10">
+              <Phone className="h-6 w-6 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl">SatuPintu</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold text-white">SatuPintu</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Login untuk mengakses dashboard dinas
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="dinasId">ID Dinas</Label>
+              <Label htmlFor="dinasId" className="text-white">ID Dinas</Label>
               <Input
                 id="dinasId"
                 placeholder="Contoh: pupr, polisi, dlh"
                 value={dinasId}
                 onChange={(e) => setDinasId(e.target.value)}
                 required
+                className="bg-white/5 border-white/10 text-white placeholder:text-muted-foreground focus-visible:ring-white/20"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-white">Password</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-white/5 border-white/10 text-white placeholder:text-muted-foreground focus-visible:ring-white/20"
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-white text-black hover:bg-white/90" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Masuk
             </Button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-muted-foreground mt-6">
             Dashboard untuk operator dinas. Warga dapat melacak laporan di{' '}
-            <a href="/track/SP-00000000-0000" className="text-blue-600 hover:underline">
+            <a href="/track/SP-20251203-0001" className="text-white hover:underline">
               halaman tracking
             </a>
           </p>

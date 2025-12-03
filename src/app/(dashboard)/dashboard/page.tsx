@@ -221,79 +221,81 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="bg-white border-b">
+      <header className="bg-background/60 backdrop-blur-xl border-b border-white/5 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Phone className="h-6 w-6 text-blue-600" />
+             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/10">
+              <Phone className="h-4 w-4 text-white" />
+            </div>
             <div>
-              <h1 className="font-bold text-lg">SatuPintu</h1>
-              <p className="text-sm text-gray-500">{user?.dinasName}</p>
+              <h1 className="font-bold text-lg text-white">SatuPintu</h1>
+              <p className="text-xs text-muted-foreground">{user?.dinasName}</p>
             </div>
           </div>
-          <Button variant="ghost" onClick={handleLogout}>
+          <Button variant="ghost" onClick={handleLogout} className="text-muted-foreground hover:text-white">
             <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-8">
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <Card>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <Card className="bg-card border-white/5">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <Clock className="h-5 w-5 text-yellow-600" />
+                  <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                    <Clock className="h-5 w-5 text-yellow-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Menunggu</p>
-                    <p className="text-2xl font-bold">{stats.pending}</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Menunggu</p>
+                    <p className="text-2xl font-bold text-white">{stats.pending}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card border-white/5">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <RefreshCw className="h-5 w-5 text-blue-600" />
+                  <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                    <RefreshCw className="h-5 w-5 text-blue-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Diproses</p>
-                    <p className="text-2xl font-bold">{stats.inProgress}</p>
+                     <p className="text-xs text-muted-foreground uppercase tracking-wider">Diproses</p>
+                    <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card border-white/5">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                    <CheckCircle className="h-5 w-5 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Selesai</p>
-                    <p className="text-2xl font-bold">{stats.resolved}</p>
+                     <p className="text-xs text-muted-foreground uppercase tracking-wider">Selesai</p>
+                    <p className="text-2xl font-bold text-white">{stats.resolved}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card className="bg-card border-white/5">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                    <AlertTriangle className="h-5 w-5 text-red-500" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Kritis</p>
-                    <p className="text-2xl font-bold">{stats.byUrgency.critical}</p>
+                     <p className="text-xs text-muted-foreground uppercase tracking-wider">Kritis</p>
+                    <p className="text-2xl font-bold text-white">{stats.byUrgency.critical}</p>
                   </div>
                 </div>
               </CardContent>
@@ -302,110 +304,117 @@ export default function DashboardPage() {
         )}
 
         {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Cari tiket atau lokasi..."
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && fetchTickets()}
-                  />
-                </div>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-40">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="PENDING">Menunggu</SelectItem>
-                  <SelectItem value="IN_PROGRESS">Dalam Proses</SelectItem>
-                  <SelectItem value="RESOLVED">Selesai</SelectItem>
-                  <SelectItem value="CANCELLED">Dibatalkan</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
-                <SelectTrigger className="w-full md:w-40">
-                  <SelectValue placeholder="Prioritas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Prioritas</SelectItem>
-                  <SelectItem value="CRITICAL">Kritis</SelectItem>
-                  <SelectItem value="HIGH">Tinggi</SelectItem>
-                  <SelectItem value="MEDIUM">Sedang</SelectItem>
-                  <SelectItem value="LOW">Rendah</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={fetchTickets} variant="outline">
-                <RefreshCw className="h-4 w-4" />
-              </Button>
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                placeholder="Cari tiket atau lokasi..."
+                className="pl-10 bg-card border-white/10 text-white placeholder:text-muted-foreground focus-visible:ring-white/20"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && fetchTickets()}
+                />
             </div>
-          </CardContent>
-        </Card>
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full md:w-40 bg-card border-white/10 text-white">
+                <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="PENDING">Menunggu</SelectItem>
+                <SelectItem value="IN_PROGRESS">Dalam Proses</SelectItem>
+                <SelectItem value="RESOLVED">Selesai</SelectItem>
+                <SelectItem value="CANCELLED">Dibatalkan</SelectItem>
+            </SelectContent>
+            </Select>
+            <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
+            <SelectTrigger className="w-full md:w-40 bg-card border-white/10 text-white">
+                <SelectValue placeholder="Prioritas" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="all">Semua Prioritas</SelectItem>
+                <SelectItem value="CRITICAL">Kritis</SelectItem>
+                <SelectItem value="HIGH">Tinggi</SelectItem>
+                <SelectItem value="MEDIUM">Sedang</SelectItem>
+                <SelectItem value="LOW">Rendah</SelectItem>
+            </SelectContent>
+            </Select>
+            <Button onClick={fetchTickets} variant="outline" className="bg-card border-white/10 hover:bg-white/5 text-white">
+            <RefreshCw className="h-4 w-4" />
+            </Button>
+        </div>
 
         {/* Tickets Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Daftar Laporan</CardTitle>
-            <CardDescription>
+        <Card className="bg-card border-white/5 overflow-hidden">
+          <CardHeader className="border-b border-white/5">
+            <CardTitle className="text-white">Daftar Laporan</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Klik pada baris untuk mengupdate status
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {ticketsLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-white/50" />
               </div>
             ) : tickets.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <XCircle className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-12 text-muted-foreground">
+                <XCircle className="h-12 w-12 mx-auto mb-3 text-white/20" />
                 <p>Tidak ada laporan ditemukan</p>
               </div>
             ) : (
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Kategori</TableHead>
-                    <TableHead>Lokasi</TableHead>
-                    <TableHead>Prioritas</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Waktu</TableHead>
+                <TableHeader className="bg-white/5">
+                  <TableRow className="hover:bg-transparent border-white/5">
+                    <TableHead className="text-muted-foreground">ID</TableHead>
+                    <TableHead className="text-muted-foreground">Kategori</TableHead>
+                    <TableHead className="text-muted-foreground">Lokasi</TableHead>
+                    <TableHead className="text-muted-foreground">Prioritas</TableHead>
+                    <TableHead className="text-muted-foreground">Status</TableHead>
+                    <TableHead className="text-muted-foreground">Waktu</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {tickets.map((ticket) => (
                     <TableRow 
                       key={ticket.id}
-                      className="cursor-pointer hover:bg-gray-50"
+                      className="cursor-pointer hover:bg-white/5 border-white/5 transition-colors"
                       onClick={() => openUpdateDialog(ticket)}
                     >
-                      <TableCell className="font-mono text-sm">{ticket.id}</TableCell>
+                      <TableCell className="font-mono text-sm text-white/70">{ticket.id}</TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{CATEGORY_LABELS[ticket.category as TicketCategory]}</p>
+                          <p className="font-medium text-white">{CATEGORY_LABELS[ticket.category as TicketCategory]}</p>
                           {ticket.subcategory && (
-                            <p className="text-sm text-gray-500">{ticket.subcategory}</p>
+                            <p className="text-xs text-muted-foreground">{ticket.subcategory}</p>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="max-w-xs truncate">{ticket.location}</TableCell>
+                      <TableCell className="max-w-xs truncate text-white/80">{ticket.location}</TableCell>
                       <TableCell>
-                        <Badge className={URGENCY_COLORS[ticket.urgency]}>
+                         <Badge className={`border ${
+                            ticket.urgency === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                            ticket.urgency === 'HIGH' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                            ticket.urgency === 'MEDIUM' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                            'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          }`}>
                           {URGENCY_LABELS[ticket.urgency as TicketUrgency]}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={STATUS_COLORS[ticket.status]}>
+                         <Badge className={`border ${
+                            ticket.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                            ticket.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                            ticket.status === 'ESCALATED' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                            ticket.status === 'RESOLVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                            'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                          }`}>
                           {STATUS_LABELS[ticket.status as TicketStatus]}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-gray-500">
+                      <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(ticket.created_at), 'dd/MM HH:mm', { locale: idLocale })}
                       </TableCell>
                     </TableRow>
@@ -419,25 +428,25 @@ export default function DashboardPage() {
 
       {/* Update Dialog */}
       <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-card border-white/10 sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Update Laporan</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-white">Update Laporan</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               {selectedTicket?.id} - {selectedTicket?.location}
             </DialogDescription>
           </DialogHeader>
           
           {selectedTicket && (
             <div className="space-y-4">
-              <div className="p-3 bg-gray-50 rounded-lg text-sm">
-                <p className="font-medium mb-1">Deskripsi:</p>
-                <p className="text-gray-600">{selectedTicket.description}</p>
+              <div className="p-3 bg-white/5 rounded-lg text-sm border border-white/5">
+                <p className="font-medium mb-1 text-white">Deskripsi:</p>
+                <p className="text-muted-foreground">{selectedTicket.description}</p>
               </div>
               
               <div className="space-y-2">
-                <Label>Status Baru</Label>
+                <Label className="text-white">Status Baru</Label>
                 <Select value={newStatus} onValueChange={setNewStatus}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-black/20 border-white/10 text-white">
                     <SelectValue placeholder="Pilih status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -450,11 +459,12 @@ export default function DashboardPage() {
               </div>
               
               <div className="space-y-2">
-                <Label>Catatan (opsional)</Label>
+                <Label className="text-white">Catatan (opsional)</Label>
                 <Textarea
                   placeholder="Tambahkan catatan update..."
                   value={updateNote}
                   onChange={(e) => setUpdateNote(e.target.value)}
+                  className="bg-black/20 border-white/10 text-white placeholder:text-muted-foreground"
                 />
               </div>
               
@@ -464,9 +474,9 @@ export default function DashboardPage() {
                   id="sendSms"
                   checked={sendSms}
                   onChange={(e) => setSendSms(e.target.checked)}
-                  className="rounded"
+                  className="rounded border-white/10 bg-black/20 text-primary focus:ring-primary"
                 />
-                <Label htmlFor="sendSms" className="cursor-pointer">
+                <Label htmlFor="sendSms" className="cursor-pointer text-muted-foreground">
                   Kirim SMS notifikasi ke pelapor
                 </Label>
               </div>
@@ -474,10 +484,10 @@ export default function DashboardPage() {
           )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setUpdateDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setUpdateDialogOpen(false)} className="border-white/10 bg-transparent text-white hover:bg-white/5">
               Batal
             </Button>
-            <Button onClick={handleUpdateTicket} disabled={updating}>
+            <Button onClick={handleUpdateTicket} disabled={updating} className="bg-white text-black hover:bg-white/90">
               {updating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Simpan
             </Button>
