@@ -263,6 +263,10 @@ const FIRST_MESSAGE = `Halo, selamat datang di SatuPintu Bandung. Saya Satu, asi
  * Mendapatkan konfigurasi lengkap Transient Assistant
  * Konfigurasi ini dikirim langsung saat memulai panggilan - tidak perlu setup di dashboard Vapi
  * 
+ * PENTING untuk Web SDK:
+ * - serverMessages WAJIB diisi agar webhook menerima tool-calls
+ * - tools format menggunakan Vapi native format (bukan OpenAI nested format)
+ * 
  * @param webhookUrl - URL webhook untuk function calls (opsional, default dari env)
  * @returns Konfigurasi assistant untuk Vapi
  */
@@ -276,7 +280,7 @@ export const getAssistantConfig = (webhookUrl?: string) => {
     // Pesan pembuka saat panggilan dimulai
     firstMessage: FIRST_MESSAGE,
 
-    // Konfigurasi Model AI dengan tools di dalam model (OpenAI style)
+    // Konfigurasi Model AI
     model: {
       provider: 'openai' as const,
       model: 'gpt-4o-mini' as const,
@@ -287,7 +291,7 @@ export const getAssistantConfig = (webhookUrl?: string) => {
           content: SYSTEM_PROMPT,
         },
       ],
-      // Tools dalam format OpenAI function calling
+      // Tools dalam format Vapi native (bukan nested OpenAI format)
       tools: [
         {
           type: 'function' as const,
@@ -344,8 +348,19 @@ export const getAssistantConfig = (webhookUrl?: string) => {
       similarityBoost: 0.8,
     },
 
-    // Server URL untuk function calls - PENTING!
-    serverUrl: serverUrl,
+    // Server configuration untuk function calls - PENTING!
+    server: {
+      url: serverUrl,
+      timeoutSeconds: 30,
+    },
+
+    // WAJIB: serverMessages untuk menerima tool-calls di webhook
+    // Tanpa ini, Vapi tidak akan mengirim tool-calls ke server
+    serverMessages: [
+      'tool-calls',
+      'status-update', 
+      'end-of-call-report',
+    ],
 
     // Konfigurasi Percakapan
     silenceTimeoutSeconds: 30,

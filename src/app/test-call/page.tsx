@@ -141,16 +141,27 @@ export default function TestCallPage() {
       setCallStatus('connecting')
       setError(null)
       
-      // Menggunakan Assistant ID yang sudah dibuat di Vapi Dashboard
-      const ASSISTANT_ID = '6620d1c3-3732-4418-96be-72766eddad35'
-      console.log('Starting call with assistant ID:', ASSISTANT_ID)
+      // Menggunakan Transient Assistant - config dikirim langsung saat start
+      const assistantConfig = getAssistantConfig()
+      console.log('Starting call with transient config:', JSON.stringify(assistantConfig, null, 2))
       
-      const call = await vapi.start(ASSISTANT_ID)
+      // Cast ke CreateAssistantDTO untuk Web SDK
+      const call = await vapi.start(assistantConfig as CreateAssistantDTO)
       console.log('Call started:', call)
     } catch (err) {
       console.error('Failed to start call:', err)
       console.error('Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err as object)))
-      setError('Gagal memulai panggilan. Pastikan konfigurasi Vapi sudah benar dan izinkan akses mikrofon.')
+      
+      // Better error message extraction
+      let errorMsg = 'Gagal memulai panggilan.'
+      if (err instanceof Error) {
+        errorMsg = err.message || errorMsg
+      } else if (typeof err === 'object' && err !== null) {
+        const errObj = err as Record<string, unknown>
+        errorMsg = (errObj.message as string) || (errObj.error as string) || JSON.stringify(err)
+      }
+      
+      setError(`${errorMsg} Pastikan konfigurasi Vapi sudah benar dan izinkan akses mikrofon.`)
       setCallStatus('idle')
     }
   }
