@@ -54,6 +54,7 @@ export async function GET(
       timeline: (timeline || []).map(t => ({
         time: t.created_at,
         message: t.message,
+        action: t.action,
       })),
     }
     

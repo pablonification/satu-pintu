@@ -18,13 +18,14 @@ import {
   Phone,
   LogOut,
 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Dynamic imports for charts (heavy recharts library)
 const DailyTicketsChart = dynamic(
   () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.DailyTicketsChart })),
   { 
     ssr: false,
-    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+    loading: () => <Skeleton className="h-[300px] w-full" />
   }
 )
 
@@ -32,7 +33,7 @@ const CategoryPieChart = dynamic(
   () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.CategoryPieChart })),
   { 
     ssr: false,
-    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+    loading: () => <Skeleton className="h-[300px] w-full" />
   }
 )
 
@@ -40,7 +41,7 @@ const UrgencyPieChart = dynamic(
   () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.UrgencyPieChart })),
   { 
     ssr: false,
-    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+    loading: () => <Skeleton className="h-[300px] w-full" />
   }
 )
 
@@ -48,7 +49,7 @@ const StatusPieChart = dynamic(
   () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.StatusPieChart })),
   { 
     ssr: false,
-    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+    loading: () => <Skeleton className="h-[300px] w-full" />
   }
 )
 
@@ -56,7 +57,7 @@ const ResolutionTimeChart = dynamic(
   () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.ResolutionTimeChart })),
   { 
     ssr: false,
-    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+    loading: () => <Skeleton className="h-[300px] w-full" />
   }
 )
 
@@ -217,8 +218,20 @@ export default function AnalyticsPage() {
         </div>
 
         {dataLoading && !analytics ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-white/50" />
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            {Array(5).fill(0).map((_, i) => (
+              <Card key={i} className="bg-card border-white/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-6 w-12" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : analytics && summaryStats ? (
           <>

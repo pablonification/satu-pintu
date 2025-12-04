@@ -117,6 +117,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    @apply transition-colors duration-200;
   }
   body {
     @apply bg-background text-foreground;
@@ -147,5 +148,9 @@
   
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-b from-white to-white/50;
+  }
+
+  .card-hover {
+    @apply transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg;
   }
 }

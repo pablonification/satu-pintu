@@ -41,7 +41,9 @@ import {
   BarChart3
 } from 'lucide-react'
 import { ExportButton } from '@/components/ExportButton'
+import { Skeleton } from '@/components/ui/skeleton'
 import { format } from 'date-fns'
+import { motion } from 'framer-motion'
 import { id as idLocale } from 'date-fns/locale'
 import { STATUS_LABELS, URGENCY_LABELS, CATEGORY_LABELS, TicketStatus, TicketUrgency, TicketCategory } from '@/types/database'
 import type { MapTicket } from '@/components/HeatmapView'
@@ -614,65 +616,105 @@ export default function DashboardPage() {
         )}
 
         {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <Card className="bg-card border-white/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                    <Clock className="h-5 w-5 text-yellow-500" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {!stats ? (
+            Array(4).fill(0).map((_, i) => (
+              <Card key={i} className="bg-card border-white/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-lg" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-6 w-12" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Menunggu</p>
-                    <p className="text-2xl font-bold text-white">{stats.pending}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-card border-white/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                    <RefreshCw className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div>
-                     <p className="text-xs text-muted-foreground uppercase tracking-wider">Diproses</p>
-                    <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-card border-white/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                    <CheckCircle className="h-5 w-5 text-emerald-500" />
-                  </div>
-                  <div>
-                     <p className="text-xs text-muted-foreground uppercase tracking-wider">Selesai</p>
-                    <p className="text-2xl font-bold text-white">{stats.resolved}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-card border-white/5">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
-                    <AlertTriangle className="h-5 w-5 text-red-500" />
-                  </div>
-                  <div>
-                     <p className="text-xs text-muted-foreground uppercase tracking-wider">Kritis</p>
-                    <p className="text-2xl font-bold text-white">{stats.byUrgency.critical}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ delay: 0.1 }}
+              >
+                <Card className="bg-card border-white/5 card-hover">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                        <Clock className="h-5 w-5 text-yellow-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Menunggu</p>
+                        <p className="text-2xl font-bold text-white">{stats.pending}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="bg-card border-white/5 card-hover">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                        <RefreshCw className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div>
+                         <p className="text-xs text-muted-foreground uppercase tracking-wider">Diproses</p>
+                        <p className="text-2xl font-bold text-white">{stats.inProgress}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ delay: 0.3 }}
+              >
+                <Card className="bg-card border-white/5 card-hover">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                        <CheckCircle className="h-5 w-5 text-emerald-500" />
+                      </div>
+                      <div>
+                         <p className="text-xs text-muted-foreground uppercase tracking-wider">Selesai</p>
+                        <p className="text-2xl font-bold text-white">{stats.resolved}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ delay: 0.4 }}
+              >
+                <Card className="bg-card border-white/5 card-hover">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-red-500/10 rounded-lg border border-red-500/20">
+                        <AlertTriangle className="h-5 w-5 text-red-500" />
+                      </div>
+                      <div>
+                         <p className="text-xs text-muted-foreground uppercase tracking-wider">Kritis</p>
+                        <p className="text-2xl font-bold text-white">{stats.byUrgency.critical}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </>
+          )}
+        </div>
 
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -747,15 +789,6 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="p-0">
                 {ticketsLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-white/50" />
-                  </div>
-                ) : tickets.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <XCircle className="h-12 w-12 mx-auto mb-3 text-white/20" />
-                    <p>Tidak ada laporan ditemukan</p>
-                  </div>
-                ) : (
                   <Table>
                     <TableHeader className="bg-white/5">
                       <TableRow className="hover:bg-transparent border-white/5">
@@ -768,24 +801,107 @@ export default function DashboardPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
+                      {Array(5).fill(0).map((_, i) => (
+                        <TableRow key={i} className="border-white/5">
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <Skeleton className="h-4 w-20" />
+                              <Skeleton className="h-3 w-16" />
+                            </div>
+                          </TableCell>
+                          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : tickets.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <XCircle className="h-12 w-12 mx-auto mb-3 text-white/20" />
+                    <p>Tidak ada laporan ditemukan</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader className="bg-white/5">
+                          <TableRow className="hover:bg-transparent border-white/5">
+                            <TableHead className="text-muted-foreground">ID</TableHead>
+                            <TableHead className="text-muted-foreground">Kategori</TableHead>
+                            <TableHead className="text-muted-foreground">Lokasi</TableHead>
+                            <TableHead className="text-muted-foreground">Prioritas</TableHead>
+                            <TableHead className="text-muted-foreground">Status</TableHead>
+                            <TableHead className="text-muted-foreground">Waktu</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {tickets.map((ticket) => (
+                            <TableRow 
+                              key={ticket.id}
+                              className="cursor-pointer hover:bg-white/5 border-white/5 transition-colors"
+                              onClick={() => openUpdateDialog(ticket)}
+                            >
+                              <TableCell className="font-mono text-sm text-white/70">{ticket.id}</TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium text-white">{CATEGORY_LABELS[ticket.category as TicketCategory]}</p>
+                                  {ticket.subcategory && (
+                                    <p className="text-xs text-muted-foreground">{ticket.subcategory}</p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="max-w-xs truncate text-white/80">{ticket.location}</TableCell>
+                              <TableCell>
+                                <Badge className={`border ${
+                                    ticket.urgency === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                    ticket.urgency === 'HIGH' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                    ticket.urgency === 'MEDIUM' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                    'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                  }`}>
+                                  {URGENCY_LABELS[ticket.urgency as TicketUrgency]}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={`border ${
+                                    ticket.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                    ticket.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                    ticket.status === 'ESCALATED' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                    ticket.status === 'RESOLVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                    'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                  }`}>
+                                  {STATUS_LABELS[ticket.status as TicketStatus]}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {format(new Date(ticket.created_at), 'dd/MM HH:mm', { locale: idLocale })}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4 p-4 bg-transparent">
                       {tickets.map((ticket) => (
-                        <TableRow 
+                        <div 
                           key={ticket.id}
-                          className="cursor-pointer hover:bg-white/5 border-white/5 transition-colors"
+                          className="bg-white/5 border border-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/10 transition-colors"
                           onClick={() => openUpdateDialog(ticket)}
                         >
-                          <TableCell className="font-mono text-sm text-white/70">{ticket.id}</TableCell>
-                          <TableCell>
+                          <div className="flex justify-between items-start mb-3">
                             <div>
+                              <p className="font-mono text-xs text-white/60 mb-1">{ticket.id}</p>
                               <p className="font-medium text-white">{CATEGORY_LABELS[ticket.category as TicketCategory]}</p>
                               {ticket.subcategory && (
                                 <p className="text-xs text-muted-foreground">{ticket.subcategory}</p>
                               )}
                             </div>
-                          </TableCell>
-                          <TableCell className="max-w-xs truncate text-white/80">{ticket.location}</TableCell>
-                          <TableCell>
-                            <Badge className={`border ${
+                            <Badge className={`border text-xs ${
                                 ticket.urgency === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
                                 ticket.urgency === 'HIGH' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
                                 ticket.urgency === 'MEDIUM' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
@@ -793,9 +909,12 @@ export default function DashboardPage() {
                               }`}>
                               {URGENCY_LABELS[ticket.urgency as TicketUrgency]}
                             </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={`border ${
+                          </div>
+                          
+                          <p className="text-sm text-white/80 mb-3 line-clamp-2">{ticket.location}</p>
+                          
+                          <div className="flex justify-between items-center pt-3 border-t border-white/5">
+                            <Badge className={`border text-xs ${
                                 ticket.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
                                 ticket.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                                 ticket.status === 'ESCALATED' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
@@ -804,14 +923,14 @@ export default function DashboardPage() {
                               }`}>
                               {STATUS_LABELS[ticket.status as TicketStatus]}
                             </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {format(new Date(ticket.created_at), 'dd/MM HH:mm', { locale: idLocale })}
-                          </TableCell>
-                        </TableRow>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(ticket.created_at), 'dd MMM HH:mm', { locale: idLocale })}
+                            </span>
+                          </div>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>

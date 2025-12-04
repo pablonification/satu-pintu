@@ -12,18 +12,31 @@ import Link from 'next/link'
 import { 
   Clock, 
   MapPin, 
-  CheckCircle2, 
-  AlertCircle, 
+  CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
   Loader2,
   Search,
   Phone,
   ArrowLeft,
   Star,
   ImageIcon,
-  Send
+  Send,
+  Users,
+  MessageSquare,
+  StickyNote,
+  FileText,
+  RefreshCw,
+  XCircle,
+  CheckCircle
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
+import { Skeleton } from '@/components/ui/skeleton'
+import { StatusProgress } from '@/components/StatusProgress'
+import { ImageLightbox } from '@/components/ImageLightbox'
+import { ImageCompare } from '@/components/ImageCompare'
+import { TicketStatus } from '@/types/database'
 
 interface TicketData {
   id: string
@@ -45,7 +58,19 @@ interface TicketData {
   timeline: Array<{
     time: string
     message: string
+    action: string
   }>
+}
+
+const TIMELINE_ICONS: Record<string, import('lucide-react').LucideIcon> = {
+  CREATED: FileText,
+  ASSIGNED: Users,
+  STATUS_CHANGE: RefreshCw,
+  UPDATE: MessageSquare,
+  ESCALATED: AlertTriangle,
+  RESOLVED: CheckCircle2,
+  CANCELLED: XCircle,
+  NOTE: StickyNote,
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -84,10 +109,33 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
   const [otpLoading, setOtpLoading] = useState(false)
   const [otpError, setOtpError] = useState<string | null>(null)
   const [otpExpiry, setOtpExpiry] = useState<Date | null>(null)
+  const [otpSecondsLeft, setOtpSecondsLeft] = useState(0)
+  
+  // Timeline state
+  const [showAllTimeline, setShowAllTimeline] = useState(false)
+  
+  // Lightbox state
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt: string } | null>(null)
 
   useEffect(() => {
     fetchTicket(resolvedParams.ticketId)
   }, [resolvedParams.ticketId])
+
+  useEffect(() => {
+    if (!otpExpiry) return
+    
+    const interval = setInterval(() => {
+      const now = new Date()
+      const diff = Math.max(0, Math.floor((otpExpiry.getTime() - now.getTime()) / 1000))
+      setOtpSecondsLeft(diff)
+      
+      if (diff <= 0) {
+        clearInterval(interval)
+      }
+    }, 1000)
+    
+    return () => clearInterval(interval)
+  }, [otpExpiry])
 
   async function fetchTicket(id: string) {
     setLoading(true)
@@ -182,7 +230,7 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
   // Star rating component
   function StarRating({ rating, interactive = false }: { rating: number; interactive?: boolean }) {
     return (
-      <div className="flex gap-1">
+      <div className="flex gap-2">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
@@ -191,10 +239,10 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
             onClick={() => interactive && setSelectedRating(star)}
             onMouseEnter={() => interactive && setHoverRating(star)}
             onMouseLeave={() => interactive && setHoverRating(0)}
-            className={`${interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'}`}
+            className={`${interactive ? 'cursor-pointer hover:scale-110 transition-transform p-1' : 'cursor-default'}`}
           >
             <Star
-              className={`h-8 w-8 ${
+              className={`h-10 w-10 sm:h-8 sm:w-8 ${
                 (interactive ? (hoverRating || selectedRating) : rating) >= star
                   ? 'fill-yellow-400 text-yellow-400'
                   : 'text-white/20'
@@ -231,7 +279,7 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-12 max-w-3xl">
+      <main className="container mx-auto px-4 sm:px-6 py-12 pb-20 sm:pb-12 max-w-3xl">
         <div className="mb-8 text-center">
             <h2 className="text-3xl font-bold text-white mb-2">Lacak Laporan</h2>
             <p className="text-muted-foreground">Masukkan ID tiket Anda untuk melihat status terkini.</p>
@@ -242,14 +290,14 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
           <CardContent className="pt-6">
             <form onSubmit={handleSearch} className="flex gap-3">
               <Input
-                placeholder="Masukkan nomor tiket (SP-XXXXXXXX-XXXX)"
+                placeholder="No. Tiket (SP-XXXXXXXX-XXXX)"
                 value={searchId}
                 onChange={(e) => setSearchId(e.target.value)}
                 className="flex-1 bg-black/20 border-white/10 text-white placeholder:text-muted-foreground focus-visible:ring-white/20"
               />
-              <Button type="submit" className="bg-white text-black hover:bg-white/90">
-                <Search className="h-4 w-4 mr-2" />
-                Cari
+              <Button type="submit" className="bg-white text-black hover:bg-white/90 px-3 sm:px-4">
+                <Search className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Cari</span>
               </Button>
             </form>
           </CardContent>
@@ -257,9 +305,55 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
 
         {/* Loading State */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="h-10 w-10 animate-spin text-white/50 mb-4" />
-            <p className="text-muted-foreground animate-pulse">Mengambil data tiket...</p>
+          <div className="space-y-6">
+            {/* Status Card Skeleton */}
+            <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
+              <CardHeader className="border-b border-white/5 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <Skeleton className="h-7 w-48 mb-2" />
+                    <Skeleton className="h-4 w-64" />
+                  </div>
+                  <Skeleton className="h-8 w-24 rounded-full" />
+                </div>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid sm:grid-cols-2 gap-6">
+                  {Array(4).fill(0).map((_, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <Skeleton className="h-10 w-10 rounded-lg" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-5 w-32" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Timeline Card Skeleton */}
+            <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
+              <CardHeader className="border-b border-white/5">
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="relative pl-4 space-y-8">
+                  {/* Vertical Line Skeleton */}
+                  <div className="absolute top-2 left-[11px] bottom-2 w-px bg-white/10" />
+                  
+                  {Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="relative pl-8">
+                      <Skeleton className="absolute left-0 top-1 h-6 w-6 rounded-full" />
+                      <div className="flex flex-col gap-2">
+                        <Skeleton className="h-4 w-full max-w-md" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -355,27 +449,42 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                 <CardTitle className="text-lg text-white">Riwayat Status</CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="relative pl-4">
-                    {/* Vertical Line */}
-                   <div className="absolute top-2 left-[11px] bottom-2 w-px bg-white/10" />
+                <div className="relative pl-4 space-y-8">
+                  {/* Vertical Line */}
+                  <div className="absolute top-2 left-[11px] bottom-2 w-px bg-white/10" />
 
-                  {ticket.timeline.map((item, index) => (
-                    <div key={index} className="relative pl-8 pb-8 last:pb-0 group">
-                      {/* Dot */}
-                      <div className={`absolute left-0 top-1 h-6 w-6 rounded-full border-2 flex items-center justify-center bg-background z-10 ${index === 0 ? 'border-emerald-500 text-emerald-500' : 'border-white/20 text-white/20'}`}>
-                        <div className={`h-2 w-2 rounded-full ${index === 0 ? 'bg-emerald-500' : 'bg-white/20'}`} />
+                  {(showAllTimeline ? ticket.timeline : ticket.timeline.slice(0, 5)).map((item, index) => {
+                    const Icon = TIMELINE_ICONS[item.action] || MessageSquare
+                    
+                    return (
+                      <div key={index} className="relative pl-10 group">
+                        {/* Icon */}
+                        <div className={`absolute left-0 top-0 h-6 w-6 rounded-full flex items-center justify-center z-10 ${index === 0 ? 'text-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/20' : 'text-muted-foreground bg-white/5 ring-1 ring-white/10'}`}>
+                          <Icon className="h-3 w-3" />
+                        </div>
+                        
+                        <div className="flex flex-col gap-1">
+                          <p className="text-sm font-medium text-white">
+                              {item.message}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(item.time), 'dd MMM yyyy, HH:mm', { locale: idLocale })}
+                          </p>
+                        </div>
                       </div>
-                      
-                      <div className="flex flex-col gap-1">
-                        <p className="text-sm font-medium text-white">
-                            {item.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(item.time), 'dd MMM yyyy, HH:mm', { locale: idLocale })}
-                        </p>
-                      </div>
+                    )
+                  })}
+                  
+                  {ticket.timeline.length > 5 && !showAllTimeline && (
+                    <div className="relative pl-10 pt-2">
+                      <button 
+                        onClick={() => setShowAllTimeline(true)}
+                        className="text-sm text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-2 transition-colors"
+                      >
+                        Tampilkan {ticket.timeline.length - 5} update lainnya
+                      </button>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -390,32 +499,48 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    {ticket.resolutionPhotoBefore && (
-                      <div className="space-y-2">
-                        <Label className="text-muted-foreground text-sm">Foto Sebelum</Label>
-                        <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10">
-                          <img
-                            src={ticket.resolutionPhotoBefore}
-                            alt="Foto kondisi sebelum"
-                            className="w-full h-full object-cover"
-                          />
+                  {ticket.resolutionPhotoBefore && ticket.resolutionPhotoAfter ? (
+                    <div className="space-y-2">
+                      <Label className="text-muted-foreground text-sm">Perbandingan</Label>
+                      <ImageCompare 
+                        beforeSrc={ticket.resolutionPhotoBefore}
+                        afterSrc={ticket.resolutionPhotoAfter}
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      {ticket.resolutionPhotoBefore && (
+                        <div className="space-y-2">
+                          <Label className="text-muted-foreground text-sm">Foto Sebelum</Label>
+                          <div 
+                            className="relative aspect-video rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setLightboxImage({ src: ticket.resolutionPhotoBefore!, alt: "Foto kondisi sebelum" })}
+                          >
+                            <img
+                              src={ticket.resolutionPhotoBefore}
+                              alt="Foto kondisi sebelum"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    {ticket.resolutionPhotoAfter && (
-                      <div className="space-y-2">
-                        <Label className="text-muted-foreground text-sm">Foto Sesudah</Label>
-                        <div className="relative aspect-video rounded-lg overflow-hidden border border-emerald-500/30">
-                          <img
-                            src={ticket.resolutionPhotoAfter}
-                            alt="Foto kondisi sesudah"
-                            className="w-full h-full object-cover"
-                          />
+                      )}
+                      {ticket.resolutionPhotoAfter && (
+                        <div className="space-y-2">
+                          <Label className="text-muted-foreground text-sm">Foto Sesudah</Label>
+                          <div 
+                            className="relative aspect-video rounded-lg overflow-hidden border border-emerald-500/30 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setLightboxImage({ src: ticket.resolutionPhotoAfter!, alt: "Foto kondisi sesudah" })}
+                          >
+                            <img
+                              src={ticket.resolutionPhotoAfter}
+                              alt="Foto kondisi sesudah"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -512,9 +637,19 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                           className="bg-black/20 border-white/10 text-white placeholder:text-muted-foreground text-center text-lg tracking-widest"
                         />
                         {otpExpiry && (
-                          <p className="text-xs text-muted-foreground">
-                            Berlaku hingga {format(otpExpiry, 'HH:mm', { locale: idLocale })}
-                          </p>
+                          <div className="flex justify-between items-center">
+                            <p className={`text-xs ${otpSecondsLeft > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {otpSecondsLeft > 0 
+                                ? `Kode berlaku: ${Math.floor(otpSecondsLeft/60)}:${(otpSecondsLeft%60).toString().padStart(2,'0')}`
+                                : 'Kode kedaluwarsa'}
+                            </p>
+                            <button 
+                              onClick={() => setOtpSent(false)}
+                              className="text-xs text-muted-foreground hover:text-white underline"
+                            >
+                              Batal
+                            </button>
+                          </div>
                         )}
                       </div>
                       
@@ -528,7 +663,7 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                           <StarRating rating={selectedRating} interactive />
                         </div>
                         {selectedRating > 0 && (
-                          <p className="text-sm text-white/60">
+                          <p className="text-sm text-white/60 animate-in fade-in slide-in-from-bottom-1">
                             {selectedRating === 1 && 'Sangat Tidak Puas'}
                             {selectedRating === 2 && 'Tidak Puas'}
                             {selectedRating === 3 && 'Cukup'}
@@ -548,6 +683,11 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                           rows={3}
                           maxLength={1000}
                         />
+                        <div className="text-right">
+                          <span className="text-xs text-muted-foreground">
+                            {feedbackText.length}/1000
+                          </span>
+                        </div>
                       </div>
                       
                       {ratingError && (
@@ -601,7 +741,16 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
             </div>
           </div>
         )}
-      </main>
+        </main>
+      
+      {lightboxImage && (
+        <ImageLightbox
+          src={lightboxImage.src}
+          alt={lightboxImage.alt}
+          isOpen={!!lightboxImage}
+          onClose={() => setLightboxImage(null)}
+        />
+      )}
     </div>
   )
 }
