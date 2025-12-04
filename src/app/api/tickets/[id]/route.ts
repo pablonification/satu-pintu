@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendSmsNotification, SMS_TEMPLATES } from '@/lib/twilio'
 import { STATUS_LABELS, TicketStatus } from '@/types/database'
+import { invalidateTicketCaches } from '@/lib/cache'
 import jwt from 'jsonwebtoken'
 
 // Validate that URL is from Supabase Storage
@@ -156,7 +157,17 @@ export async function PATCH(
     
     // Update ticket
     const updateData: Record<string, unknown> = {}
-    if (status) updateData.status = status
+    if (status) {
+      updateData.status = status
+      // Set resolved_at timestamp when status changes to RESOLVED
+      if (status === 'RESOLVED' && ticket.status !== 'RESOLVED') {
+        updateData.resolved_at = new Date().toISOString()
+      }
+      // Clear resolved_at if status changes away from RESOLVED
+      if (status !== 'RESOLVED' && ticket.status === 'RESOLVED') {
+        updateData.resolved_at = null
+      }
+    }
     if (resolution_photo_before !== undefined) updateData.resolution_photo_before = resolution_photo_before
     if (resolution_photo_after !== undefined) updateData.resolution_photo_after = resolution_photo_after
     
@@ -205,6 +216,9 @@ export async function PATCH(
         })
       }
     }
+    
+    // Invalidate caches after update
+    invalidateTicketCaches(id)
     
     return NextResponse.json({
       success: true,

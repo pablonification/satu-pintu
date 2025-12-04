@@ -1,14 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { cache, CACHE_TTL, getCacheKey } from '@/lib/cache'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+interface AnalyticsData {
+  summary: {
+    total: number
+    resolved: number
+    pending: number
+    inProgress: number
+    avgResolutionTimeHours: number
+  }
+  dailyData: { date: string; count: number }[]
+  categoryData: { name: string; value: number }[]
+  urgencyData: { name: string; value: number }[]
+  statusData: { name: string; value: number }[]
+  resolutionData: { category: string; avgHours: number }[]
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const days = parseInt(searchParams.get('days') || '30')
+  
+  // Check cache
+  const cacheKey = getCacheKey('analytics', { days: days.toString() })
+  const cached = cache.get<AnalyticsData>(cacheKey)
+  
+  if (cached) {
+    return NextResponse.json({
+      success: true,
+      data: cached,
+      cached: true,
+    })
+  }
   
   try {
     const startDate = new Date()
@@ -91,22 +119,27 @@ export async function GET(request: NextRequest) {
       ? Math.round((totalResolutionTime / resolvedCount) / (1000 * 60 * 60) * 10) / 10 
       : 0
     
+    const analyticsData: AnalyticsData = {
+      summary: {
+        total: tickets?.length || 0,
+        resolved: ticketsByStatus['RESOLVED'] || 0,
+        pending: ticketsByStatus['PENDING'] || 0,
+        inProgress: ticketsByStatus['IN_PROGRESS'] || 0,
+        avgResolutionTimeHours: avgResolutionTime,
+      },
+      dailyData,
+      categoryData,
+      urgencyData,
+      statusData,
+      resolutionData,
+    }
+    
+    // Cache the result
+    cache.set(cacheKey, analyticsData, CACHE_TTL.ANALYTICS)
+    
     return NextResponse.json({
       success: true,
-      data: {
-        summary: {
-          total: tickets?.length || 0,
-          resolved: ticketsByStatus['RESOLVED'] || 0,
-          pending: ticketsByStatus['PENDING'] || 0,
-          inProgress: ticketsByStatus['IN_PROGRESS'] || 0,
-          avgResolutionTimeHours: avgResolutionTime,
-        },
-        dailyData,
-        categoryData,
-        urgencyData,
-        statusData,
-        resolutionData,
-      }
+      data: analyticsData
     })
     
   } catch (error) {

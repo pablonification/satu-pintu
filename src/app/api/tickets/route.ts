@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { cache, CACHE_TTL, getCacheKey, invalidateTicketCaches } from '@/lib/cache'
 import jwt from 'jsonwebtoken'
 
 const JWT_SECRET = process.env.JWT_SECRET!
@@ -8,6 +9,16 @@ interface JWTPayload {
   dinas_id: string
   dinas_name: string
   categories: string[]
+}
+
+interface TicketListResponse {
+  tickets: unknown[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
 function verifyAuth(request: NextRequest): JWTPayload | null {
@@ -41,10 +52,34 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50)
   const search = searchParams.get('search')
   
+  // Check cache (skip if search is provided - too many variations)
+  const cacheKey = !search 
+    ? getCacheKey('tickets', { 
+        dinas: auth.dinas_id, 
+        status: status || undefined, 
+        urgency: urgency || undefined, 
+        category: category || undefined,
+        page: page.toString(),
+        limit: limit.toString()
+      })
+    : null
+  
+  if (cacheKey) {
+    const cached = cache.get<TicketListResponse>(cacheKey)
+    if (cached) {
+      return NextResponse.json({
+        success: true,
+        data: cached,
+        cached: true,
+      })
+    }
+  }
+  
   try {
+    // Select only needed columns for list view (performance optimization)
     let query = supabaseAdmin
       .from('tickets')
-      .select('*', { count: 'exact' })
+      .select('id, category, subcategory, location, description, reporter_phone, status, urgency, assigned_dinas, created_at, updated_at', { count: 'exact' })
     
     // Filter by assigned dinas (unless admin)
     if (auth.dinas_id !== 'admin') {
@@ -56,10 +91,11 @@ export async function GET(request: NextRequest) {
     if (urgency) query = query.eq('urgency', urgency)
     if (category) query = query.eq('category', category)
     if (search) {
+      // Use optimized search with index
       query = query.or(`id.ilike.%${search}%,location.ilike.%${search}%`)
     }
     
-    // Pagination
+    // Pagination with optimized sorting (uses index)
     const offset = (page - 1) * limit
     query = query
       .order('created_at', { ascending: false })
@@ -69,17 +105,24 @@ export async function GET(request: NextRequest) {
     
     if (error) throw error
     
+    const response: TicketListResponse = {
+      tickets: tickets || [],
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+      },
+    }
+    
+    // Cache the result (only if no search)
+    if (cacheKey) {
+      cache.set(cacheKey, response, CACHE_TTL.TICKETS_LIST)
+    }
+    
     return NextResponse.json({
       success: true,
-      data: {
-        tickets: tickets || [],
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit),
-        },
-      },
+      data: response,
     })
   } catch (error) {
     console.error('Get tickets error:', error)
@@ -111,6 +154,9 @@ export async function POST(request: NextRequest) {
       .single()
     
     if (error) throw error
+    
+    // Invalidate caches after creating ticket
+    invalidateTicketCaches()
     
     return NextResponse.json({
       success: true,

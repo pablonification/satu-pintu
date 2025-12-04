@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -17,13 +18,47 @@ import {
   Phone,
   LogOut,
 } from 'lucide-react'
-import {
-  DailyTicketsChart,
-  CategoryPieChart,
-  UrgencyPieChart,
-  StatusPieChart,
-  ResolutionTimeChart,
-} from '@/components/charts/AnalyticsCharts'
+
+// Dynamic imports for charts (heavy recharts library)
+const DailyTicketsChart = dynamic(
+  () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.DailyTicketsChart })),
+  { 
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+  }
+)
+
+const CategoryPieChart = dynamic(
+  () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.CategoryPieChart })),
+  { 
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+  }
+)
+
+const UrgencyPieChart = dynamic(
+  () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.UrgencyPieChart })),
+  { 
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+  }
+)
+
+const StatusPieChart = dynamic(
+  () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.StatusPieChart })),
+  { 
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+  }
+)
+
+const ResolutionTimeChart = dynamic(
+  () => import('@/components/charts/AnalyticsCharts').then(mod => ({ default: mod.ResolutionTimeChart })),
+  { 
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-[300px]"><Loader2 className="h-6 w-6 animate-spin text-white/50" /></div>
+  }
+)
 
 interface User {
   dinasId: string
@@ -54,17 +89,8 @@ export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [period, setPeriod] = useState('30')
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
-  useEffect(() => {
-    if (user) {
-      fetchAnalytics()
-    }
-  }, [user, period])
-
-  async function checkAuth() {
+  // Memoize checkAuth to prevent recreating on every render
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/me')
       const data = await res.json()
@@ -79,9 +105,10 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
 
-  async function fetchAnalytics() {
+  // Memoize fetchAnalytics
+  const fetchAnalytics = useCallback(async () => {
     setDataLoading(true)
     try {
       const res = await fetch(`/api/analytics?days=${period}`)
@@ -95,12 +122,28 @@ export default function AnalyticsPage() {
     } finally {
       setDataLoading(false)
     }
-  }
+  }, [period])
 
-  async function handleLogout() {
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
+
+  useEffect(() => {
+    if (user) {
+      fetchAnalytics()
+    }
+  }, [user, fetchAnalytics])
+
+  const handleLogout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
-  }
+  }, [router])
+
+  // Memoize summary stats to prevent unnecessary re-renders
+  const summaryStats = useMemo(() => {
+    if (!analytics) return null
+    return analytics.summary
+  }, [analytics])
 
   if (loading) {
     return (
@@ -177,7 +220,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-white/50" />
           </div>
-        ) : analytics ? (
+        ) : analytics && summaryStats ? (
           <>
             {/* Summary Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
@@ -189,7 +232,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p>
-                      <p className="text-2xl font-bold text-white">{analytics.summary.total}</p>
+                      <p className="text-2xl font-bold text-white">{summaryStats.total}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -203,7 +246,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Selesai</p>
-                      <p className="text-2xl font-bold text-white">{analytics.summary.resolved}</p>
+                      <p className="text-2xl font-bold text-white">{summaryStats.resolved}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -217,7 +260,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Menunggu</p>
-                      <p className="text-2xl font-bold text-white">{analytics.summary.pending}</p>
+                      <p className="text-2xl font-bold text-white">{summaryStats.pending}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -231,7 +274,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Diproses</p>
-                      <p className="text-2xl font-bold text-white">{analytics.summary.inProgress}</p>
+                      <p className="text-2xl font-bold text-white">{summaryStats.inProgress}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -245,7 +288,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider">Rata-rata Waktu</p>
-                      <p className="text-2xl font-bold text-white">{analytics.summary.avgResolutionTimeHours}j</p>
+                      <p className="text-2xl font-bold text-white">{summaryStats.avgResolutionTimeHours}j</p>
                     </div>
                   </div>
                 </CardContent>
