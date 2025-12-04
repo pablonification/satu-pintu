@@ -146,7 +146,7 @@ export default function TestCallPage() {
       console.log('Starting call with transient config:', JSON.stringify(assistantConfig, null, 2))
       
       // Cast ke CreateAssistantDTO untuk Web SDK
-      const call = await vapi.start(assistantConfig as CreateAssistantDTO)
+      const call = await vapi.start(assistantConfig as unknown as CreateAssistantDTO)
       console.log('Call started:', call)
     } catch (err) {
       console.error('Failed to start call:', err)

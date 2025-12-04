@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, generateTicketId } from '@/lib/supabase'
 import { formatTicketIdForSpeech } from '@/lib/vapi'
 import { CATEGORY_TO_DINAS, DINAS_NAMES, DinasId, TicketCategory, TicketUrgency } from '@/types/database'
+import { validateAddressEnhanced } from '@/lib/address-validation'
+import { sendSmsNotification, SMS_TEMPLATES } from '@/lib/twilio'
 
 // ============================================================================
 // UNIVERSAL TOOL CALL EXTRACTOR
