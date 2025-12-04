@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Vapi from '@vapi-ai/web'
-import { Phone, PhoneOff, Mic, MicOff, Loader2, AlertCircle, Volume2, Settings } from 'lucide-react'
+import type { CreateAssistantDTO } from '@vapi-ai/web/dist/api'
+import { Phone, PhoneOff, Mic, MicOff, Loader2, AlertCircle, Volume2, Settings, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
+import { getAssistantConfig } from '@/lib/vapi'
 
 type CallStatus = 'idle' | 'connecting' | 'active' | 'ending'
 
@@ -26,18 +28,15 @@ export default function TestCallPage() {
   const [error, setError] = useState<string | null>(null)
   const [volumeLevel, setVolumeLevel] = useState(0)
   
-  // Configuration
+  // Configuration - Transient Assistant hanya butuh Public Key
   const [vapiPublicKey, setVapiPublicKey] = useState('')
-  const [assistantId, setAssistantId] = useState('')
   const [showConfig, setShowConfig] = useState(true)
 
   // Load config from localStorage
   useEffect(() => {
     const savedPublicKey = localStorage.getItem('vapi_public_key') || ''
-    const savedAssistantId = localStorage.getItem('vapi_assistant_id') || ''
     setVapiPublicKey(savedPublicKey)
-    setAssistantId(savedAssistantId)
-    if (savedPublicKey && savedAssistantId) {
+    if (savedPublicKey) {
       setShowConfig(false)
     }
   }, [])
@@ -45,7 +44,6 @@ export default function TestCallPage() {
   // Save config to localStorage
   const saveConfig = () => {
     localStorage.setItem('vapi_public_key', vapiPublicKey)
-    localStorage.setItem('vapi_assistant_id', assistantId)
     setShowConfig(false)
     setError(null)
   }
@@ -122,7 +120,7 @@ export default function TestCallPage() {
   }, [vapiPublicKey, addMessage])
 
   const startCall = async () => {
-    if (!vapi || !assistantId) {
+    if (!vapi) {
       setError('Konfigurasi Vapi belum lengkap')
       setShowConfig(true)
       return
@@ -131,7 +129,10 @@ export default function TestCallPage() {
     try {
       setCallStatus('connecting')
       setError(null)
-      await vapi.start(assistantId)
+      
+      // Menggunakan Transient Assistant - config dikirim langsung saat start
+      const assistantConfig = getAssistantConfig() as unknown as CreateAssistantDTO
+      await vapi.start(assistantConfig)
     } catch (err) {
       console.error('Failed to start call:', err)
       setError('Gagal memulai panggilan. Pastikan konfigurasi Vapi sudah benar.')
@@ -187,7 +188,7 @@ export default function TestCallPage() {
                   Konfigurasi Vapi
                 </CardTitle>
                 <CardDescription>
-                  Masukkan kredensial Vapi Anda. Dapatkan di{' '}
+                  Masukkan Public Key Vapi Anda. Dapatkan di{' '}
                   <a href="https://dashboard.vapi.ai" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">
                     dashboard.vapi.ai
                   </a>
@@ -203,18 +204,22 @@ export default function TestCallPage() {
                     placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                     className="bg-background/50 mt-1"
                   />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Hanya perlu Public Key saja. Assistant akan dibuat otomatis (Transient Assistant).
+                  </p>
                 </div>
-                <div>
-                  <Label htmlFor="assistantId">Assistant ID</Label>
-                  <Input
-                    id="assistantId"
-                    value={assistantId}
-                    onChange={(e) => setAssistantId(e.target.value)}
-                    placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                    className="bg-background/50 mt-1"
-                  />
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-400 mt-0.5" />
+                    <div className="text-sm text-green-400">
+                      <strong>Transient Assistant Mode</strong>
+                      <p className="text-green-400/80 text-xs mt-1">
+                        Tidak perlu setup Assistant di Vapi Dashboard. Semua konfigurasi sudah diatur di kode.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <Button onClick={saveConfig} className="w-full" disabled={!vapiPublicKey || !assistantId}>
+                <Button onClick={saveConfig} className="w-full" disabled={!vapiPublicKey}>
                   Simpan Konfigurasi
                 </Button>
               </CardContent>
@@ -282,7 +287,7 @@ export default function TestCallPage() {
                     onClick={startCall}
                     size="lg"
                     className="h-14 px-8 bg-green-500 hover:bg-green-600 rounded-full"
-                    disabled={!vapiPublicKey || !assistantId}
+                    disabled={!vapiPublicKey}
                   >
                     <Phone className="h-5 w-5 mr-2" />
                     Mulai Panggilan
@@ -380,12 +385,17 @@ export default function TestCallPage() {
               <CardTitle className="text-lg">Cara Menggunakan</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p><strong className="text-white">1.</strong> Pastikan Anda sudah setup Vapi Assistant di dashboard.vapi.ai</p>
-              <p><strong className="text-white">2.</strong> Masukkan Public Key dan Assistant ID</p>
+              <p><strong className="text-white">1.</strong> Dapatkan Public Key dari dashboard.vapi.ai (menu Settings)</p>
+              <p><strong className="text-white">2.</strong> Masukkan Public Key dan klik Simpan Konfigurasi</p>
               <p><strong className="text-white">3.</strong> Klik &quot;Mulai Panggilan&quot; dan izinkan akses mikrofon</p>
               <p><strong className="text-white">4.</strong> AI akan menyapa dan menanyakan keluhan Anda</p>
               <p><strong className="text-white">5.</strong> Sampaikan keluhan seperti: &quot;Ada jalan rusak di depan rumah saya&quot;</p>
-              <p><strong className="text-white">6.</strong> AI akan memandu Anda untuk melengkapi informasi</p>
+              <p><strong className="text-white">6.</strong> AI akan memandu Anda untuk melengkapi informasi dan membuat tiket</p>
+              <div className="mt-4 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                <p className="text-indigo-400 text-xs">
+                  <strong>Tips:</strong> Tidak perlu setup Assistant di Vapi Dashboard. Sistem menggunakan Transient Assistant yang sudah dikonfigurasi untuk SatuPintu.
+                </p>
+              </div>
             </CardContent>
           </Card>
 
