@@ -113,15 +113,15 @@ CREATE TRIGGER trigger_dinas_updated_at
   EXECUTE FUNCTION update_updated_at();
 
 -- Seed dinas data (password is hashed version of 'demo2025')
--- Hash generated with: bcrypt.hashSync('demo2025', 10)
+-- Hash generated with: node -e "const bcrypt = require('bcryptjs'); console.log(bcrypt.hashSync('demo2025', 10));"
 INSERT INTO dinas (id, name, password_hash, categories, phone) VALUES
-('polisi', 'Kepolisian Resort Kota Bandung', '$2a$10$rQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjY', ARRAY['DARURAT'], '110'),
-('ambulans', 'Unit Ambulans Dinkes Bandung', '$2a$10$rQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjY', ARRAY['DARURAT'], '119'),
-('damkar', 'Dinas Pemadam Kebakaran Bandung', '$2a$10$rQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjY', ARRAY['DARURAT'], '113'),
-('pupr', 'Dinas PUPR Kota Bandung', '$2a$10$rQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjY', ARRAY['INFRA'], NULL),
-('dlh', 'Dinas Lingkungan Hidup Bandung', '$2a$10$rQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjY', ARRAY['KEBERSIHAN'], NULL),
-('dinsos', 'Dinas Sosial Kota Bandung', '$2a$10$rQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjY', ARRAY['SOSIAL'], NULL),
-('admin', 'Admin SatuPintu', '$2a$10$rQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjYqKqLqLqLqLuQnM1v.jxjY', ARRAY['DARURAT','INFRA','KEBERSIHAN','SOSIAL','LAINNYA'], NULL)
+('polisi', 'Kepolisian Resort Kota Bandung', '$2b$10$MZ7JjsTpRf66T0nN1.BX9uP9Mj9hubQ34je3DKg/.Z4OdsPZUzgEG', ARRAY['DARURAT'], '110'),
+('ambulans', 'Unit Ambulans Dinkes Bandung', '$2b$10$MZ7JjsTpRf66T0nN1.BX9uP9Mj9hubQ34je3DKg/.Z4OdsPZUzgEG', ARRAY['DARURAT'], '119'),
+('damkar', 'Dinas Pemadam Kebakaran Bandung', '$2b$10$MZ7JjsTpRf66T0nN1.BX9uP9Mj9hubQ34je3DKg/.Z4OdsPZUzgEG', ARRAY['DARURAT'], '113'),
+('pupr', 'Dinas PUPR Kota Bandung', '$2b$10$MZ7JjsTpRf66T0nN1.BX9uP9Mj9hubQ34je3DKg/.Z4OdsPZUzgEG', ARRAY['INFRA'], NULL),
+('dlh', 'Dinas Lingkungan Hidup Bandung', '$2b$10$MZ7JjsTpRf66T0nN1.BX9uP9Mj9hubQ34je3DKg/.Z4OdsPZUzgEG', ARRAY['KEBERSIHAN'], NULL),
+('dinsos', 'Dinas Sosial Kota Bandung', '$2b$10$MZ7JjsTpRf66T0nN1.BX9uP9Mj9hubQ34je3DKg/.Z4OdsPZUzgEG', ARRAY['SOSIAL'], NULL),
+('admin', 'Admin SatuPintu', '$2b$10$MZ7JjsTpRf66T0nN1.BX9uP9Mj9hubQ34je3DKg/.Z4OdsPZUzgEG', ARRAY['DARURAT','INFRA','KEBERSIHAN','SOSIAL','LAINNYA'], NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed demo tickets

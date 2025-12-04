@@ -8,9 +8,10 @@ AI-powered centralized call center untuk smart city. Warga cukup menelepon satu 
 
 - **Framework**: Next.js 16 (App Router + Turbopack)
 - **Database**: Supabase PostgreSQL
-- **Voice AI**: Gemini 2.0 Flash (native audio input)
-- **Voice Transport**: Twilio Voice
-- **SMS**: Twilio SMS
+- **Voice AI**: Vapi.ai (Conversational AI Platform)
+- **STT/TTS**: Deepgram + ElevenLabs (via Vapi)
+- **Address Validation**: Nominatim (OpenStreetMap) + Gemini fallback
+- **SMS**: Twilio SMS (optional)
 - **UI**: Tailwind CSS + shadcn/ui
 - **Hosting**: Vercel
 
@@ -42,7 +43,23 @@ npm install
 3. Klik **Get API Key** → **Create API key in new project**
 4. Copy API key → untuk `GOOGLE_AI_API_KEY`
 
-### 4. Setup Twilio (Voice & SMS) - $15 FREE TRIAL
+### 4. Setup Vapi.ai (Voice AI) - $10 FREE CREDIT
+
+1. Buka [vapi.ai](https://vapi.ai) dan buat akun
+2. Di dashboard, buka **Assistants** → **Create Assistant**
+3. Konfigurasi Assistant:
+   - **Name**: SatuPintu Assistant
+   - **First Message**: `Selamat datang di SatuPintu, layanan pengaduan terpadu Kota Bandung. Ada yang bisa saya bantu hari ini?`
+   - **System Prompt**: (lihat file `src/lib/vapi.ts` untuk contoh lengkap)
+   - **Voice**: Pilih ElevenLabs Indonesian voice
+   - **Model**: GPT-4 Turbo
+4. Tambahkan **Functions**:
+   - `validateAddress` - untuk validasi alamat
+   - `createTicket` - untuk membuat tiket
+5. Set **Server URL** (webhook): `https://your-domain.vercel.app/api/vapi/webhook`
+6. Catat **Assistant ID** dan **Public Key** (dari Account Settings)
+
+### 5. Setup Twilio (SMS Notifikasi) - OPTIONAL, $15 FREE TRIAL
 
 1. Buka [twilio.com](https://twilio.com) dan buat akun
 2. Verifikasi nomor HP Anda (wajib untuk trial)
@@ -51,9 +68,10 @@ npm install
    - `Auth Token` → untuk `TWILIO_AUTH_TOKEN`
 4. Buka **Phone Numbers** → **Buy a Number** → pilih nomor US (gratis di trial)
 5. Catat nomor telepon → untuk `TWILIO_PHONE_NUMBER` (format: `+1234567890`)
-6. Webhook akan diatur setelah deploy ke Vercel
 
-### 5. Setup Environment Variables
+> **Note**: Twilio hanya digunakan untuk SMS notifikasi. Voice call sekarang menggunakan Vapi.ai
+
+### 6. Setup Environment Variables
 
 ```bash
 cp .env.example .env.local
@@ -67,10 +85,10 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-# Google AI (dari langkah 3)
+# Google AI (dari langkah 3) - untuk validasi alamat fallback
 GOOGLE_AI_API_KEY=AIzaSy...
 
-# Twilio (dari langkah 4)
+# Twilio (dari langkah 5) - OPTIONAL, untuk SMS
 TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxx
 TWILIO_PHONE_NUMBER=+1234567890
@@ -81,9 +99,20 @@ INTERNAL_API_KEY=<hasil_openssl_rand_hex_16>
 JWT_SECRET=<hasil_openssl_rand_hex_16>
 ```
 
+> **Note**: Vapi Public Key dan Assistant ID diinput langsung di halaman `/test-call`
+
 > **Tip**: Generate random string dengan menjalankan `openssl rand -hex 16` di terminal
 
-### 6. Run Development Server
+### 7. Run Database Migration
+
+Jalankan migration kedua untuk field baru (reporter_name, validated_address):
+
+```sql
+-- Di Supabase SQL Editor, jalankan:
+-- File: supabase/migrations/002_add_reporter_fields.sql
+```
+
+### 8. Run Development Server
 
 ```bash
 npm run dev
@@ -109,8 +138,10 @@ Buka [http://localhost:3000](http://localhost:3000)
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/voice/incoming` | POST | Twilio voice webhook |
-| `/api/voice/process` | POST | Process recorded audio |
+| `/api/vapi/webhook` | POST | Vapi function calls (validateAddress, createTicket) |
+| `/api/address/validate` | POST | Validate address using Nominatim + Gemini |
+| `/api/voice/incoming` | POST | Twilio voice webhook (legacy) |
+| `/api/voice/process` | POST | Process recorded audio (legacy) |
 | `/api/sms/incoming` | POST | Twilio SMS webhook |
 | `/api/track/[ticketId]` | GET | Public ticket tracking |
 | `/api/tickets` | GET | List tickets (auth required) |
@@ -173,32 +204,44 @@ git push -u origin main
    - `JWT_SECRET`
 5. Klik **Deploy** dan tunggu selesai
 
-### 3. Setup Twilio Webhooks (Setelah Deploy)
+### 3. Setup Vapi Webhook (Setelah Deploy)
+
+1. Buka [dashboard.vapi.ai](https://dashboard.vapi.ai)
+2. Buka Assistant yang sudah dibuat
+3. Di bagian **Server URL**, masukkan: `https://your-app.vercel.app/api/vapi/webhook`
+4. Save changes
+
+### 4. Setup Twilio SMS Webhook (Optional)
 
 1. Buka [console.twilio.com](https://console.twilio.com)
 2. Buka **Phone Numbers** → **Manage** → **Active Numbers**
 3. Klik nomor telepon Anda
-4. Di bagian **Voice Configuration**:
-   - A CALL COMES IN: **Webhook**
-   - URL: `https://your-app.vercel.app/api/voice/incoming`
-   - HTTP: **POST**
-5. Di bagian **Messaging Configuration**:
+4. Di bagian **Messaging Configuration**:
    - A MESSAGE COMES IN: **Webhook**
    - URL: `https://your-app.vercel.app/api/sms/incoming`
    - HTTP: **POST**
-6. Klik **Save configuration**
+5. Klik **Save configuration**
 
 ## Testing
+
+### Test Voice AI (Web)
+1. Buka `https://your-app.vercel.app/test-call`
+2. Masukkan Vapi **Public Key** dan **Assistant ID**
+3. Klik **Mulai Panggilan** dan izinkan akses mikrofon
+4. AI akan menyapa: "Selamat datang di SatuPintu..."
+5. Sampaikan keluhan seperti: "Ada jalan rusak di depan rumah saya di Jalan Cihampelas"
+6. AI akan memandu untuk melengkapi data (nama, alamat, konfirmasi)
+7. Setelah konfirmasi, tiket akan dibuat dan Anda akan mendapat nomor tiket
+
+### Test Voice AI (Phone - via Vapi)
+1. Di Vapi dashboard, beli nomor telepon atau connect ke Twilio
+2. Telepon nomor tersebut
+3. Flow sama seperti web test
 
 ### Test Dashboard
 1. Buka `https://your-app.vercel.app/login`
 2. Login dengan ID: `admin`, Password: `demo2025`
 3. Anda akan melihat dashboard dengan tiket contoh
-
-### Test Voice Call
-1. Telepon nomor Twilio Anda
-2. Bicara keluhan Anda (contoh: "Jalan di depan rumah saya rusak berlubang")
-3. AI akan memproses dan membuat tiket otomatis
 
 ### Test SMS Tracking
 1. Kirim SMS ke nomor Twilio: `CEK SP-XXXXXXXX-XXXX`
@@ -210,22 +253,29 @@ git push -u origin main
 
 ## Troubleshooting
 
-### Error "Invalid API Key"
+### Error "Invalid API Key" (Gemini)
 - Pastikan `GOOGLE_AI_API_KEY` sudah benar dan aktif
 - Cek di [aistudio.google.com](https://aistudio.google.com) apakah API key masih valid
 
-### Error "Twilio credentials invalid"
-- Pastikan `TWILIO_ACCOUNT_SID` dan `TWILIO_AUTH_TOKEN` sudah benar
-- Cek di [console.twilio.com](https://console.twilio.com) bagian Account Info
+### Vapi call tidak berfungsi
+- Pastikan Public Key dan Assistant ID sudah benar
+- Cek apakah Server URL (webhook) sudah di-set di Vapi dashboard
+- Lihat logs di Vapi dashboard untuk debug
+- Pastikan browser mengizinkan akses mikrofon
 
 ### Error "Database connection failed"
 - Pastikan URL Supabase menggunakan format `https://xxxxx.supabase.co`
 - Pastikan `service_role` key digunakan (bukan `anon` key) untuk `SUPABASE_SERVICE_ROLE_KEY`
 
-### Webhook tidak dipanggil
-- Pastikan URL webhook menggunakan HTTPS
-- Pastikan domain Vercel sudah live dan bisa diakses
-- Cek Twilio Console → Monitor → Logs untuk melihat error
+### Alamat tidak tervalidasi
+- Nominatim mungkin tidak menemukan alamat - coba dengan alamat yang lebih spesifik
+- Fallback ke Gemini akan digunakan otomatis
+- Pastikan alamat berada di Kota Bandung
+
+### SMS tidak terkirim
+- Pastikan kredensial Twilio sudah benar
+- Cek saldo Twilio trial credit
+- Lihat logs di Twilio Console → Monitor → Logs
 
 ## License
 

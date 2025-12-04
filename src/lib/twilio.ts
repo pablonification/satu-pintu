@@ -1,12 +1,26 @@
 import twilio from 'twilio'
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID!
-const authToken = process.env.TWILIO_AUTH_TOKEN!
-const twilioPhone = process.env.TWILIO_PHONE_NUMBER!
+// Lazy initialization to avoid build errors when env vars not set
+let _client: ReturnType<typeof twilio> | null = null
 
-const client = twilio(accountSid, authToken)
+function getTwilioClient() {
+  if (!_client) {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID
+    const authToken = process.env.TWILIO_AUTH_TOKEN
+    
+    if (!accountSid || !authToken) {
+      console.warn('Twilio credentials not configured')
+      return null
+    }
+    
+    _client = twilio(accountSid, authToken)
+  }
+  return _client
+}
 
-export { client as twilioClient, twilioPhone }
+export const twilioPhone = process.env.TWILIO_PHONE_NUMBER || ''
+
+export { getTwilioClient as twilioClient }
 
 // Send SMS notification to citizen
 export async function sendSmsNotification(
@@ -14,6 +28,12 @@ export async function sendSmsNotification(
   message: string
 ): Promise<string | null> {
   try {
+    const client = getTwilioClient()
+    if (!client) {
+      console.warn('Twilio not configured, skipping SMS')
+      return null
+    }
+    
     const msg = await client.messages.create({
       body: message,
       from: twilioPhone,

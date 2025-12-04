@@ -25,6 +25,10 @@ export interface Ticket {
   location: string
   description: string
   reporter_phone: string
+  reporter_name: string | null
+  validated_address: string | null
+  address_lat: number | null
+  address_lng: number | null
   status: TicketStatus
   urgency: TicketUrgency
   assigned_dinas: DinasId[]
