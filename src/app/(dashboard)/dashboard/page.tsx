@@ -37,8 +37,10 @@ import {
   Volume2,
   Upload,
   ImageIcon,
-  X
+  X,
+  BarChart3
 } from 'lucide-react'
+import { ExportButton } from '@/components/ExportButton'
 import { format } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 import { STATUS_LABELS, URGENCY_LABELS, CATEGORY_LABELS, TicketStatus, TicketUrgency, TicketCategory } from '@/types/database'
@@ -542,10 +544,20 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground">{user?.dinasName}</p>
             </div>
           </div>
-          <Button variant="ghost" onClick={handleLogout} className="text-muted-foreground hover:text-white">
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              onClick={() => router.push('/dashboard/analytics')} 
+              className="text-muted-foreground hover:text-white"
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analitik
+            </Button>
+            <Button variant="ghost" onClick={handleLogout} className="text-muted-foreground hover:text-white">
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -703,6 +715,12 @@ export default function DashboardPage() {
             <Button onClick={() => { fetchTickets(); if (activeView === 'map') fetchMapTickets(); }} variant="outline" className="bg-card border-white/10 hover:bg-white/5 text-white">
             <RefreshCw className="h-4 w-4" />
             </Button>
+            <ExportButton 
+              filters={{
+                status: statusFilter,
+                urgency: urgencyFilter,
+              }}
+            />
         </div>
 
         {/* View Tabs */}
