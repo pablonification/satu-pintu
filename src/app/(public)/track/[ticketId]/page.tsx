@@ -77,6 +77,13 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
   const [submittingRating, setSubmittingRating] = useState(false)
   const [ratingError, setRatingError] = useState<string | null>(null)
   const [ratingSuccess, setRatingSuccess] = useState(false)
+  
+  // OTP state
+  const [otp, setOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [otpError, setOtpError] = useState<string | null>(null)
+  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null)
 
   useEffect(() => {
     fetchTicket(resolvedParams.ticketId)
@@ -109,8 +116,33 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
     }
   }
   
+  async function handleRequestOTP() {
+    if (!ticket) return
+    
+    setOtpLoading(true)
+    setOtpError(null)
+    
+    try {
+      const res = await fetch(`/api/tickets/${ticket.id}/request-otp`, {
+        method: 'POST',
+      })
+      const data = await res.json()
+      
+      if (data.success) {
+        setOtpSent(true)
+        setOtpExpiry(new Date(data.expiresAt))
+      } else {
+        setOtpError(data.error || 'Gagal mengirim OTP')
+      }
+    } catch {
+      setOtpError('Terjadi kesalahan saat mengirim OTP')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+  
   async function handleSubmitRating() {
-    if (!ticket || selectedRating === 0) return
+    if (!ticket || selectedRating === 0 || !otp) return
     
     setSubmittingRating(true)
     setRatingError(null)
@@ -122,6 +154,7 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
         body: JSON.stringify({
           rating: selectedRating,
           feedback: feedbackText || undefined,
+          otp: otp,
         }),
       })
       
@@ -433,9 +466,60 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                         Penilaian Anda telah berhasil dikirim.
                       </p>
                     </div>
+                  ) : !otpSent ? (
+                    // Step 1: Request OTP
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground text-center">
+                        Untuk memberikan penilaian, kami akan mengirim kode OTP ke nomor telepon Anda yang terdaftar.
+                      </p>
+                      <Button 
+                        onClick={handleRequestOTP} 
+                        disabled={otpLoading}
+                        className="w-full bg-yellow-500 text-black hover:bg-yellow-400"
+                      >
+                        {otpLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Mengirim OTP...
+                          </>
+                        ) : (
+                          <>
+                            <Phone className="h-4 w-4 mr-2" />
+                            Minta Kode OTP
+                          </>
+                        )}
+                      </Button>
+                      {otpError && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                          <p className="text-red-400 text-sm flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            {otpError}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   ) : (
-                    // Show rating form
+                    // Step 2: Enter OTP + Rating
                     <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Label className="text-white">Kode OTP</Label>
+                        <Input
+                          type="text"
+                          maxLength={6}
+                          placeholder="Masukkan 6 digit OTP"
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                          className="bg-black/20 border-white/10 text-white placeholder:text-muted-foreground text-center text-lg tracking-widest"
+                        />
+                        {otpExpiry && (
+                          <p className="text-xs text-muted-foreground">
+                            Berlaku hingga {format(otpExpiry, 'HH:mm', { locale: idLocale })}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <Separator className="bg-white/10" />
+                      
                       <div className="text-center">
                         <p className="text-muted-foreground mb-4">
                           Bagaimana penilaian Anda terhadap penanganan laporan ini?
@@ -462,6 +546,7 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                           onChange={(e) => setFeedbackText(e.target.value)}
                           className="bg-black/20 border-white/10 text-white placeholder:text-muted-foreground"
                           rows={3}
+                          maxLength={1000}
                         />
                       </div>
                       
@@ -476,7 +561,7 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                       
                       <Button
                         onClick={handleSubmitRating}
-                        disabled={selectedRating === 0 || submittingRating}
+                        disabled={selectedRating === 0 || submittingRating || otp.length !== 6}
                         className="w-full bg-yellow-500 text-black hover:bg-yellow-400"
                       >
                         {submittingRating ? (
@@ -490,6 +575,15 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                             Kirim Penilaian
                           </>
                         )}
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        onClick={handleRequestOTP}
+                        disabled={otpLoading}
+                        className="w-full text-muted-foreground hover:text-white"
+                      >
+                        {otpLoading ? 'Mengirim...' : 'Kirim ulang kode OTP'}
                       </Button>
                     </div>
                   )}

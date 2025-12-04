@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, generateTicketId } from '@/lib/supabase'
-import { formatTicketIdForSpeech, EMERGENCY_TRANSFER_NUMBER } from '@/lib/vapi'
+import { formatTicketIdForSpeech } from '@/lib/vapi'
 import { CATEGORY_TO_DINAS, DINAS_NAMES, DinasId, TicketCategory, TicketUrgency } from '@/types/database'
 import { validateAddressEnhanced } from '@/lib/address-validation'
 import { sendSmsNotification, SMS_TEMPLATES } from '@/lib/twilio'
@@ -397,16 +397,18 @@ export async function POST(request: NextRequest) {
         return vapiResponse(toolCallId, name, responseMessage)
       }
 
-      case 'transferEmergency': {
-        const { emergencyType, location, situation } = params as {
+      case 'logEmergency': {
+        const { emergencyType, location, situation, reporterName, reporterPhone } = params as {
           emergencyType: 'KEBAKARAN' | 'KECELAKAAN' | 'KEJAHATAN' | 'MEDIS' | 'BENCANA'
           location: string
           situation: string
+          reporterName?: string
+          reporterPhone?: string
         }
 
         // Validate required fields
         if (!emergencyType || !location || !situation) {
-          return vapiResponse(toolCallId, name, 'Maaf, saya perlu informasi lokasi dan kondisi darurat untuk menyambungkan ke layanan darurat. Bisa diinfokan lokasinya dimana?')
+          return vapiResponse(toolCallId, name, 'Maaf, saya perlu informasi lokasi dan kondisi darurat. Bisa diinfokan lokasinya dimana?')
         }
 
         // Map emergency type to category
@@ -432,8 +434,8 @@ export async function POST(request: NextRequest) {
             subcategory: emergencyType,
             location: location,
             description: `[DARURAT - ${emergencyType}] ${situation}`,
-            reporter_phone: customerPhone || '+62000000000',
-            reporter_name: 'Pelapor Darurat',
+            reporter_phone: reporterPhone || customerPhone || '+62000000000',
+            reporter_name: reporterName || 'Pelapor Darurat',
             validated_address: location,
             status: 'PENDING',
             urgency: 'CRITICAL' as TicketUrgency,
@@ -443,48 +445,39 @@ export async function POST(request: NextRequest) {
 
         if (ticketError) {
           console.error('Failed to create emergency ticket:', ticketError)
-          // Still attempt transfer even if ticket creation fails
-        } else {
-          // Add timeline entries
-          await supabaseAdmin.from('ticket_timeline').insert([
-            {
-              ticket_id: ticketId,
-              action: 'CREATED',
-              message: `Laporan darurat ${emergencyType} diterima via telepon`,
-              created_by: 'system',
-            },
-            {
-              ticket_id: ticketId,
-              action: 'ESCALATED',
-              message: `TRANSFER KE LAYANAN DARURAT 112 - ${emergencyType} di ${location}`,
-              created_by: 'system',
-            },
-          ])
-          console.log('SUCCESS: Emergency ticket created:', ticketId)
+          return vapiResponse(toolCallId, name, 'Laporan darurat gagal dicatat, tapi saya akan tetap menyambungkan Anda ke layanan darurat.')
         }
 
-        // Log the transfer attempt
-        console.log('=== EMERGENCY TRANSFER INITIATED ===')
+        // Add timeline entries
+        await supabaseAdmin.from('ticket_timeline').insert([
+          {
+            ticket_id: ticketId,
+            action: 'CREATED',
+            message: `Laporan darurat ${emergencyType} diterima via telepon`,
+            created_by: 'system',
+          },
+          {
+            ticket_id: ticketId,
+            action: 'ESCALATED', 
+            message: `TRANSFER KE LAYANAN DARURAT 112 - ${emergencyType} di ${location}`,
+            created_by: 'system',
+          },
+        ])
+
+        // Log the emergency
+        console.log('=== EMERGENCY LOGGED ===')
+        console.log('Ticket ID:', ticketId)
         console.log('Emergency Type:', emergencyType)
         console.log('Location:', location)
         console.log('Situation:', situation)
-        console.log('Transfer Number:', EMERGENCY_TRANSFER_NUMBER)
-        console.log('Ticket ID:', ticketId)
-        console.log('=====================================')
+        console.log('========================')
 
-        // Return transfer instruction to Vapi
-        // This tells Vapi to transfer the call to the emergency number
-        return NextResponse.json({
-          results: [{
-            toolCallId,
-            name,
-            result: JSON.stringify({
-              action: 'transfer',
-              destination: EMERGENCY_TRANSFER_NUMBER,
-              message: `Baik, saya akan segera menyambungkan Anda ke layanan darurat. Mohon tetap tenang. Saya sudah mencatat: ${emergencyType} di ${location}. ${situation}. Harap tunggu sebentar, panggilan akan disambungkan.`
-            })
-          }]
-        })
+        // Return success message - Vapi will handle the actual transfer via native transferCall tool
+        return vapiResponse(
+          toolCallId, 
+          name, 
+          `Laporan darurat telah dicatat dengan nomor ${ticketId}. Saya akan segera menyambungkan Anda ke layanan darurat 112.`
+        )
       }
 
       default:

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
 // POST /api/tickets/[id]/rate
-// Body: { rating: number (1-5), feedback?: string }
+// Body: { rating: number (1-5), feedback?: string, otp: string }
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -13,7 +13,7 @@ export async function POST(
     // Get existing ticket
     const { data: ticket, error: fetchError } = await supabaseAdmin
       .from('tickets')
-      .select('*')
+      .select('id, status, rating, rating_otp, rating_otp_expires_at')
       .eq('id', id)
       .single()
     
@@ -41,7 +41,30 @@ export async function POST(
     }
     
     const body = await request.json()
-    const { rating, feedback } = body
+    const { rating, feedback, otp } = body
+    
+    // Validate OTP
+    if (!otp || typeof otp !== 'string') {
+      return NextResponse.json(
+        { success: false, error: 'Kode OTP diperlukan', code: 'OTP_REQUIRED' },
+        { status: 400 }
+      )
+    }
+
+    // Check OTP matches and not expired
+    if (ticket.rating_otp !== otp) {
+      return NextResponse.json(
+        { success: false, error: 'Kode OTP tidak valid', code: 'INVALID_OTP' },
+        { status: 401 }
+      )
+    }
+
+    if (!ticket.rating_otp_expires_at || new Date(ticket.rating_otp_expires_at) < new Date()) {
+      return NextResponse.json(
+        { success: false, error: 'Kode OTP sudah kadaluarsa', code: 'OTP_EXPIRED' },
+        { status: 401 }
+      )
+    }
     
     // Validate rating
     if (!rating || typeof rating !== 'number' || rating < 1 || rating > 5) {
@@ -51,13 +74,31 @@ export async function POST(
       )
     }
     
-    // Update ticket with rating
+    // Check rating is integer (not 4.5, etc)
+    if (!Number.isInteger(rating)) {
+      return NextResponse.json(
+        { success: false, error: 'Rating harus bilangan bulat', code: 'INVALID_RATING' },
+        { status: 400 }
+      )
+    }
+    
+    // Validate feedback length
+    if (feedback && (typeof feedback !== 'string' || feedback.length > 1000)) {
+      return NextResponse.json(
+        { success: false, error: 'Feedback maksimal 1000 karakter', code: 'INVALID_FEEDBACK' },
+        { status: 400 }
+      )
+    }
+    
+    // Update ticket with rating and clear OTP
     const { data: updatedTicket, error: updateError } = await supabaseAdmin
       .from('tickets')
       .update({
         rating: rating,
         feedback: feedback || null,
         rated_at: new Date().toISOString(),
+        rating_otp: null,
+        rating_otp_expires_at: null,
       })
       .eq('id', id)
       .select()

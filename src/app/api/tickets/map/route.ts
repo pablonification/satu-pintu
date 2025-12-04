@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const category = searchParams.get('category')
   const status = searchParams.get('status')
+  const urgency = searchParams.get('urgency')
   const from = searchParams.get('from')
   const to = searchParams.get('to')
   
@@ -55,6 +56,7 @@ export async function GET(request: NextRequest) {
     // Apply filters
     if (category) query = query.eq('category', category)
     if (status) query = query.eq('status', status)
+    if (urgency) query = query.eq('urgency', urgency)
     if (from) query = query.gte('created_at', from)
     if (to) query = query.lte('created_at', to)
     

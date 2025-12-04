@@ -4,6 +4,19 @@ import { sendSmsNotification, SMS_TEMPLATES } from '@/lib/twilio'
 import { STATUS_LABELS, TicketStatus } from '@/types/database'
 import jwt from 'jsonwebtoken'
 
+// Validate that URL is from Supabase Storage
+function isValidPhotoUrl(url: string | null | undefined): boolean {
+  if (!url) return true // null/undefined is valid (no photo)
+  try {
+    const parsed = new URL(url)
+    // Accept Supabase storage URLs
+    return parsed.hostname.endsWith('.supabase.co') || 
+           parsed.hostname.endsWith('.supabase.in')
+  } catch {
+    return false
+  }
+}
+
 const JWT_SECRET = process.env.JWT_SECRET!
 
 interface JWTPayload {
@@ -117,6 +130,21 @@ export async function PATCH(
     
     const body = await request.json()
     const { status, note, sendSms, resolution_photo_before, resolution_photo_after } = body
+    
+    // Validate photo URLs are from Supabase
+    if (resolution_photo_before && !isValidPhotoUrl(resolution_photo_before)) {
+      return NextResponse.json(
+        { success: false, error: 'URL foto sebelum tidak valid', code: 'INVALID_PHOTO_URL' },
+        { status: 400 }
+      )
+    }
+
+    if (resolution_photo_after && !isValidPhotoUrl(resolution_photo_after)) {
+      return NextResponse.json(
+        { success: false, error: 'URL foto sesudah tidak valid', code: 'INVALID_PHOTO_URL' },
+        { status: 400 }
+      )
+    }
     
     // Validate: when status changes to RESOLVED, require resolution_photo_after
     if (status === 'RESOLVED' && !resolution_photo_after && !ticket.resolution_photo_after) {

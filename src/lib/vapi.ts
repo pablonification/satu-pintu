@@ -258,10 +258,14 @@ Jika mendeteksi kondisi CRITICAL:
 1. Tetap tenang dan yakinkan pelapor bahwa bantuan akan segera datang
 2. Kumpulkan informasi MINIMUM yang diperlukan:
    - Lokasi tepat kejadian
-   - Jenis kejadian
+   - Jenis kejadian  
    - Kondisi saat ini (ada korban? berapa orang?)
-3. Setelah info minimum terkumpul, SEGERA gunakan tool transferEmergency
-4. Jangan tanyakan detail lain - waktu sangat penting!
+   - Nama pelapor (jika sempat)
+3. SEGERA gunakan tool logEmergency untuk mencatat laporan darurat
+4. SETELAH logEmergency berhasil, LANGSUNG gunakan tool transferCall untuk menyambungkan ke layanan darurat 112
+5. Jangan tanyakan detail lain - waktu sangat penting!
+
+PENTING: Urutan harus logEmergency DULU, baru transferCall!
 
 ═══════════════════════════════════════════════════════════════════════════════
 ATURAN PENTING
@@ -274,7 +278,7 @@ ATURAN PENTING
 5. JANGAN memberikan janji waktu penyelesaian yang spesifik - sampaikan bahwa laporan akan ditindaklanjuti sesuai prioritas
 6. Jika ada pertanyaan di luar kapasitas, arahkan ke kanal informasi yang tepat
 7. FLEKSIBEL dalam menerima deskripsi lokasi - tidak semua orang tahu alamat lengkap
-8. Untuk kondisi CRITICAL, SEGERA gunakan transferEmergency setelah info minimum terkumpul`
+8. Untuk kondisi CRITICAL: (1) gunakan logEmergency untuk catat laporan, (2) langsung gunakan transferCall untuk transfer ke 112`
 
 // ============================================================================
 // PESAN PEMBUKA
@@ -366,8 +370,8 @@ export const getAssistantConfig = (webhookUrl?: string) => {
         {
           type: 'function' as const,
           function: {
-            name: 'transferEmergency',
-            description: 'Transfer panggilan ke layanan darurat 112 untuk kondisi CRITICAL. Gunakan SEGERA setelah info minimum (lokasi, jenis kejadian, kondisi korban) terkumpul.',
+            name: 'logEmergency',
+            description: 'Mencatat laporan darurat CRITICAL ke sistem. Gunakan SEBELUM melakukan transfer panggilan ke 112.',
             parameters: {
               type: 'object' as const,
               properties: {
@@ -384,10 +388,28 @@ export const getAssistantConfig = (webhookUrl?: string) => {
                   type: 'string' as const,
                   description: 'Ringkasan situasi dan kondisi korban jika ada',
                 },
+                reporterName: {
+                  type: 'string' as const,
+                  description: 'Nama pelapor',
+                },
+                reporterPhone: {
+                  type: 'string' as const,
+                  description: 'Nomor telepon pelapor',
+                },
               },
               required: ['emergencyType', 'location', 'situation'],
             },
           },
+        },
+        {
+          type: 'transferCall' as const,
+          destinations: [
+            {
+              type: 'number' as const,
+              number: EMERGENCY_TRANSFER_NUMBER,
+              message: 'Menyambungkan panggilan ke layanan darurat.',
+            },
+          ],
         },
       ],
     },

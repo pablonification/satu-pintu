@@ -154,10 +154,23 @@ export default function DashboardPage() {
   
   // Critical alert state
   const [criticalCount, setCriticalCount] = useState(0)
-  const [alertDismissed, setAlertDismissed] = useState(false)
+  const [alertDismissed, setAlertDismissed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('criticalAlertDismissed') === 'true'
+    }
+    return false
+  })
   const [soundEnabled, setSoundEnabled] = useState(true)
   const audioContextRef = useRef<AudioContext | null>(null)
   const lastCriticalCountRef = useRef(0)
+
+  // Dismiss alert and persist to sessionStorage
+  function dismissAlert() {
+    setAlertDismissed(true)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('criticalAlertDismissed', 'true')
+    }
+  }
 
   // Play alert sound for critical tickets
   const playAlertSound = useCallback(() => {
@@ -226,21 +239,37 @@ export default function DashboardPage() {
     }
   }, [user, activeView, statusFilter, urgencyFilter])
 
-  // Track critical tickets and play alert sound
+  // Track critical tickets (PENDING only) and play alert sound
   useEffect(() => {
-    if (stats) {
-      const newCriticalCount = stats.byUrgency.critical
-      setCriticalCount(newCriticalCount)
-      
-      // Play sound if there are new critical tickets
-      if (newCriticalCount > lastCriticalCountRef.current && newCriticalCount > 0) {
-        playAlertSound()
-        setAlertDismissed(false) // Reset dismissed state when new critical tickets arrive
+    // Calculate from tickets - only PENDING critical tickets
+    const newCriticalCount = tickets.filter(
+      t => t.urgency === 'CRITICAL' && t.status === 'PENDING'
+    ).length
+    
+    // Check if count increased (new critical ticket)
+    if (newCriticalCount > lastCriticalCountRef.current && newCriticalCount > 0) {
+      playAlertSound()
+      setAlertDismissed(false) // Show alert again for new tickets
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('criticalAlertDismissed') // Clear stored dismiss
       }
-      
-      lastCriticalCountRef.current = newCriticalCount
     }
-  }, [stats, playAlertSound])
+    
+    setCriticalCount(newCriticalCount)
+    lastCriticalCountRef.current = newCriticalCount
+  }, [tickets, playAlertSound])
+
+  // Auto-refresh tickets every 30 seconds to catch new CRITICAL tickets
+  useEffect(() => {
+    if (!user) return
+    
+    const interval = setInterval(() => {
+      fetchTickets()
+    }, 30000) // 30 seconds
+    
+    return () => clearInterval(interval)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]) // Note: Don't add fetchTickets to deps to avoid infinite loop
 
   async function checkAuth() {
     try {
@@ -297,7 +326,7 @@ export default function DashboardPage() {
     try {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.set('status', statusFilter)
-      if (urgencyFilter !== 'all') params.set('category', urgencyFilter)
+      if (urgencyFilter !== 'all') params.set('urgency', urgencyFilter)
       
       const res = await fetch(`/api/tickets/map?${params}`)
       const data = await res.json()
@@ -325,6 +354,10 @@ export default function DashboardPage() {
         setPhotoError('Ukuran file maksimal 5MB')
         return
       }
+      // Revoke previous URL to prevent memory leak
+      if (photoBeforePreview) {
+        URL.revokeObjectURL(photoBeforePreview)
+      }
       setPhotoBefore(file)
       setPhotoBeforePreview(URL.createObjectURL(file))
       setPhotoError(null)
@@ -338,6 +371,10 @@ export default function DashboardPage() {
         setPhotoError('Ukuran file maksimal 5MB')
         return
       }
+      // Revoke previous URL to prevent memory leak
+      if (photoAfterPreview) {
+        URL.revokeObjectURL(photoAfterPreview)
+      }
       setPhotoAfter(file)
       setPhotoAfterPreview(URL.createObjectURL(file))
       setPhotoError(null)
@@ -345,6 +382,10 @@ export default function DashboardPage() {
   }
 
   function clearPhotoBefore() {
+    // Revoke URL to prevent memory leak
+    if (photoBeforePreview) {
+      URL.revokeObjectURL(photoBeforePreview)
+    }
     setPhotoBefore(null)
     setPhotoBeforePreview(null)
     if (photoBeforeInputRef.current) {
@@ -353,6 +394,10 @@ export default function DashboardPage() {
   }
 
   function clearPhotoAfter() {
+    // Revoke URL to prevent memory leak
+    if (photoAfterPreview) {
+      URL.revokeObjectURL(photoAfterPreview)
+    }
     setPhotoAfter(null)
     setPhotoAfterPreview(null)
     if (photoAfterInputRef.current) {
@@ -546,7 +591,7 @@ export default function DashboardPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setAlertDismissed(true)}
+                  onClick={dismissAlert}
                   className="text-red-400/60 hover:text-red-300 hover:bg-red-500/20"
                 >
                   <XCircle className="h-4 w-4" />
