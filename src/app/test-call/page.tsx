@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
-import { getAssistantConfig } from '@/lib/vapi'
+import { getAssistantConfig, VAPI_PUBLIC_KEY } from '@/lib/vapi'
 
 type CallStatus = 'idle' | 'connecting' | 'active' | 'ending'
 
@@ -32,9 +32,10 @@ export default function TestCallPage() {
   const [vapiPublicKey, setVapiPublicKey] = useState('')
   const [showConfig, setShowConfig] = useState(true)
 
-  // Load config from localStorage
+  // Load config from localStorage atau env
   useEffect(() => {
-    const savedPublicKey = localStorage.getItem('vapi_public_key') || ''
+    // Prioritas: localStorage > env variable
+    const savedPublicKey = localStorage.getItem('vapi_public_key') || VAPI_PUBLIC_KEY || ''
     setVapiPublicKey(savedPublicKey)
     if (savedPublicKey) {
       setShowConfig(false)
@@ -108,7 +109,17 @@ export default function TestCallPage() {
 
     vapiInstance.on('error', (error: Error) => {
       console.error('Vapi error:', error)
-      setError(error.message || 'Terjadi kesalahan')
+      console.error('Vapi error details:', JSON.stringify(error, null, 2))
+      
+      // Extract error message
+      let errorMessage = 'Terjadi kesalahan'
+      if (error && typeof error === 'object') {
+        errorMessage = (error as { message?: string; error?: string }).message 
+          || (error as { message?: string; error?: string }).error 
+          || JSON.stringify(error)
+      }
+      
+      setError(errorMessage)
       setCallStatus('idle')
     })
 
@@ -130,12 +141,16 @@ export default function TestCallPage() {
       setCallStatus('connecting')
       setError(null)
       
-      // Menggunakan Transient Assistant - config dikirim langsung saat start
-      const assistantConfig = getAssistantConfig() as unknown as CreateAssistantDTO
-      await vapi.start(assistantConfig)
+      // Menggunakan Assistant ID yang sudah dibuat di Vapi Dashboard
+      const ASSISTANT_ID = '6620d1c3-3732-4418-96be-72766eddad35'
+      console.log('Starting call with assistant ID:', ASSISTANT_ID)
+      
+      const call = await vapi.start(ASSISTANT_ID)
+      console.log('Call started:', call)
     } catch (err) {
       console.error('Failed to start call:', err)
-      setError('Gagal memulai panggilan. Pastikan konfigurasi Vapi sudah benar.')
+      console.error('Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err as object)))
+      setError('Gagal memulai panggilan. Pastikan konfigurasi Vapi sudah benar dan izinkan akses mikrofon.')
       setCallStatus('idle')
     }
   }

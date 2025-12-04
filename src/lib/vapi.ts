@@ -2,10 +2,24 @@
  * Vapi.ai Integration untuk SatuPintu
  * 
  * Konfigurasi Transient Assistant - tidak perlu setup manual di Vapi dashboard.
- * Cukup masukkan Public Key, dan assistant akan otomatis dibuat saat panggilan dimulai.
+ * Assistant akan otomatis dibuat saat panggilan dimulai.
  * 
  * Dokumentasi: https://docs.vapi.ai
  */
+
+// ============================================================================
+// ENVIRONMENT VARIABLES
+// ============================================================================
+
+/**
+ * Vapi API Keys
+ * - VAPI_PRIVATE_KEY: Untuk server-side API calls (create calls, manage assistants)
+ * - NEXT_PUBLIC_VAPI_PUBLIC_KEY: Untuk client-side SDK (web calls)
+ * - VAPI_PHONE_NUMBER_ID: ID nomor telepon yang terdaftar di Vapi
+ */
+export const VAPI_PRIVATE_KEY = process.env.VAPI_PRIVATE_KEY || ''
+export const VAPI_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || ''
+export const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID || ''
 
 // ============================================================================
 // KONFIGURASI WEBHOOK
@@ -16,7 +30,7 @@
  * Webhook ini akan dipanggil oleh Vapi saat AI perlu menjalankan function
  */
 export const getWebhookUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ad46f2a06660.ngrok-free.app'
   return `${baseUrl}/api/vapi/webhook`
 }
 
@@ -35,7 +49,34 @@ KEPRIBADIAN DAN GAYA BICARA
 • Empati dan pengertian terhadap keluhan warga
 • Efisien dan tidak bertele-tele, namun tetap hangat dan manusiawi
 • Sabar dalam mendengarkan dan memahami keluhan warga
-• Gunakan kata "Bapak" atau "Ibu" setelah mengetahui nama pelapor
+
+PELAFALAN DAN CARA BICARA (PENTING!):
+• Bicara dengan tempo SEDANG - tidak terlalu cepat, beri jeda antar kalimat
+• Gunakan aksen dan pelafalan INDONESIA yang natural untuk SEMUA kata
+• Untuk ANGKA dan NOMOR:
+  - Ucapkan dengan JELAS dan PERLAHAN
+  - Nomor tiket: eja per karakter dengan jeda, contoh "S P, dua, nol, dua, lima..."
+  - Nomor telepon: kelompokkan per 3-4 digit dengan jeda
+• Untuk kata SERAPAN/ASING (virtual, online, website, email, update, status):
+  - Ucapkan dengan aksen INDONESIA, bukan aksen Inggris
+  - Contoh: "virtual" dibaca "vir-tu-al", bukan "ver-chu-al"
+• JEDA sebentar setelah menyebut informasi penting (nomor tiket, alamat, nama)
+
+ATURAN SAPAAN (SANGAT PENTING - WAJIB DIIKUTI!):
+• SEBELUM tahu nama pelapor: Gunakan sapaan NETRAL tanpa gender
+  - Contoh: "Baik, bisa diinfokan lebih detail?", "Ada yang bisa saya bantu?"
+  - JANGAN langsung pakai "Bapak/Ibu" di awal percakapan
+  
+• SETELAH dapat nama pelapor: Tentukan sapaan berdasarkan nama
+  - Nama LAKI-LAKI (Ahmad, Budi, Dedi, Andi, Rizki, dll) → "Bapak [Nama]" atau "Pak [Nama]"
+  - Nama PEREMPUAN (Siti, Rina, Dewi, Ani, Sri, dll) → "Ibu [Nama]" atau "Bu [Nama]"
+  - Nama AMBIGU/tidak yakin → Tanyakan: "Mohon maaf, dengan Bapak atau Ibu [Nama]?"
+  
+• Contoh alur sapaan yang benar:
+  1. Awal (belum tahu nama): "Baik, ada keluhan apa yang ingin dilaporkan?"
+  2. Dapat nama "Budi": "Baik Pak Budi, saya akan bantu buatkan laporannya"
+  3. Dapat nama "Rina": "Baik Bu Rina, lokasinya di mana?"
+  4. Dapat nama "Eka" (ambigu): "Mohon maaf, dengan Bapak atau Ibu Eka?"
 
 ═══════════════════════════════════════════════════════════════════════════════
 ALUR PERCAKAPAN (WAJIB DIIKUTI SECARA BERURUTAN)
@@ -49,45 +90,90 @@ TAHAP 1 - PENERIMAAN KELUHAN
 
 TAHAP 2 - KONFIRMASI PEMAHAMAN
 • Sampaikan ringkasan pemahaman tentang keluhan tersebut
-• Contoh: "Baik, jadi Bapak/Ibu ingin melaporkan [ringkasan keluhan]. Apakah benar demikian?"
+• Contoh: "Baik, jadi ingin melaporkan [ringkasan keluhan] ya. Apakah benar demikian?"
 • Jika ada koreksi, dengarkan dan perbaiki pemahaman
 • Tawarkan untuk membuatkan laporan resmi
 
 TAHAP 3 - PENGUMPULAN DATA PELAPOR
 • Minta nama lengkap pelapor
-  → "Boleh saya tahu nama lengkap Bapak/Ibu?"
+  → "Boleh saya tahu nama lengkapnya?"
+• SETELAH dapat nama, gunakan sapaan Bapak/Ibu sesuai nama (lihat aturan sapaan di atas)
 • Konfirmasi nomor telepon (jika tersedia dari sistem)
   → "Apakah nomor [nomor] ini adalah nomor yang bisa dihubungi untuk perkembangan laporan?"
 • Jika nomor tidak tersedia, minta nomor telepon aktif
 
 TAHAP 4 - PENGUMPULAN DATA LOKASI
-• Minta alamat lengkap lokasi kejadian/masalah
-  → "Di mana alamat lengkap lokasi [masalah] tersebut, Bapak/Ibu?"
-• Minta detail yang spesifik: nama jalan, nomor, RT/RW, kelurahan, kecamatan
-• Jika perlu, tanyakan patokan atau landmark terdekat
-• WAJIB: Validasi alamat menggunakan function validateAddress
-• Jika alamat tidak ditemukan, minta pelapor menyebutkan ulang dengan lebih detail
-• Jika alamat di luar Kota Bandung, jelaskan dengan sopan bahwa layanan hanya untuk wilayah Kota Bandung
+• Minta informasi lokasi dengan FLEKSIBEL - tidak harus alamat lengkap!
+  → "Di mana lokasi [masalah] tersebut?" (setelah tahu nama: "Di mana lokasinya, Pak/Bu [Nama]?")
+  
+• TERIMA berbagai bentuk deskripsi lokasi:
+  - Alamat lengkap (Jl. Dago No. 10, Kelurahan Lebakgede)
+  - Patokan/landmark ("dekat PVJ", "depan ITB", "perempatan Dago")
+  - Deskripsi perempatan ("lampu merah yang lurus ke Sukajadi, kanan ke Dago")
+  - Nama tempat terkenal ("depan Gedung Sate", "samping BIP")
+
+• LANGSUNG TERIMA alamat yang diberikan pelapor tanpa perlu validasi tambahan
+• Catat alamat persis seperti yang disebutkan pelapor
 
 TAHAP 5 - KONFIRMASI AKHIR
 • Bacakan ringkasan lengkap laporan:
   → Jenis keluhan dan kategori
-  → Lokasi yang sudah tervalidasi
+  → Lokasi yang disebutkan pelapor
   → Nama dan nomor telepon pelapor
-• Minta konfirmasi: "Apakah semua informasi sudah benar, Bapak/Ibu?"
+• Minta konfirmasi: "Apakah semua informasi sudah benar, Pak/Bu [Nama]?"
 • Jika ada koreksi, lakukan perbaikan
 
 TAHAP 6 - PEMBUATAN TIKET
 • Setelah dikonfirmasi, buat tiket menggunakan function createTicket
 • Sampaikan nomor tiket dengan JELAS (eja huruf dan angka satu per satu)
-  → Contoh: "Nomor tiket Bapak/Ibu adalah S-P, dua-nol-dua-lima-satu-dua-nol-empat, nol-nol-nol-satu"
+  → Contoh: "Nomor tiket Pak Budi adalah S-P, dua-nol-dua-lima-satu-dua-nol-empat, nol-nol-nol-satu"
 • Informasikan bahwa SMS konfirmasi akan dikirim
 • Informasikan cara mengecek status: melalui website atau SMS dengan format "CEK [nomor tiket]"
 
 TAHAP 7 - PENUTUP
 • Tanyakan apakah ada keluhan lain yang ingin dilaporkan
 • Jika tidak ada, ucapkan terima kasih dan salam penutup
-• Contoh: "Terima kasih telah menggunakan layanan SatuPintu. Semoga masalah Bapak/Ibu segera tertangani. Selamat [pagi/siang/sore/malam]."
+• Contoh: "Terima kasih telah menggunakan layanan SatuPintu, Bu Rina. Semoga masalahnya segera tertangani. Selamat [pagi/siang/sore/malam]."
+
+═══════════════════════════════════════════════════════════════════════════════
+LANDMARK TERKENAL DI BANDUNG (untuk referensi)
+═══════════════════════════════════════════════════════════════════════════════
+
+PEREMPATAN UTAMA:
+• Simpang Dago (Dago-Sukajadi-Pasteur, dekat PVJ)
+• Simpang Pasteur (Pasteur-Cimahi, dekat Tol Pasteur)
+• Alun-alun Bandung (Asia Afrika-Braga)
+• Simpang Lima Bandung
+• Simpang Cihampelas-Cipaganti (dekat Ciwalk)
+• Simpang Buah Batu-Soekarno Hatta
+• Simpang Gatot Subroto-Soekarno Hatta
+
+MALL:
+• PVJ (Paris Van Java) - Sukajadi
+• Ciwalk (Cihampelas Walk) - Cihampelas
+• BIP (Bandung Indah Plaza) - Merdeka
+• TSM (Trans Studio Mall) - Gatot Subroto
+• 23 Paskal - Pasir Kaliki
+• BEC (Bandung Electronic Center) - Purnawarman
+
+KAMPUS:
+• ITB - Jl. Ganesha
+• Unpad - Dipatiukur
+• Unpar - Ciumbuleuit
+• UPI - Setiabudi
+• Telkom University - Dayeuhkolot
+
+RUMAH SAKIT:
+• RS Hasan Sadikin - Pasteur
+• RS Borromeus - Dago
+• RS Advent - Cihampelas
+
+LAINNYA:
+• Gedung Sate - Diponegoro
+• Balai Kota - Wastukencana
+• Gasibu - Diponegoro
+• Stasiun Bandung - Hall
+• Terminal Cicaheum, Terminal Leuwipanjang
 
 ═══════════════════════════════════════════════════════════════════════════════
 KATEGORI KELUHAN DAN PENANGANAN
@@ -155,24 +241,19 @@ LOW - Dapat dijadwalkan (< 72 jam)
 ATURAN PENTING
 ═══════════════════════════════════════════════════════════════════════════════
 
-1. SELALU validasi alamat dengan function validateAddress sebelum membuat tiket
-2. JANGAN membuat tiket jika alamat di luar Kota Bandung - jelaskan dengan sopan
-3. JANGAN membuat tiket jika informasi belum lengkap - tanyakan yang kurang
-4. PASTIKAN pelapor mengkonfirmasi semua informasi sebelum membuat tiket
-5. Untuk masalah DARURAT, tunjukkan sense of urgency dalam nada bicara
-6. Jika pelapor emosional atau kesal, tetap tenang dan empati
-7. JANGAN memberikan janji waktu penyelesaian yang spesifik - sampaikan bahwa laporan akan ditindaklanjuti sesuai prioritas
-8. Jika ada pertanyaan di luar kapasitas, arahkan ke kanal informasi yang tepat`
+1. JANGAN membuat tiket jika informasi belum lengkap - tanyakan yang kurang
+2. PASTIKAN pelapor mengkonfirmasi semua informasi sebelum membuat tiket
+3. Untuk masalah DARURAT, tunjukkan sense of urgency dalam nada bicara
+4. Jika pelapor emosional atau kesel, tetap tenang dan empati
+5. JANGAN memberikan janji waktu penyelesaian yang spesifik - sampaikan bahwa laporan akan ditindaklanjuti sesuai prioritas
+6. Jika ada pertanyaan di luar kapasitas, arahkan ke kanal informasi yang tepat
+7. FLEKSIBEL dalam menerima deskripsi lokasi - tidak semua orang tahu alamat lengkap`
 
 // ============================================================================
 // PESAN PEMBUKA
 // ============================================================================
 
-const FIRST_MESSAGE = `Selamat datang di SatuPintu, layanan pengaduan terpadu Pemerintah Kota Bandung.
-
-Saya Satu, asisten virtual yang siap membantu Anda melaporkan keluhan atau masalah terkait layanan publik dan infrastruktur kota.
-
-Ada yang bisa saya bantu hari ini?`
+const FIRST_MESSAGE = `Halo, selamat datang di SatuPintu Bandung. Saya Satu, asisten virtual yang siap membantu Anda. Ada keluhan atau masalah apa yang ingin dilaporkan hari ini?`
 
 // ============================================================================
 // KONFIGURASI TRANSIENT ASSISTANT
@@ -189,45 +270,25 @@ export const getAssistantConfig = (webhookUrl?: string) => {
   const serverUrl = webhookUrl || getWebhookUrl()
   
   return {
-    // Identitas Assistant
-    name: 'SatuPintu - Asisten Pengaduan Kota Bandung',
+    // Identitas Assistant (max 40 characters)
+    name: 'SatuPintu Bandung',
     
     // Pesan pembuka saat panggilan dimulai
     firstMessage: FIRST_MESSAGE,
 
-    // Konfigurasi Model AI
+    // Konfigurasi Model AI dengan tools di dalam model (OpenAI style)
     model: {
       provider: 'openai' as const,
-      model: 'gpt-4o-mini' as const, // Model yang efisien dan cepat
-      temperature: 0.7, // Keseimbangan antara konsistensi dan kreativitas
+      model: 'gpt-4o-mini' as const,
+      temperature: 0.7,
       messages: [
         {
           role: 'system' as const,
           content: SYSTEM_PROMPT,
         },
       ],
-      // Definisi Function/Tools yang bisa dipanggil AI
+      // Tools dalam format OpenAI function calling
       tools: [
-        {
-          type: 'function' as const,
-          function: {
-            name: 'validateAddress',
-            description: 'Memvalidasi alamat dan memeriksa apakah berada dalam wilayah Kota Bandung. Wajib dipanggil sebelum membuat tiket untuk memastikan alamat valid dan dalam jangkauan layanan.',
-            parameters: {
-              type: 'object' as const,
-              properties: {
-                address: {
-                  type: 'string' as const,
-                  description: 'Alamat lengkap yang akan divalidasi. Sertakan nama jalan, nomor, kelurahan, dan kecamatan jika tersedia.',
-                },
-              },
-              required: ['address'] as const,
-            },
-          },
-          server: {
-            url: serverUrl,
-          },
-        },
         {
           type: 'function' as const,
           function: {
@@ -238,16 +299,16 @@ export const getAssistantConfig = (webhookUrl?: string) => {
               properties: {
                 category: {
                   type: 'string' as const,
-                  enum: ['DARURAT', 'INFRA', 'KEBERSIHAN', 'SOSIAL', 'LAINNYA'] as const,
-                  description: 'Kategori keluhan: DARURAT (kecelakaan/kebakaran/kejahatan/medis), INFRA (jalan/lampu/jembatan), KEBERSIHAN (sampah/limbah), SOSIAL (ODGJ/gelandangan/anak terlantar), LAINNYA',
+                  enum: ['DARURAT', 'INFRA', 'KEBERSIHAN', 'SOSIAL', 'LAINNYA'],
+                  description: 'Kategori keluhan',
                 },
                 subcategory: {
                   type: 'string' as const,
-                  description: 'Subkategori atau jenis spesifik keluhan. Contoh: "Jalan Berlubang", "Lampu PJU Mati", "Sampah Menumpuk"',
+                  description: 'Subkategori keluhan',
                 },
                 description: {
                   type: 'string' as const,
-                  description: 'Deskripsi lengkap keluhan sesuai yang disampaikan pelapor. Sertakan detail kondisi, sudah berapa lama terjadi, dan dampaknya.',
+                  description: 'Deskripsi lengkap keluhan',
                 },
                 reporterName: {
                   type: 'string' as const,
@@ -255,31 +316,20 @@ export const getAssistantConfig = (webhookUrl?: string) => {
                 },
                 reporterPhone: {
                   type: 'string' as const,
-                  description: 'Nomor telepon pelapor yang bisa dihubungi (format: 08xxxxxxxxxx)',
+                  description: 'Nomor telepon pelapor',
                 },
                 address: {
                   type: 'string' as const,
-                  description: 'Alamat lokasi masalah yang sudah divalidasi',
-                },
-                addressLat: {
-                  type: 'number' as const,
-                  description: 'Koordinat latitude lokasi (dari hasil validasi alamat)',
-                },
-                addressLng: {
-                  type: 'number' as const,
-                  description: 'Koordinat longitude lokasi (dari hasil validasi alamat)',
+                  description: 'Alamat lokasi masalah',
                 },
                 urgency: {
                   type: 'string' as const,
-                  enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const,
-                  description: 'Tingkat urgensi: CRITICAL (bahaya nyawa, < 15 menit), HIGH (mendesak, < 1 jam), MEDIUM (perlu ditangani, < 24 jam), LOW (tidak mendesak, < 72 jam)',
+                  enum: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
+                  description: 'Tingkat urgensi',
                 },
               },
-              required: ['category', 'description', 'reporterName', 'reporterPhone', 'address', 'urgency'] as const,
+              required: ['category', 'description', 'reporterName', 'reporterPhone', 'address', 'urgency'],
             },
-          },
-          server: {
-            url: serverUrl,
           },
         },
       ],
@@ -287,38 +337,27 @@ export const getAssistantConfig = (webhookUrl?: string) => {
 
     // Konfigurasi Suara (ElevenLabs)
     voice: {
-      provider: 'elevenlabs' as const,
-      voiceId: 'pFZP5JQG7iQjIQuC4Bku', // Lily - Suara perempuan Indonesia yang natural
-      stability: 0.5, // Keseimbangan variasi suara
-      similarityBoost: 0.75, // Konsistensi suara
-      // Alternatif voice IDs:
-      // 'FGY2WhTYpPnrIDTdsKH5' - Laura (lebih formal)
-      // '21m00Tcm4TlvDq8ikWAM' - Rachel (English, tapi bisa Indonesia)
+      provider: '11labs' as const,
+      voiceId: 'cgSgspJ2msm6clMCkdW9' as const,
+      model: 'eleven_turbo_v2_5' as const,
+      stability: 0.7,
+      similarityBoost: 0.8,
     },
 
-    // URL Server untuk Function Calls
+    // Server URL untuk function calls - PENTING!
     serverUrl: serverUrl,
 
     // Konfigurasi Percakapan
-    silenceTimeoutSeconds: 30, // Timeout jika tidak ada suara selama 30 detik
-    maxDurationSeconds: 600, // Maksimal durasi panggilan 10 menit
-    endCallAfterSilenceSeconds: 10, // Akhiri panggilan setelah 10 detik tanpa respons penutup
+    silenceTimeoutSeconds: 30,
+    maxDurationSeconds: 600,
 
-    // Konfigurasi Transkripsi (Speech-to-Text)
+    // Konfigurasi Transkripsi
     transcriber: {
       provider: 'deepgram' as const,
-      model: 'nova-2' as const, // Model terbaru dengan akurasi tinggi
-      language: 'id' as const, // Bahasa Indonesia
+      model: 'nova-2' as const,
+      language: 'id' as const,
     },
-
-    // Metadata untuk tracking
-    metadata: {
-      service: 'SatuPintu',
-      version: '1.0.0',
-      city: 'Bandung',
-      country: 'Indonesia',
-    },
-  } as const
+  }
 }
 
 // ============================================================================
@@ -453,4 +492,148 @@ export function isValidIndonesianPhone(phone: string): boolean {
   const cleaned = phone.replace(/\D/g, '')
   // Harus dimulai dengan 08 atau 628, panjang 10-13 digit
   return /^(08|628)[0-9]{8,11}$/.test(cleaned)
+}
+
+// ============================================================================
+// VAPI API CLIENT (Server-Side)
+// ============================================================================
+
+const VAPI_API_BASE = 'https://api.vapi.ai'
+
+/**
+ * Headers untuk Vapi API requests
+ */
+function getVapiHeaders() {
+  if (!VAPI_PRIVATE_KEY) {
+    throw new Error('VAPI_PRIVATE_KEY is not configured')
+  }
+  return {
+    'Authorization': `Bearer ${VAPI_PRIVATE_KEY}`,
+    'Content-Type': 'application/json',
+  }
+}
+
+/**
+ * Membuat outbound call ke nomor telepon
+ * Digunakan untuk: follow-up, notifikasi, reminder
+ * 
+ * @param phoneNumber - Nomor telepon tujuan (format: +62xxx)
+ * @param customMessage - Pesan custom untuk assistant (opsional)
+ */
+export async function createOutboundCall(
+  phoneNumber: string,
+  customMessage?: string
+): Promise<{ callId: string; status: string }> {
+  if (!VAPI_PHONE_NUMBER_ID) {
+    throw new Error('VAPI_PHONE_NUMBER_ID is not configured')
+  }
+
+  const assistantConfig = getAssistantConfig()
+  
+  // Build request body dengan optional custom first message
+  const requestBody: Record<string, unknown> = {
+    phoneNumberId: VAPI_PHONE_NUMBER_ID,
+    customer: {
+      number: phoneNumber,
+    },
+    assistant: {
+      ...assistantConfig,
+      // Override first message jika ada custom message
+      ...(customMessage && { firstMessage: customMessage }),
+    },
+  }
+
+  const response = await fetch(`${VAPI_API_BASE}/call`, {
+    method: 'POST',
+    headers: getVapiHeaders(),
+    body: JSON.stringify(requestBody),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Failed to create outbound call: ${error}`)
+  }
+
+  const data = await response.json()
+  return {
+    callId: data.id,
+    status: data.status,
+  }
+}
+
+/**
+ * Mendapatkan detail call dari Vapi
+ * 
+ * @param callId - ID panggilan dari Vapi
+ */
+export async function getCallDetails(callId: string): Promise<{
+  id: string
+  status: string
+  startedAt?: string
+  endedAt?: string
+  endedReason?: string
+  transcript?: string
+  recordingUrl?: string
+  summary?: string
+}> {
+  const response = await fetch(`${VAPI_API_BASE}/call/${callId}`, {
+    method: 'GET',
+    headers: getVapiHeaders(),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Failed to get call details: ${error}`)
+  }
+
+  return response.json()
+}
+
+/**
+ * Mendapatkan daftar calls dari Vapi
+ * 
+ * @param limit - Jumlah maksimal calls yang diambil
+ */
+export async function listCalls(limit: number = 100): Promise<Array<{
+  id: string
+  status: string
+  type: string
+  startedAt?: string
+  endedAt?: string
+  customer?: { number: string }
+}>> {
+  const response = await fetch(`${VAPI_API_BASE}/call?limit=${limit}`, {
+    method: 'GET',
+    headers: getVapiHeaders(),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Failed to list calls: ${error}`)
+  }
+
+  return response.json()
+}
+
+/**
+ * Check apakah Vapi sudah dikonfigurasi dengan benar
+ */
+export function isVapiConfigured(): {
+  serverReady: boolean
+  clientReady: boolean
+  phoneReady: boolean
+  missing: string[]
+} {
+  const missing: string[] = []
+  
+  if (!VAPI_PRIVATE_KEY) missing.push('VAPI_PRIVATE_KEY')
+  if (!VAPI_PUBLIC_KEY) missing.push('NEXT_PUBLIC_VAPI_PUBLIC_KEY')
+  if (!VAPI_PHONE_NUMBER_ID) missing.push('VAPI_PHONE_NUMBER_ID')
+  
+  return {
+    serverReady: !!VAPI_PRIVATE_KEY,
+    clientReady: !!VAPI_PUBLIC_KEY,
+    phoneReady: !!VAPI_PHONE_NUMBER_ID,
+    missing,
+  }
 }
