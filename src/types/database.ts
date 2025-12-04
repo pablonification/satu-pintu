@@ -34,6 +34,11 @@ export interface Ticket {
   assigned_dinas: DinasId[]
   call_sid: string | null
   transcription: string | null
+  resolution_photo_before: string | null
+  resolution_photo_after: string | null
+  rating: number | null
+  feedback: string | null
+  rated_at: string | null
   created_at: string
   updated_at: string
 }

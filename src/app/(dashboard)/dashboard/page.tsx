@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import { createClient } from '@supabase/supabase-js'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
   TableBody,
@@ -27,11 +30,38 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  RefreshCw
+  RefreshCw,
+  Map,
+  List,
+  AlertCircle,
+  Volume2,
+  Upload,
+  ImageIcon,
+  X
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
 import { STATUS_LABELS, URGENCY_LABELS, CATEGORY_LABELS, TicketStatus, TicketUrgency, TicketCategory } from '@/types/database'
+import type { MapTicket } from '@/components/HeatmapView'
+
+// Initialize Supabase client for storage
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+)
+
+// Dynamically import HeatmapView with SSR disabled
+const HeatmapView = dynamic(
+  () => import('@/components/HeatmapView'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-[500px] bg-card border border-white/5 rounded-lg">
+        <Loader2 className="h-8 w-8 animate-spin text-white/50" />
+      </div>
+    )
+  }
+)
 
 interface User {
   dinasId: string
@@ -106,6 +136,77 @@ export default function DashboardPage() {
   const [updateNote, setUpdateNote] = useState('')
   const [sendSms, setSendSms] = useState(true)
   const [updating, setUpdating] = useState(false)
+  
+  // Photo upload state
+  const [photoBefore, setPhotoBefore] = useState<File | null>(null)
+  const [photoAfter, setPhotoAfter] = useState<File | null>(null)
+  const [photoBeforePreview, setPhotoBeforePreview] = useState<string | null>(null)
+  const [photoAfterPreview, setPhotoAfterPreview] = useState<string | null>(null)
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
+  const [photoError, setPhotoError] = useState<string | null>(null)
+  const photoBeforeInputRef = useRef<HTMLInputElement>(null)
+  const photoAfterInputRef = useRef<HTMLInputElement>(null)
+  
+  // Map view state
+  const [activeView, setActiveView] = useState<string>('table')
+  const [mapTickets, setMapTickets] = useState<MapTicket[]>([])
+  const [mapLoading, setMapLoading] = useState(false)
+  
+  // Critical alert state
+  const [criticalCount, setCriticalCount] = useState(0)
+  const [alertDismissed, setAlertDismissed] = useState(false)
+  const [soundEnabled, setSoundEnabled] = useState(true)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const lastCriticalCountRef = useRef(0)
+
+  // Play alert sound for critical tickets
+  const playAlertSound = useCallback(() => {
+    if (!soundEnabled) return
+    
+    try {
+      // Create AudioContext if not exists
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      }
+      
+      const ctx = audioContextRef.current
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
+      
+      // Create a beep sound
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      
+      oscillator.frequency.value = 880 // A5 note
+      oscillator.type = 'sine'
+      
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5)
+      
+      oscillator.start(ctx.currentTime)
+      oscillator.stop(ctx.currentTime + 0.5)
+      
+      // Play second beep
+      setTimeout(() => {
+        const osc2 = ctx.createOscillator()
+        const gain2 = ctx.createGain()
+        osc2.connect(gain2)
+        gain2.connect(ctx.destination)
+        osc2.frequency.value = 880
+        osc2.type = 'sine'
+        gain2.gain.setValueAtTime(0.3, ctx.currentTime)
+        gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5)
+        osc2.start(ctx.currentTime)
+        osc2.stop(ctx.currentTime + 0.5)
+      }, 200)
+    } catch (error) {
+      console.error('Failed to play alert sound:', error)
+    }
+  }, [soundEnabled])
 
   useEffect(() => {
     checkAuth()
@@ -117,6 +218,29 @@ export default function DashboardPage() {
       fetchTickets()
     }
   }, [user, statusFilter, urgencyFilter])
+
+  // Fetch map tickets when switching to map view
+  useEffect(() => {
+    if (user && activeView === 'map') {
+      fetchMapTickets()
+    }
+  }, [user, activeView, statusFilter, urgencyFilter])
+
+  // Track critical tickets and play alert sound
+  useEffect(() => {
+    if (stats) {
+      const newCriticalCount = stats.byUrgency.critical
+      setCriticalCount(newCriticalCount)
+      
+      // Play sound if there are new critical tickets
+      if (newCriticalCount > lastCriticalCountRef.current && newCriticalCount > 0) {
+        playAlertSound()
+        setAlertDismissed(false) // Reset dismissed state when new critical tickets arrive
+      }
+      
+      lastCriticalCountRef.current = newCriticalCount
+    }
+  }, [stats, playAlertSound])
 
   async function checkAuth() {
     try {
@@ -168,16 +292,140 @@ export default function DashboardPage() {
     }
   }
 
+  async function fetchMapTickets() {
+    setMapLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (statusFilter !== 'all') params.set('status', statusFilter)
+      if (urgencyFilter !== 'all') params.set('category', urgencyFilter)
+      
+      const res = await fetch(`/api/tickets/map?${params}`)
+      const data = await res.json()
+      
+      if (data.success) {
+        setMapTickets(data.data.tickets)
+      }
+    } catch (error) {
+      console.error('Failed to fetch map tickets:', error)
+    } finally {
+      setMapLoading(false)
+    }
+  }
+
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
   }
 
+  // Handle photo file selection
+  function handlePhotoBeforeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setPhotoError('Ukuran file maksimal 5MB')
+        return
+      }
+      setPhotoBefore(file)
+      setPhotoBeforePreview(URL.createObjectURL(file))
+      setPhotoError(null)
+    }
+  }
+
+  function handlePhotoAfterChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setPhotoError('Ukuran file maksimal 5MB')
+        return
+      }
+      setPhotoAfter(file)
+      setPhotoAfterPreview(URL.createObjectURL(file))
+      setPhotoError(null)
+    }
+  }
+
+  function clearPhotoBefore() {
+    setPhotoBefore(null)
+    setPhotoBeforePreview(null)
+    if (photoBeforeInputRef.current) {
+      photoBeforeInputRef.current.value = ''
+    }
+  }
+
+  function clearPhotoAfter() {
+    setPhotoAfter(null)
+    setPhotoAfterPreview(null)
+    if (photoAfterInputRef.current) {
+      photoAfterInputRef.current.value = ''
+    }
+  }
+
+  // Upload photo to Supabase Storage
+  async function uploadPhoto(file: File, ticketId: string, type: 'before' | 'after'): Promise<string | null> {
+    const timestamp = Date.now()
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${ticketId}/${type}-${timestamp}.${fileExt}`
+    
+    const { data, error } = await supabase.storage
+      .from('ticket-photos')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+    
+    if (error) {
+      console.error('Upload error:', error)
+      return null
+    }
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('ticket-photos')
+      .getPublicUrl(fileName)
+    
+    return urlData.publicUrl
+  }
+
   async function handleUpdateTicket() {
     if (!selectedTicket || !newStatus) return
     
+    // Validate: if status is RESOLVED, require photo after
+    if (newStatus === 'RESOLVED' && !photoAfter) {
+      setPhotoError('Foto sesudah (bukti penyelesaian) wajib diisi untuk menyelesaikan laporan')
+      return
+    }
+    
     setUpdating(true)
+    setUploadingPhotos(true)
+    setPhotoError(null)
+    
     try {
+      let photoBeforeUrl: string | null = null
+      let photoAfterUrl: string | null = null
+      
+      // Upload photos if provided
+      if (photoBefore) {
+        photoBeforeUrl = await uploadPhoto(photoBefore, selectedTicket.id, 'before')
+        if (!photoBeforeUrl) {
+          setPhotoError('Gagal mengupload foto sebelum')
+          setUpdating(false)
+          setUploadingPhotos(false)
+          return
+        }
+      }
+      
+      if (photoAfter) {
+        photoAfterUrl = await uploadPhoto(photoAfter, selectedTicket.id, 'after')
+        if (!photoAfterUrl) {
+          setPhotoError('Gagal mengupload foto sesudah')
+          setUpdating(false)
+          setUploadingPhotos(false)
+          return
+        }
+      }
+      
+      setUploadingPhotos(false)
+      
       const res = await fetch(`/api/tickets/${selectedTicket.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -185,6 +433,8 @@ export default function DashboardPage() {
           status: newStatus,
           note: updateNote,
           sendSms,
+          resolution_photo_before: photoBeforeUrl,
+          resolution_photo_after: photoAfterUrl,
         }),
       })
       
@@ -195,13 +445,20 @@ export default function DashboardPage() {
         setSelectedTicket(null)
         setNewStatus('')
         setUpdateNote('')
+        // Reset photo state
+        clearPhotoBefore()
+        clearPhotoAfter()
         fetchTickets()
         fetchStats()
+      } else {
+        setPhotoError(data.error || 'Gagal mengupdate tiket')
       }
     } catch (error) {
       console.error('Failed to update ticket:', error)
+      setPhotoError('Terjadi kesalahan saat mengupdate tiket')
     } finally {
       setUpdating(false)
+      setUploadingPhotos(false)
     }
   }
 
@@ -209,6 +466,12 @@ export default function DashboardPage() {
     setSelectedTicket(ticket)
     setNewStatus(ticket.status)
     setUpdateNote('')
+    // Reset photo state
+    setPhotoBefore(null)
+    setPhotoAfter(null)
+    setPhotoBeforePreview(null)
+    setPhotoAfterPreview(null)
+    setPhotoError(null)
     setUpdateDialogOpen(true)
   }
 
@@ -242,6 +505,57 @@ export default function DashboardPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Critical Alert Banner */}
+        {criticalCount > 0 && !alertDismissed && (
+          <div className="mb-6 animate-pulse">
+            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-500/30 rounded-full">
+                  <AlertCircle className="h-6 w-6 text-red-400" />
+                </div>
+                <div>
+                  <p className="font-bold text-red-400 text-lg">
+                    ⚠️ PERHATIAN: Ada {criticalCount} tiket DARURAT yang memerlukan penanganan segera!
+                  </p>
+                  <p className="text-red-300/80 text-sm">
+                    Tiket dengan prioritas CRITICAL memerlukan respons dalam 15 menit
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className={`text-red-400 hover:text-red-300 hover:bg-red-500/20 ${!soundEnabled ? 'opacity-50' : ''}`}
+                  title={soundEnabled ? 'Matikan suara notifikasi' : 'Nyalakan suara notifikasi'}
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setUrgencyFilter('CRITICAL')
+                    fetchTickets()
+                  }}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                >
+                  Lihat Tiket
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAlertDismissed(true)}
+                  className="text-red-400/60 hover:text-red-300 hover:bg-red-500/20"
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -341,94 +655,131 @@ export default function DashboardPage() {
                 <SelectItem value="LOW">Rendah</SelectItem>
             </SelectContent>
             </Select>
-            <Button onClick={fetchTickets} variant="outline" className="bg-card border-white/10 hover:bg-white/5 text-white">
+            <Button onClick={() => { fetchTickets(); if (activeView === 'map') fetchMapTickets(); }} variant="outline" className="bg-card border-white/10 hover:bg-white/5 text-white">
             <RefreshCw className="h-4 w-4" />
             </Button>
         </div>
 
-        {/* Tickets Table */}
-        <Card className="bg-card border-white/5 overflow-hidden">
-          <CardHeader className="border-b border-white/5">
-            <CardTitle className="text-white">Daftar Laporan</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Klik pada baris untuk mengupdate status
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            {ticketsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-white/50" />
-              </div>
-            ) : tickets.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <XCircle className="h-12 w-12 mx-auto mb-3 text-white/20" />
-                <p>Tidak ada laporan ditemukan</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader className="bg-white/5">
-                  <TableRow className="hover:bg-transparent border-white/5">
-                    <TableHead className="text-muted-foreground">ID</TableHead>
-                    <TableHead className="text-muted-foreground">Kategori</TableHead>
-                    <TableHead className="text-muted-foreground">Lokasi</TableHead>
-                    <TableHead className="text-muted-foreground">Prioritas</TableHead>
-                    <TableHead className="text-muted-foreground">Status</TableHead>
-                    <TableHead className="text-muted-foreground">Waktu</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tickets.map((ticket) => (
-                    <TableRow 
-                      key={ticket.id}
-                      className="cursor-pointer hover:bg-white/5 border-white/5 transition-colors"
-                      onClick={() => openUpdateDialog(ticket)}
-                    >
-                      <TableCell className="font-mono text-sm text-white/70">{ticket.id}</TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium text-white">{CATEGORY_LABELS[ticket.category as TicketCategory]}</p>
-                          {ticket.subcategory && (
-                            <p className="text-xs text-muted-foreground">{ticket.subcategory}</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate text-white/80">{ticket.location}</TableCell>
-                      <TableCell>
-                         <Badge className={`border ${
-                            ticket.urgency === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                            ticket.urgency === 'HIGH' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                            ticket.urgency === 'MEDIUM' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                            'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          }`}>
-                          {URGENCY_LABELS[ticket.urgency as TicketUrgency]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                         <Badge className={`border ${
-                            ticket.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                            ticket.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                            ticket.status === 'ESCALATED' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                            ticket.status === 'RESOLVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                            'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                          }`}>
-                          {STATUS_LABELS[ticket.status as TicketStatus]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {format(new Date(ticket.created_at), 'dd/MM HH:mm', { locale: idLocale })}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        {/* View Tabs */}
+        <Tabs value={activeView} onValueChange={setActiveView} className="mb-6">
+          <TabsList className="bg-card border border-white/10">
+            <TabsTrigger value="table" className="data-[state=active]:bg-white/10">
+              <List className="h-4 w-4 mr-2" />
+              Tabel
+            </TabsTrigger>
+            <TabsTrigger value="map" className="data-[state=active]:bg-white/10">
+              <Map className="h-4 w-4 mr-2" />
+              Peta
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="table">
+            {/* Tickets Table */}
+            <Card className="bg-card border-white/5 overflow-hidden">
+              <CardHeader className="border-b border-white/5">
+                <CardTitle className="text-white">Daftar Laporan</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Klik pada baris untuk mengupdate status
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {ticketsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+                  </div>
+                ) : tickets.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <XCircle className="h-12 w-12 mx-auto mb-3 text-white/20" />
+                    <p>Tidak ada laporan ditemukan</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader className="bg-white/5">
+                      <TableRow className="hover:bg-transparent border-white/5">
+                        <TableHead className="text-muted-foreground">ID</TableHead>
+                        <TableHead className="text-muted-foreground">Kategori</TableHead>
+                        <TableHead className="text-muted-foreground">Lokasi</TableHead>
+                        <TableHead className="text-muted-foreground">Prioritas</TableHead>
+                        <TableHead className="text-muted-foreground">Status</TableHead>
+                        <TableHead className="text-muted-foreground">Waktu</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {tickets.map((ticket) => (
+                        <TableRow 
+                          key={ticket.id}
+                          className="cursor-pointer hover:bg-white/5 border-white/5 transition-colors"
+                          onClick={() => openUpdateDialog(ticket)}
+                        >
+                          <TableCell className="font-mono text-sm text-white/70">{ticket.id}</TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium text-white">{CATEGORY_LABELS[ticket.category as TicketCategory]}</p>
+                              {ticket.subcategory && (
+                                <p className="text-xs text-muted-foreground">{ticket.subcategory}</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate text-white/80">{ticket.location}</TableCell>
+                          <TableCell>
+                            <Badge className={`border ${
+                                ticket.urgency === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                ticket.urgency === 'HIGH' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                ticket.urgency === 'MEDIUM' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              }`}>
+                              {URGENCY_LABELS[ticket.urgency as TicketUrgency]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={`border ${
+                                ticket.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                ticket.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                ticket.status === 'ESCALATED' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                ticket.status === 'RESOLVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                              }`}>
+                              {STATUS_LABELS[ticket.status as TicketStatus]}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {format(new Date(ticket.created_at), 'dd/MM HH:mm', { locale: idLocale })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="map">
+            {/* Map View */}
+            <Card className="bg-card border-white/5 overflow-hidden">
+              <CardHeader className="border-b border-white/5">
+                <CardTitle className="text-white">Peta Laporan</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Lokasi laporan di Kota Bandung - klik marker untuk detail
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-4">
+                {mapLoading ? (
+                  <div className="flex items-center justify-center h-[500px]">
+                    <Loader2 className="h-8 w-8 animate-spin text-white/50" />
+                  </div>
+                ) : (
+                  <HeatmapView tickets={mapTickets} height="500px" />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Update Dialog */}
       <Dialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
-        <DialogContent className="bg-card border-white/10 sm:max-w-md">
+        <DialogContent className="bg-card border-white/10 sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-white">Update Laporan</DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -457,6 +808,107 @@ export default function DashboardPage() {
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* Photo Upload Section - Show when status is RESOLVED */}
+              {newStatus === 'RESOLVED' && (
+                <div className="space-y-4 p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5 text-emerald-400" />
+                    <Label className="text-emerald-400 font-medium">Bukti Penyelesaian</Label>
+                  </div>
+                  
+                  {/* Photo Before (Optional) */}
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm">Foto Sebelum (opsional)</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        ref={photoBeforeInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoBeforeChange}
+                        className="hidden"
+                        id="photo-before"
+                      />
+                      {photoBeforePreview ? (
+                        <div className="relative">
+                          <img 
+                            src={photoBeforePreview} 
+                            alt="Preview sebelum" 
+                            className="h-24 w-24 object-cover rounded-lg border border-white/10"
+                          />
+                          <button
+                            onClick={clearPhotoBefore}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          htmlFor="photo-before"
+                          className="flex flex-col items-center justify-center h-24 w-24 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-white/40 transition-colors"
+                        >
+                          <Upload className="h-6 w-6 text-white/40" />
+                          <span className="text-xs text-white/40 mt-1">Upload</span>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Photo After (Required) */}
+                  <div className="space-y-2">
+                    <Label className="text-white text-sm">
+                      Foto Sesudah <span className="text-red-400">*</span>
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        ref={photoAfterInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoAfterChange}
+                        className="hidden"
+                        id="photo-after"
+                      />
+                      {photoAfterPreview ? (
+                        <div className="relative">
+                          <img 
+                            src={photoAfterPreview} 
+                            alt="Preview sesudah" 
+                            className="h-24 w-24 object-cover rounded-lg border border-white/10"
+                          />
+                          <button
+                            onClick={clearPhotoAfter}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          htmlFor="photo-after"
+                          className="flex flex-col items-center justify-center h-24 w-24 border-2 border-dashed border-emerald-500/40 rounded-lg cursor-pointer hover:border-emerald-500/60 transition-colors bg-emerald-500/5"
+                        >
+                          <Upload className="h-6 w-6 text-emerald-400/60" />
+                          <span className="text-xs text-emerald-400/60 mt-1">Wajib</span>
+                        </label>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Foto bukti penyelesaian wajib diupload untuk menyelesaikan laporan
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Photo Error Message */}
+              {photoError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-red-400 text-sm flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    {photoError}
+                  </p>
+                </div>
+              )}
               
               <div className="space-y-2">
                 <Label className="text-white">Catatan (opsional)</Label>
@@ -487,9 +939,13 @@ export default function DashboardPage() {
             <Button variant="outline" onClick={() => setUpdateDialogOpen(false)} className="border-white/10 bg-transparent text-white hover:bg-white/5">
               Batal
             </Button>
-            <Button onClick={handleUpdateTicket} disabled={updating} className="bg-white text-black hover:bg-white/90">
+            <Button 
+              onClick={handleUpdateTicket} 
+              disabled={updating || (newStatus === 'RESOLVED' && !photoAfter)} 
+              className="bg-white text-black hover:bg-white/90"
+            >
               {updating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Simpan
+              {uploadingPhotos ? 'Mengupload foto...' : 'Simpan'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import Link from 'next/link'
 import { 
   Clock, 
@@ -15,7 +17,10 @@ import {
   Loader2,
   Search,
   Phone,
-  ArrowLeft
+  ArrowLeft,
+  Star,
+  ImageIcon,
+  Send
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id as idLocale } from 'date-fns/locale'
@@ -32,6 +37,11 @@ interface TicketData {
   assignedTo: string[]
   createdAt: string
   updatedAt: string
+  resolutionPhotoBefore: string | null
+  resolutionPhotoAfter: string | null
+  rating: number | null
+  feedback: string | null
+  ratedAt: string | null
   timeline: Array<{
     time: string
     message: string
@@ -59,6 +69,14 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchId, setSearchId] = useState('')
+  
+  // Rating state
+  const [selectedRating, setSelectedRating] = useState<number>(0)
+  const [hoverRating, setHoverRating] = useState<number>(0)
+  const [feedbackText, setFeedbackText] = useState('')
+  const [submittingRating, setSubmittingRating] = useState(false)
+  const [ratingError, setRatingError] = useState<string | null>(null)
+  const [ratingSuccess, setRatingSuccess] = useState(false)
 
   useEffect(() => {
     fetchTicket(resolvedParams.ticketId)
@@ -89,6 +107,70 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
     if (searchId.trim()) {
       window.location.href = `/track/${searchId.trim()}`
     }
+  }
+  
+  async function handleSubmitRating() {
+    if (!ticket || selectedRating === 0) return
+    
+    setSubmittingRating(true)
+    setRatingError(null)
+    
+    try {
+      const res = await fetch(`/api/tickets/${ticket.id}/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rating: selectedRating,
+          feedback: feedbackText || undefined,
+        }),
+      })
+      
+      const data = await res.json()
+      
+      if (data.success) {
+        setRatingSuccess(true)
+        // Update local ticket data
+        setTicket(prev => prev ? {
+          ...prev,
+          rating: selectedRating,
+          feedback: feedbackText,
+          ratedAt: new Date().toISOString(),
+        } : null)
+      } else {
+        setRatingError(data.error || 'Gagal mengirim penilaian')
+      }
+    } catch {
+      setRatingError('Terjadi kesalahan saat mengirim penilaian')
+    } finally {
+      setSubmittingRating(false)
+    }
+  }
+  
+  // Star rating component
+  function StarRating({ rating, interactive = false }: { rating: number; interactive?: boolean }) {
+    return (
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            disabled={!interactive}
+            onClick={() => interactive && setSelectedRating(star)}
+            onMouseEnter={() => interactive && setHoverRating(star)}
+            onMouseLeave={() => interactive && setHoverRating(0)}
+            className={`${interactive ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-default'}`}
+          >
+            <Star
+              className={`h-8 w-8 ${
+                (interactive ? (hoverRating || selectedRating) : rating) >= star
+                  ? 'fill-yellow-400 text-yellow-400'
+                  : 'text-white/20'
+              }`}
+            />
+          </button>
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -264,6 +346,156 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                 </div>
               </CardContent>
             </Card>
+
+            {/* Photo Proof Section - Show if photos exist */}
+            {(ticket.resolutionPhotoBefore || ticket.resolutionPhotoAfter) && (
+              <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
+                <CardHeader className="border-b border-white/5">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5 text-emerald-400" />
+                    <CardTitle className="text-lg text-white">Bukti Penyelesaian</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    {ticket.resolutionPhotoBefore && (
+                      <div className="space-y-2">
+                        <Label className="text-muted-foreground text-sm">Foto Sebelum</Label>
+                        <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10">
+                          <img
+                            src={ticket.resolutionPhotoBefore}
+                            alt="Foto kondisi sebelum"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {ticket.resolutionPhotoAfter && (
+                      <div className="space-y-2">
+                        <Label className="text-muted-foreground text-sm">Foto Sesudah</Label>
+                        <div className="relative aspect-video rounded-lg overflow-hidden border border-emerald-500/30">
+                          <img
+                            src={ticket.resolutionPhotoAfter}
+                            alt="Foto kondisi sesudah"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Rating Section - Show for RESOLVED tickets */}
+            {ticket.status === 'RESOLVED' && (
+              <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
+                <CardHeader className="border-b border-white/5">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-5 w-5 text-yellow-400" />
+                    <CardTitle className="text-lg text-white">Penilaian Layanan</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  {/* Already rated - show result */}
+                  {ticket.rating !== null ? (
+                    <div className="text-center space-y-4">
+                      <div className="flex justify-center">
+                        <StarRating rating={ticket.rating} />
+                      </div>
+                      <p className="text-white font-medium">
+                        Anda memberikan rating {ticket.rating}/5
+                      </p>
+                      {ticket.feedback && (
+                        <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                          <p className="text-muted-foreground italic">&quot;{ticket.feedback}&quot;</p>
+                        </div>
+                      )}
+                      {ticket.ratedAt && (
+                        <p className="text-xs text-muted-foreground">
+                          Dinilai pada {format(new Date(ticket.ratedAt), 'dd MMMM yyyy, HH:mm', { locale: idLocale })}
+                        </p>
+                      )}
+                      <div className="pt-2">
+                        <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 border">
+                          Terima kasih atas penilaian Anda!
+                        </Badge>
+                      </div>
+                    </div>
+                  ) : ratingSuccess ? (
+                    // Just submitted rating
+                    <div className="text-center space-y-4">
+                      <div className="flex justify-center">
+                        <CheckCircle2 className="h-16 w-16 text-emerald-400" />
+                      </div>
+                      <p className="text-white font-medium text-lg">Terima Kasih!</p>
+                      <p className="text-muted-foreground">
+                        Penilaian Anda telah berhasil dikirim.
+                      </p>
+                    </div>
+                  ) : (
+                    // Show rating form
+                    <div className="space-y-6">
+                      <div className="text-center">
+                        <p className="text-muted-foreground mb-4">
+                          Bagaimana penilaian Anda terhadap penanganan laporan ini?
+                        </p>
+                        <div className="flex justify-center mb-2">
+                          <StarRating rating={selectedRating} interactive />
+                        </div>
+                        {selectedRating > 0 && (
+                          <p className="text-sm text-white/60">
+                            {selectedRating === 1 && 'Sangat Tidak Puas'}
+                            {selectedRating === 2 && 'Tidak Puas'}
+                            {selectedRating === 3 && 'Cukup'}
+                            {selectedRating === 4 && 'Puas'}
+                            {selectedRating === 5 && 'Sangat Puas'}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-white">Feedback (opsional)</Label>
+                        <Textarea
+                          placeholder="Tuliskan komentar atau saran Anda..."
+                          value={feedbackText}
+                          onChange={(e) => setFeedbackText(e.target.value)}
+                          className="bg-black/20 border-white/10 text-white placeholder:text-muted-foreground"
+                          rows={3}
+                        />
+                      </div>
+                      
+                      {ratingError && (
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                          <p className="text-red-400 text-sm flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            {ratingError}
+                          </p>
+                        </div>
+                      )}
+                      
+                      <Button
+                        onClick={handleSubmitRating}
+                        disabled={selectedRating === 0 || submittingRating}
+                        className="w-full bg-yellow-500 text-black hover:bg-yellow-400"
+                      >
+                        {submittingRating ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Mengirim...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4 mr-2" />
+                            Kirim Penilaian
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Help Text */}
             <div className="text-center mt-8 p-6 rounded-2xl bg-white/5 border border-white/5">
