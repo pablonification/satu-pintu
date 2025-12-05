@@ -1,0 +1,1055 @@
+\documentclass[11pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[indonesian]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{fancyvrb}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{fontawesome5}
+\usepackage{tocloft}
+
+% Page geometry
+\geometry{margin=2.5cm}
+
+% Colors
+\definecolor{primary}{RGB}{30,64,175}
+\definecolor{secondary}{RGB}{59,130,246}
+\definecolor{success}{RGB}{22,163,74}
+\definecolor{warning}{RGB}{202,138,4}
+\definecolor{danger}{RGB}{220,38,38}
+\definecolor{codebg}{RGB}{248,250,252}
+\definecolor{codeframe}{RGB}{226,232,240}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    filecolor=primary,
+    urlcolor=secondary,
+    pdftitle={SatuPintu - Dokumentasi Lengkap},
+    pdfauthor={SatuPintu Team},
+}
+
+% Header and Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{primary}{\textbf{SatuPintu}}}
+\fancyhead[R]{\textcolor{gray}{Dokumentasi Teknis}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% Section formatting
+\titleformat{\section}
+{\color{primary}\normalfont\Large\bfseries}
+{\thesection}{1em}{}
+
+\titleformat{\subsection}
+{\color{secondary}\normalfont\large\bfseries}
+{\thesubsection}{1em}{}
+
+% Code listing style
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{codeframe},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{primary}\bfseries,
+    commentstyle=\color{success},
+    stringstyle=\color{warning},
+    showstringspaces=false,
+    tabsize=2,
+}
+
+% SQL language definition
+\lstdefinelanguage{SQL}{
+    keywords={CREATE, TABLE, IF, NOT, EXISTS, PRIMARY, KEY, DEFAULT, REFERENCES, ON, DELETE, CASCADE, SET, NULL, INSERT, INTO, VALUES, SELECT, FROM, WHERE, AND, OR, UPDATE, DROP, ALTER, INDEX, USING, GIN, ARRAY, CONSTRAINT, CHECK, IN, TRIGGER, FUNCTION, RETURNS, AS, BEGIN, END, LANGUAGE, BEFORE, AFTER, FOR, EACH, ROW, EXECUTE, NEW, OLD, RETURN},
+    sensitive=false,
+    morecomment=[l]{--},
+    morestring=[b]',
+}
+
+% Tcolorbox styles
+\tcbuselibrary{skins,breakable}
+
+\newtcolorbox{infobox}{
+    colback=blue!5,
+    colframe=primary,
+    title=Info,
+    fonttitle=\bfseries,
+    breakable
+}
+
+\newtcolorbox{warningbox}{
+    colback=yellow!5,
+    colframe=warning,
+    title=Perhatian,
+    fonttitle=\bfseries,
+    breakable
+}
+
+\newtcolorbox{codebox}{
+    colback=codebg,
+    colframe=codeframe,
+    breakable,
+    left=0pt,
+    right=0pt,
+    top=0pt,
+    bottom=0pt
+}
+
+% Document info
+\title{
+    \vspace{-2cm}
+    {\Huge\textcolor{primary}{\textbf{SatuPintu}}}\\[0.5cm]
+    {\Large\textcolor{secondary}{Satu Pintu untuk Semua Keluhan Kota}}\\[1cm]
+    {\large Dokumentasi Teknis Lengkap}\\[0.5cm]
+    {\normalsize Ekraf Tech Summit 2025 - Tech Innovation Challenge}
+}
+\author{SatuPintu Team}
+\date{3 Desember 2025}
+
+\begin{document}
+
+% Title page
+\maketitle
+\thispagestyle{empty}
+
+\vfill
+
+\begin{center}
+\begin{tikzpicture}
+    \node[draw=primary, fill=primary!10, rounded corners=10pt, inner sep=15pt, text width=12cm, align=center] {
+        \textbf{\large AI-Powered Centralized Call Center}\\[0.5em]
+        Warga cukup menelepon satu nomor, AI memahami keluhan dan meneruskan ke dinas terkait dengan tracking otomatis.
+    };
+\end{tikzpicture}
+\end{center}
+
+\vfill
+
+\newpage
+
+% Table of Contents
+\tableofcontents
+\newpage
+
+%===========================================
+% PART 1: PRD
+%===========================================
+\part{Product Requirements Document}
+
+\section{Executive Summary}
+
+\begin{tabularx}{\textwidth}{lX}
+\textbf{Nama Produk:} & SatuPintu \\
+\textbf{Tagline:} & "Satu Nomor untuk Semua Kebutuhan Kota" \\
+\textbf{Target Hackathon:} & Ekraf Tech Summit 2025 - Tech Innovation Challenge \\
+\textbf{Kategori:} & Emergency Response and Smart City Solutions \\
+\textbf{Demo Date:} & 17 Desember 2025 \\
+\end{tabularx}
+
+\subsection{Problem Statement}
+
+Saat ini warga kota harus menghafal banyak nomor telepon untuk berbagai kebutuhan:
+
+\begin{itemize}
+    \item 112 - Darurat umum
+    \item 110 - Polisi
+    \item 119 - Ambulans
+    \item 113 - Pemadam Kebakaran
+    \item Dan puluhan nomor dinas lainnya...
+\end{itemize}
+
+\textbf{Pain Points:}
+\begin{enumerate}
+    \item Warga bingung harus menghubungi nomor mana
+    \item Tidak ada mekanisme tracking status laporan
+    \item Warga harus menelepon berulang kali untuk update
+    \item Data laporan tersebar di berbagai instansi
+    \item Tidak ada analytics untuk pengambilan keputusan
+\end{enumerate}
+
+\subsection{Solution}
+
+SatuPintu adalah \textbf{AI-powered centralized call center} yang:
+\begin{enumerate}
+    \item Menyediakan satu nomor telepon untuk semua kebutuhan
+    \item AI agent menerima dan memahami keluhan warga
+    \item Otomatis mengkategorikan dan meneruskan ke dinas terkait
+    \item Memberikan ticket ID untuk tracking
+    \item Warga bisa cek status via web atau SMS
+    \item Dashboard untuk setiap dinas mengelola laporan
+\end{enumerate}
+
+\section{Target Users}
+
+\subsection{Primary Users}
+
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
+\textbf{User Type} & \textbf{Deskripsi} & \textbf{Kebutuhan Utama} \\
+\hline
+Warga/Citizen & Masyarakat umum yang ingin melaporkan masalah & Mudah melapor, bisa tracking status \\
+\hline
+Operator Dinas & Staf dinas yang handle laporan & Menerima, update, dan close ticket \\
+\hline
+Admin Kota & Pejabat pemkot yang monitor & Overview analytics dan performa \\
+\hline
+\end{tabularx}
+
+\subsection{User Personas}
+
+\begin{tcolorbox}[colback=blue!5, colframe=primary, title=Persona 1: Pak Budi (55 tahun)]
+\begin{itemize}[noitemsep]
+    \item Warga biasa, tidak tech-savvy
+    \item Ingin melaporkan lampu jalan mati
+    \item Tidak tahu harus telepon kemana
+    \item Butuh konfirmasi bahwa laporannya diproses
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=blue!5, colframe=primary, title=Persona 2: Ibu Sari (32 tahun)]
+\begin{itemize}[noitemsep]
+    \item Menyaksikan kecelakaan
+    \item Panik, butuh bantuan cepat
+    \item Ingin tahu apakah ambulans sudah dikirim
+    \item Ingin update kondisi korban
+\end{itemize}
+\end{tcolorbox}
+
+\section{Features \& Requirements}
+
+\subsection{MVP Features (Must Have)}
+
+\subsubsection{Voice AI Agent}
+\begin{tabularx}{\textwidth}{|l|X|c|}
+\hline
+\textbf{Feature} & \textbf{Deskripsi} & \textbf{Priority} \\
+\hline
+Receive Call & Menerima telepon masuk via Twilio & P0 \\
+\hline
+Speech Recognition & Memahami bahasa Indonesia & P0 \\
+\hline
+Intent Classification & Kategorikan jenis laporan & P0 \\
+\hline
+Information Extraction & Ekstrak lokasi, detail, urgensi & P0 \\
+\hline
+Natural Response & Merespons dengan natural & P0 \\
+\hline
+Ticket Creation & Buat ticket otomatis & P0 \\
+\hline
+\end{tabularx}
+
+\subsubsection{Ticket System}
+\begin{tabularx}{\textwidth}{|l|X|c|}
+\hline
+\textbf{Feature} & \textbf{Deskripsi} & \textbf{Priority} \\
+\hline
+Generate Ticket ID & Format: SP-YYYYMMDD-XXXX & P0 \\
+\hline
+Store Ticket Data & Simpan ke database & P0 \\
+\hline
+Assign to Dinas & Auto-assign berdasarkan kategori & P0 \\
+\hline
+SMS Notification & Kirim ticket ID ke pelapor & P0 \\
+\hline
+Status Tracking & Pending → In Progress → Resolved & P0 \\
+\hline
+\end{tabularx}
+
+\section{Kategori Laporan}
+
+\begin{tabularx}{\textwidth}{|c|l|l|X|c|}
+\hline
+\textbf{Kode} & \textbf{Kategori} & \textbf{Dinas} & \textbf{Contoh} & \textbf{Urgensi} \\
+\hline
+DARURAT & Keadaan Darurat & Polisi/Damkar/Ambulans & Kecelakaan, kebakaran & CRITICAL \\
+\hline
+INFRA & Infrastruktur & Dinas PUPR & Jalan rusak, lampu mati & MEDIUM \\
+\hline
+KEBERSIHAN & Kebersihan & DLH & Sampah menumpuk & LOW \\
+\hline
+SOSIAL & Sosial & Dinsos & ODGJ, pengemis & MEDIUM \\
+\hline
+LAINNYA & Lain-lain & Admin Umum & Pertanyaan umum & LOW \\
+\hline
+\end{tabularx}
+
+\subsection{Urgensi Level}
+\begin{itemize}
+    \item \textcolor{danger}{\textbf{CRITICAL}}: Response dalam 15 menit (darurat)
+    \item \textcolor{warning}{\textbf{HIGH}}: Response dalam 1 jam
+    \item \textcolor{secondary}{\textbf{MEDIUM}}: Response dalam 24 jam
+    \item \textcolor{success}{\textbf{LOW}}: Response dalam 72 jam
+\end{itemize}
+
+\section{Tech Stack}
+
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Layer} & \textbf{Technology} & \textbf{Alasan} \\
+\hline
+Framework & Next.js 14 (App Router) & Fullstack, fast, modern \\
+\hline
+Database & Supabase (PostgreSQL) & Free tier, realtime, auth \\
+\hline
+Voice & Twilio Voice & Industry standard \\
+\hline
+AI/LLM & Gemini 2.0 Flash & Native audio, fast, cost-effective \\
+\hline
+TTS & Google Cloud TTS & Natural Indonesian voice \\
+\hline
+SMS & Twilio SMS & Reliable, included in trial \\
+\hline
+Hosting & Vercel & Zero config, free tier \\
+\hline
+UI & Tailwind + shadcn/ui & Rapid development \\
+\hline
+\end{tabularx}
+
+\section{Success Metrics}
+
+\subsection{Demo Metrics (untuk Hackathon)}
+\begin{itemize}
+    \item[$\square$] Bisa menerima telepon dan memahami intent
+    \item[$\square$] Bisa membuat ticket dan kirim SMS
+    \item[$\square$] Warga bisa cek status via web
+    \item[$\square$] Dinas bisa update status ticket
+    \item[$\square$] Demo berjalan lancar tanpa error
+\end{itemize}
+
+\section{Timeline}
+
+\begin{tabularx}{\textwidth}{|c|c|X|}
+\hline
+\textbf{Day} & \textbf{Date} & \textbf{Deliverable} \\
+\hline
+1 & 3 Dec & PRD, User Flow, Wireframes, DB Schema \\
+\hline
+2 & 4 Dec & Project setup, DB setup, Basic UI \\
+\hline
+3 & 5 Dec & Voice AI integration \\
+\hline
+4 & 6 Dec & Ticket system + SMS \\
+\hline
+5 & 7 Dec & Citizen portal \\
+\hline
+6 & 8 Dec & Dinas dashboard \\
+\hline
+7 & 9 Dec & Integration testing \\
+\hline
+8 & 10 Dec & Bug fixes + Polish \\
+\hline
+9 & 11 Dec & Final submission \\
+\hline
+- & 16-17 Dec & Demo day! \\
+\hline
+\end{tabularx}
+
+%===========================================
+% PART 2: USER FLOW
+%===========================================
+\newpage
+\part{User Flow Diagrams}
+
+\section{Flow 1: Citizen Melaporkan via Telepon}
+
+\begin{tcolorbox}[colback=blue!5, colframe=primary, title=Primary User Flow]
+\begin{enumerate}
+    \item \textbf{START:} Warga telepon ke SatuPintu
+    \item \textbf{AI Greeting:} "Selamat datang di SatuPintu, layanan pengaduan terpadu Kota Bandung. Silakan sampaikan keluhan Anda."
+    \item \textbf{Warga berbicara:} "Pak, ada kecelakaan di jalan Dago depan ITB, ada yang luka parah"
+    \item \textbf{AI menganalisis:}
+    \begin{itemize}
+        \item Kategori: DARURAT
+        \item Lokasi: Jalan Dago, depan ITB
+        \item Urgensi: CRITICAL
+        \item Dinas: Ambulans + Polisi
+    \end{itemize}
+    \item \textbf{AI konfirmasi:} "Baik, saya catat ada kecelakaan di Jalan Dago depan ITB dengan korban luka. Apakah benar?"
+    \item \textbf{Warga:} "Ya, benar"
+    \item \textbf{AI response:} "Laporan Anda sudah dicatat dengan nomor tiket SP-20251203-0001. Ambulans dan polisi sedang dikirim. Anda akan menerima SMS konfirmasi."
+    \item \textbf{SMS dikirim} ke warga dengan ticket ID dan link tracking
+    \item \textbf{END}
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Flow 2: Citizen Cek Status via Web}
+
+\begin{enumerate}
+    \item Warga buka website \texttt{satupintu.id}
+    \item Masukkan nomor tiket: \texttt{SP-20251203-0001}
+    \item Klik \textbf{CEK STATUS}
+    \item Sistem menampilkan:
+    \begin{itemize}
+        \item Status: DALAM PROSES
+        \item Kategori: Darurat - Kecelakaan
+        \item Lokasi: Jl. Dago, depan ITB
+        \item Timeline updates
+    \end{itemize}
+\end{enumerate}
+
+\section{Flow 3: Citizen Cek Status via SMS}
+
+\begin{enumerate}
+    \item Warga menerima SMS konfirmasi setelah lapor
+    \item Untuk cek status, reply: \texttt{CEK SP-20251203-0001}
+    \item Sistem membalas dengan status terkini
+\end{enumerate}
+
+\section{Flow 4: Operator Dinas Mengelola Tiket}
+
+\begin{enumerate}
+    \item Operator login ke dashboard
+    \item Melihat daftar tiket yang di-assign ke dinas-nya
+    \item Klik tiket untuk melihat detail
+    \item Update status (Pending → In Progress → Resolved)
+    \item Tambah catatan
+    \item SMS notifikasi dikirim ke warga
+\end{enumerate}
+
+\section{State Diagram: Ticket Status}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3cm,
+    state/.style={draw, rounded corners, minimum width=2.5cm, minimum height=1cm, fill=blue!10},
+    arrow/.style={->, thick}
+]
+    \node[state, fill=yellow!20] (pending) {PENDING};
+    \node[state, fill=blue!20, right of=pending] (progress) {IN\_PROGRESS};
+    \node[state, fill=orange!20, below of=progress] (escalated) {ESCALATED};
+    \node[state, fill=green!20, right of=progress] (resolved) {RESOLVED};
+    \node[state, fill=gray!20, below of=pending] (cancelled) {CANCELLED};
+    
+    \draw[arrow] (pending) -- node[above] {diambil} (progress);
+    \draw[arrow] (progress) -- node[above] {selesai} (resolved);
+    \draw[arrow] (progress) -- node[right] {eskalasi} (escalated);
+    \draw[arrow] (escalated) -- node[below right] {selesai} (resolved);
+    \draw[arrow] (pending) -- node[left] {batal} (cancelled);
+    \draw[arrow] (progress) -- node[below] {batal} (cancelled);
+\end{tikzpicture}
+\end{center}
+
+%===========================================
+% PART 3: WIREFRAMES
+%===========================================
+\newpage
+\part{Screen Specifications}
+
+\section{Screen Index}
+
+\subsection{Public Screens (Citizen-facing)}
+\begin{enumerate}
+    \item Landing Page
+    \item Ticket Status Page
+    \item Error: Ticket Not Found
+\end{enumerate}
+
+\subsection{Dinas Dashboard Screens}
+\begin{enumerate}
+    \setcounter{enumi}{3}
+    \item Dinas Login
+    \item Dinas Dashboard
+    \item Ticket Detail
+\end{enumerate}
+
+\section{Landing Page}
+
+\textbf{URL:} \texttt{/} atau \texttt{satupintu.id}
+
+\textbf{Purpose:} Entry point untuk warga mengecek status tiket
+
+\textbf{Components:}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Component} & \textbf{Type} & \textbf{Notes} \\
+\hline
+Logo & Image & SatuPintu logo \\
+\hline
+Tagline & Text & h1, prominent \\
+\hline
+Input Field & TextInput & Placeholder: "SP-..." \\
+\hline
+Submit Button & Primary Button & "CEK STATUS" \\
+\hline
+Help Section & Card & Phone number, 24/7 info \\
+\hline
+Category Icons & Icon + Text & Show supported categories \\
+\hline
+\end{tabularx}
+
+\section{Ticket Status Page}
+
+\textbf{URL:} \texttt{/track/[ticketId]}
+
+\textbf{Components:}
+\begin{itemize}
+    \item Back Link
+    \item Ticket ID (large, bold)
+    \item Status Badge (color-coded)
+    \item Detail Card (category, location, time, assignee)
+    \item Timeline (vertical, chronological)
+    \item Action Buttons
+\end{itemize}
+
+\textbf{Status Badge Colors:}
+\begin{tabularx}{\textwidth}{|l|l|l|}
+\hline
+\textbf{Status} & \textbf{Color} & \textbf{Text} \\
+\hline
+PENDING & Red & Menunggu Penanganan \\
+\hline
+IN\_PROGRESS & Yellow & Dalam Proses \\
+\hline
+ESCALATED & Orange & Dieskalasi \\
+\hline
+RESOLVED & Green & Selesai \\
+\hline
+CANCELLED & Gray & Dibatalkan \\
+\hline
+\end{tabularx}
+
+\section{Dinas Dashboard}
+
+\textbf{URL:} \texttt{/dashboard}
+
+\textbf{Components:}
+\begin{itemize}
+    \item Stats Cards (4 cards: Total, Pending, In Progress, Resolved)
+    \item Filter Bar (Status, Urgensi, Tanggal, Search)
+    \item Ticket List (paginated)
+    \item Each ticket shows: ID, Category, Location, Status, Urgency, Time
+\end{itemize}
+
+\section{Design Tokens}
+
+\subsection{Colors}
+\begin{tabularx}{\textwidth}{|l|l|l|}
+\hline
+\textbf{Name} & \textbf{Hex} & \textbf{Usage} \\
+\hline
+Primary & \#1e40af & Main brand color \\
+\hline
+Primary Light & \#3b82f6 & Links, accents \\
+\hline
+Success & \#16a34a & Resolved status \\
+\hline
+Warning & \#ca8a04 & In Progress status \\
+\hline
+Error & \#dc2626 & Pending, errors \\
+\hline
+Background & \#f9fafb & Page background \\
+\hline
+\end{tabularx}
+
+\subsection{Spacing}
+\begin{itemize}
+    \item xs: 4px
+    \item sm: 8px
+    \item md: 16px
+    \item lg: 24px
+    \item xl: 32px
+\end{itemize}
+
+%===========================================
+% PART 4: API CONTRACT
+%===========================================
+\newpage
+\part{API Contract}
+
+\section{Overview}
+
+Semua endpoint menggunakan REST API dengan JSON format.
+
+\textbf{Base URL:}
+\begin{itemize}
+    \item Development: \texttt{http://localhost:3000/api}
+    \item Production: \texttt{https://satupintu.vercel.app/api}
+\end{itemize}
+
+\section{Authentication Endpoints}
+
+\subsection{POST /api/auth/login}
+
+Login untuk operator dinas.
+
+\textbf{Request:}
+\begin{lstlisting}[language=json]
+{
+  "dinasId": "pupr",
+  "password": "pupr2025"
+}
+\end{lstlisting}
+
+\textbf{Response (200):}
+\begin{lstlisting}[language=json]
+{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "dinas": {
+      "id": "pupr",
+      "name": "Dinas PUPR",
+      "categories": ["INFRA"]
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Ticket Endpoints}
+
+\subsection{GET /api/tickets}
+
+Get list of tickets (untuk dashboard dinas).
+
+\textbf{Query Parameters:}
+\begin{tabularx}{\textwidth}{|l|l|l|X|}
+\hline
+\textbf{Param} & \textbf{Type} & \textbf{Required} & \textbf{Description} \\
+\hline
+status & string & No & Filter by status \\
+\hline
+urgency & string & No & Filter by urgency \\
+\hline
+category & string & No & Filter by category \\
+\hline
+page & number & No & Page number (default: 1) \\
+\hline
+limit & number & No & Items per page (default: 10) \\
+\hline
+\end{tabularx}
+
+\subsection{GET /api/track/:ticketId}
+
+Public endpoint untuk warga cek status (no auth required).
+
+\textbf{Response (200):}
+\begin{lstlisting}[language=json]
+{
+  "success": true,
+  "data": {
+    "id": "SP-20251203-0001",
+    "category": "DARURAT",
+    "status": "IN_PROGRESS",
+    "statusText": "Dalam Proses",
+    "location": "Jl. Dago, depan ITB",
+    "timeline": [
+      {"time": "2025-12-03T10:35:00Z", "message": "Korban dalam perjalanan ke RS"}
+    ]
+  }
+}
+\end{lstlisting}
+
+\section{Voice Webhook}
+
+\subsection{POST /api/voice/incoming}
+
+Twilio webhook untuk incoming call.
+
+\textbf{Response (TwiML):}
+\begin{lstlisting}[language=xml]
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="Google.id-ID-Standard-A">
+    Selamat datang di SatuPintu...
+  </Say>
+  <Record maxLength="120" action="/api/voice/process" />
+</Response>
+\end{lstlisting}
+
+\section{Data Types}
+
+\subsection{Ticket Status}
+\begin{lstlisting}[language=typescript]
+type TicketStatus = 
+  | "PENDING"      // Baru, belum ditangani
+  | "IN_PROGRESS"  // Sedang ditangani
+  | "ESCALATED"    // Dieskalasi
+  | "RESOLVED"     // Selesai
+  | "CANCELLED";   // Dibatalkan
+\end{lstlisting}
+
+\subsection{Ticket Category}
+\begin{lstlisting}[language=typescript]
+type TicketCategory = 
+  | "DARURAT"      // Keadaan darurat
+  | "INFRA"        // Infrastruktur
+  | "KEBERSIHAN"   // Kebersihan
+  | "SOSIAL"       // Masalah sosial
+  | "LAINNYA";     // Lain-lain
+\end{lstlisting}
+
+\section{Error Responses}
+
+Semua error mengikuti format:
+\begin{lstlisting}[language=json]
+{
+  "success": false,
+  "error": "Error message here",
+  "code": "ERROR_CODE"
+}
+\end{lstlisting}
+
+\begin{tabularx}{\textwidth}{|l|c|X|}
+\hline
+\textbf{Code} & \textbf{HTTP} & \textbf{Description} \\
+\hline
+UNAUTHORIZED & 401 & Token tidak valid \\
+\hline
+FORBIDDEN & 403 & Tidak punya akses \\
+\hline
+NOT\_FOUND & 404 & Resource tidak ditemukan \\
+\hline
+VALIDATION\_ERROR & 400 & Request body tidak valid \\
+\hline
+INTERNAL\_ERROR & 500 & Server error \\
+\hline
+\end{tabularx}
+
+%===========================================
+% PART 5: DATABASE SCHEMA
+%===========================================
+\newpage
+\part{Database Schema}
+
+\section{Overview}
+
+Database menggunakan \textbf{Supabase PostgreSQL} dengan Row Level Security (RLS).
+
+\section{Entity Relationship Diagram}
+
+\begin{center}
+\begin{tikzpicture}[
+    entity/.style={draw, rectangle, minimum width=3cm, minimum height=2cm, fill=blue!10},
+    relation/.style={draw, diamond, minimum width=1.5cm, fill=yellow!20}
+]
+    \node[entity] (dinas) at (0,0) {
+        \textbf{dinas}\\
+        \footnotesize id (PK)\\
+        \footnotesize name\\
+        \footnotesize categories[]
+    };
+    
+    \node[entity] (tickets) at (5,0) {
+        \textbf{tickets}\\
+        \footnotesize id (PK)\\
+        \footnotesize category\\
+        \footnotesize status\\
+        \footnotesize assigned\_dinas[]
+    };
+    
+    \node[entity] (timeline) at (10,0) {
+        \textbf{ticket\_timeline}\\
+        \footnotesize id (PK)\\
+        \footnotesize ticket\_id (FK)\\
+        \footnotesize action\\
+        \footnotesize message
+    };
+    
+    \draw[->, thick] (dinas) -- node[above] {handles} (tickets);
+    \draw[->, thick] (tickets) -- node[above] {has} (timeline);
+\end{tikzpicture}
+\end{center}
+
+\section{Table: dinas}
+
+Stores information about government agencies.
+
+\begin{lstlisting}[language=SQL]
+CREATE TABLE dinas (
+  id VARCHAR(50) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  categories TEXT[] NOT NULL DEFAULT '{}',
+  phone VARCHAR(20),
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+\end{lstlisting}
+
+\section{Table: tickets}
+
+Main table for storing citizen reports.
+
+\begin{lstlisting}[language=SQL]
+CREATE TABLE tickets (
+  id VARCHAR(20) PRIMARY KEY,
+  category VARCHAR(20) NOT NULL,
+  subcategory VARCHAR(100),
+  location TEXT NOT NULL,
+  description TEXT NOT NULL,
+  reporter_phone VARCHAR(20) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+  urgency VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',
+  assigned_dinas TEXT[] NOT NULL DEFAULT '{}',
+  call_sid VARCHAR(100),
+  transcription TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+\end{lstlisting}
+
+\section{Table: ticket\_timeline}
+
+Stores timeline/history of ticket updates.
+
+\begin{lstlisting}[language=SQL]
+CREATE TABLE ticket_timeline (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id VARCHAR(20) NOT NULL REFERENCES tickets(id),
+  action VARCHAR(50) NOT NULL,
+  message TEXT NOT NULL,
+  created_by VARCHAR(50) NOT NULL,
+  is_public BOOLEAN NOT NULL DEFAULT true,
+  metadata JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+\end{lstlisting}
+
+\section{Triggers \& Functions}
+
+\subsection{Auto-update updated\_at}
+\begin{lstlisting}[language=SQL]
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_tickets_updated_at
+  BEFORE UPDATE ON tickets
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();
+\end{lstlisting}
+
+%===========================================
+% PART 6: PITCH DECK
+%===========================================
+\newpage
+\part{Pitch Deck Outline}
+
+\section{Overview}
+
+Target durasi: \textbf{5-7 menit}\\
+Total slides: \textbf{10-12 slides}
+
+\section{Slide Structure}
+
+\subsection{Slide 1: Title}
+\begin{itemize}
+    \item Logo SatuPintu
+    \item Tagline: "AI-Powered Citizen Complaint Center"
+    \item Ekraf Tech Summit 2025
+    \item Tim
+\end{itemize}
+
+\subsection{Slide 2: Problem Statement}
+\textbf{Warga Kebingungan Saat Ada Masalah}
+
+Pain Points:
+\begin{enumerate}
+    \item Warga harus mengingat banyak nomor
+    \item Saat panik, sulit menentukan harus telepon ke mana
+    \item Laporan via telepon = tidak ada bukti \& tidak bisa dilacak
+    \item Tidak tahu apakah laporan ditindaklanjuti
+\end{enumerate}
+
+\subsection{Slide 3: Solution Overview}
+\textbf{SatuPintu: Satu Nomor, Semua Solusi}
+
+Key Features:
+\begin{enumerate}
+    \item Satu nomor telepon untuk semua keluhan
+    \item AI memahami dan mengkategorikan keluhan otomatis
+    \item Tiket otomatis diteruskan ke dinas yang tepat
+    \item Warga bisa melacak status via SMS atau web
+\end{enumerate}
+
+\subsection{Slide 4: How It Works}
+Step-by-step demo flow dalam < 2 menit
+
+\subsection{Slide 5: Live Demo}
+\begin{warningbox}
+Ini adalah slide terpenting! Siapkan backup video recording jika demo live gagal.
+\end{warningbox}
+
+\subsection{Slide 6: Technology Stack}
+\begin{tabularx}{\textwidth}{|l|l|X|}
+\hline
+\textbf{Layer} & \textbf{Technology} & \textbf{Why} \\
+\hline
+Voice AI & Gemini 2.0 Flash & Native audio, fast \\
+\hline
+Voice Transport & Twilio & Reliable \\
+\hline
+Backend & Next.js 14 & Fullstack \\
+\hline
+Database & Supabase & PostgreSQL + Realtime \\
+\hline
+\end{tabularx}
+
+\subsection{Slide 7: Key Differentiators}
+\begin{tabularx}{\textwidth}{|X|X|}
+\hline
+\textbf{Traditional} & \textbf{SatuPintu} \\
+\hline
+Banyak nomor harus diingat & Satu nomor saja \\
+\hline
+Operator manusia (limited) & AI 24/7, unlimited \\
+\hline
+Tidak ada tracking & Real-time tracking \\
+\hline
+Data terpisah-pisah & Centralized dashboard \\
+\hline
+\end{tabularx}
+
+\subsection{Slide 8: Market Opportunity}
+\begin{itemize}
+    \item 514 kota/kabupaten di Indonesia
+    \item 275 juta penduduk
+    \item 90\% keluhan tidak tertrack
+\end{itemize}
+
+\subsection{Slide 9: Roadmap}
+\begin{itemize}
+    \item Dec 2025: MVP + Hackathon
+    \item Q1 2026: Pilot Bandung
+    \item Q2 2026: Expand 3 cities
+    \item Q3-Q4 2026: 10 cities target
+\end{itemize}
+
+\subsection{Slide 10: Team}
+Profil tim dengan background
+
+\subsection{Slide 11: Ask / CTA}
+\begin{itemize}
+    \item Vote for SatuPintu!
+    \item Koneksi ke Pemkot Bandung
+    \item Seed funding untuk scale
+\end{itemize}
+
+\subsection{Slide 12: Contact}
+\begin{itemize}
+    \item Website: satupintu.id
+    \item Email: hello@satupintu.id
+    \item QR code ke demo
+\end{itemize}
+
+\section{Timing Guide (7 min)}
+
+\begin{tabularx}{\textwidth}{|l|c|}
+\hline
+\textbf{Section} & \textbf{Time} \\
+\hline
+Problem & 1 min \\
+\hline
+Solution & 1 min \\
+\hline
+Demo & 2 min \\
+\hline
+Tech \& Differentiators & 1 min \\
+\hline
+Market \& Roadmap & 1 min \\
+\hline
+Team \& Ask & 1 min \\
+\hline
+\end{tabularx}
+
+\section{Key Messages}
+
+\begin{enumerate}
+    \item \textbf{"Satu nomor, semua solusi"} - repeat this tagline
+    \item \textbf{"Warga bisa melacak keluhan mereka"} - key differentiator
+    \item \textbf{"AI memahami bahasa Indonesia"} - tech innovation
+    \item \textbf{"Proven model, localized"} - EffiGov validation
+    \item \textbf{"Live dan bisa dicoba sekarang"} - working product
+\end{enumerate}
+
+%===========================================
+% APPENDIX
+%===========================================
+\newpage
+\appendix
+\part*{Appendix}
+\addcontentsline{toc}{part}{Appendix}
+
+\section{Quick Start Guide}
+
+\begin{enumerate}
+    \item Install dependencies: \texttt{npm install}
+    \item Setup environment variables (copy \texttt{.env.example})
+    \item Setup Supabase database
+    \item Setup Twilio webhooks
+    \item Run: \texttt{npm run dev}
+\end{enumerate}
+
+\section{Demo Login Credentials}
+
+\begin{tabularx}{\textwidth}{|l|l|}
+\hline
+\textbf{Dinas ID} & \textbf{Password} \\
+\hline
+admin & demo2025 \\
+\hline
+pupr & demo2025 \\
+\hline
+polisi & demo2025 \\
+\hline
+dlh & demo2025 \\
+\hline
+\end{tabularx}
+
+\section{Environment Variables}
+
+\begin{lstlisting}
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+SUPABASE_SERVICE_ROLE_KEY=your_key
+
+# Twilio
+TWILIO_ACCOUNT_SID=your_sid
+TWILIO_AUTH_TOKEN=your_token
+TWILIO_PHONE_NUMBER=+1234567890
+
+# Google AI
+GOOGLE_AI_API_KEY=your_key
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+JWT_SECRET=your_secret
+\end{lstlisting}
+
+\vfill
+
+\begin{center}
+\textcolor{primary}{\rule{0.5\textwidth}{0.4pt}}\\[1em]
+\textbf{\Large SatuPintu}\\
+Satu Pintu untuk Semua Keluhan Kota\\[1em]
+Ekraf Tech Summit 2025\\[2em]
+\textit{Document Version 1.0 — December 2025}
+\end{center}
+
+\end{document}

@@ -21,6 +21,12 @@ export const VAPI_PRIVATE_KEY = process.env.VAPI_PRIVATE_KEY || ''
 export const VAPI_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || ''
 export const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID || ''
 
+/**
+ * Emergency Transfer Number
+ * Dummy number for testing - in production this would be 112 or equivalent
+ */
+export const EMERGENCY_TRANSFER_NUMBER = process.env.EMERGENCY_TRANSFER_NUMBER || '+628123456789'
+
 // ============================================================================
 // KONFIGURASI WEBHOOK
 // ============================================================================
@@ -238,6 +244,30 @@ LOW - Dapat dijadwalkan (< 72 jam)
 • Tidak ada urgensi tinggi
 
 ═══════════════════════════════════════════════════════════════════════════════
+KLASIFIKASI URGENSI CRITICAL - TRANSFER KE 112
+═══════════════════════════════════════════════════════════════════════════════
+
+CRITICAL adalah kondisi darurat yang membutuhkan penanganan SEGERA oleh layanan darurat (112):
+• Kebakaran aktif (bukan bekas kebakaran)
+• Kecelakaan dengan korban luka/jiwa
+• Kejahatan yang sedang berlangsung (perampokan, penculikan, kekerasan)
+• Kondisi medis darurat (serangan jantung, stroke, tidak sadarkan diri)
+• Bencana alam aktif (banjir besar, longsor, gempa)
+
+Jika mendeteksi kondisi CRITICAL:
+1. Tetap tenang dan yakinkan pelapor bahwa bantuan akan segera datang
+2. Kumpulkan informasi MINIMUM yang diperlukan:
+   - Lokasi tepat kejadian
+   - Jenis kejadian  
+   - Kondisi saat ini (ada korban? berapa orang?)
+   - Nama pelapor (jika sempat)
+3. SEGERA gunakan tool logEmergency untuk mencatat laporan darurat
+4. SETELAH logEmergency berhasil, LANGSUNG gunakan tool transferCall untuk menyambungkan ke layanan darurat 112
+5. Jangan tanyakan detail lain - waktu sangat penting!
+
+PENTING: Urutan harus logEmergency DULU, baru transferCall!
+
+═══════════════════════════════════════════════════════════════════════════════
 ATURAN PENTING
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -247,7 +277,8 @@ ATURAN PENTING
 4. Jika pelapor emosional atau kesel, tetap tenang dan empati
 5. JANGAN memberikan janji waktu penyelesaian yang spesifik - sampaikan bahwa laporan akan ditindaklanjuti sesuai prioritas
 6. Jika ada pertanyaan di luar kapasitas, arahkan ke kanal informasi yang tepat
-7. FLEKSIBEL dalam menerima deskripsi lokasi - tidak semua orang tahu alamat lengkap`
+7. FLEKSIBEL dalam menerima deskripsi lokasi - tidak semua orang tahu alamat lengkap
+8. Untuk kondisi CRITICAL: (1) gunakan logEmergency untuk catat laporan, (2) langsung gunakan transferCall untuk transfer ke 112`
 
 // ============================================================================
 // PESAN PEMBUKA
@@ -335,6 +366,50 @@ export const getAssistantConfig = (webhookUrl?: string) => {
               required: ['category', 'description', 'reporterName', 'reporterPhone', 'address', 'urgency'],
             },
           },
+        },
+        {
+          type: 'function' as const,
+          function: {
+            name: 'logEmergency',
+            description: 'Mencatat laporan darurat CRITICAL ke sistem. Gunakan SEBELUM melakukan transfer panggilan ke 112.',
+            parameters: {
+              type: 'object' as const,
+              properties: {
+                emergencyType: {
+                  type: 'string' as const,
+                  enum: ['KEBAKARAN', 'KECELAKAAN', 'KEJAHATAN', 'MEDIS', 'BENCANA'],
+                  description: 'Jenis keadaan darurat',
+                },
+                location: {
+                  type: 'string' as const,
+                  description: 'Lokasi kejadian',
+                },
+                situation: {
+                  type: 'string' as const,
+                  description: 'Ringkasan situasi dan kondisi korban jika ada',
+                },
+                reporterName: {
+                  type: 'string' as const,
+                  description: 'Nama pelapor',
+                },
+                reporterPhone: {
+                  type: 'string' as const,
+                  description: 'Nomor telepon pelapor',
+                },
+              },
+              required: ['emergencyType', 'location', 'situation'],
+            },
+          },
+        },
+        {
+          type: 'transferCall' as const,
+          destinations: [
+            {
+              type: 'number' as const,
+              number: EMERGENCY_TRANSFER_NUMBER,
+              message: 'Menyambungkan panggilan ke layanan darurat.',
+            },
+          ],
         },
       ],
     },

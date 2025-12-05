@@ -322,6 +322,18 @@ export async function POST(request: NextRequest) {
         const assignedDinas = CATEGORY_TO_DINAS[category] || ['admin']
         const finalUrgency = urgency || (category === 'DARURAT' ? 'CRITICAL' : 'MEDIUM')
 
+        // Validate address before ticket insert
+        const validation = await validateAddressEnhanced(address)
+        let validatedAddress = address
+        let addressLat: number | null = null
+        let addressLng: number | null = null
+
+        if (validation.isValid && validation.isInCoverage) {
+          validatedAddress = validation.formattedAddress || address
+          addressLat = validation.lat || null
+          addressLng = validation.lng || null
+        }
+
         const { error: ticketError } = await supabaseAdmin
           .from('tickets')
           .insert({
@@ -332,9 +344,9 @@ export async function POST(request: NextRequest) {
             description,
             reporter_phone: finalPhone,
             reporter_name: reporterName,
-            validated_address: address,
-            address_lat: null,
-            address_lng: null,
+            validated_address: validatedAddress,
+            address_lat: addressLat,
+            address_lng: addressLng,
             status: 'PENDING',
             urgency: finalUrgency,
             assigned_dinas: assignedDinas,
@@ -361,6 +373,17 @@ export async function POST(request: NextRequest) {
           },
         ])
 
+        // Send SMS notification (wrapped in try-catch so it doesn't break ticket creation)
+        try {
+          const trackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/track/${ticketId}`
+          const smsMessage = SMS_TEMPLATES.ticketCreated(ticketId, category, trackUrl)
+          await sendSmsNotification(finalPhone, smsMessage)
+          console.log('SMS notification sent to:', finalPhone)
+        } catch (smsError) {
+          console.error('Failed to send SMS notification:', smsError)
+          // Continue without SMS - don't fail the ticket creation
+        }
+
         const ticketIdSpoken = formatTicketIdForSpeech(ticketId)
         const dinasNames = assignedDinas.map((d: DinasId) => DINAS_NAMES[d]).join(' dan ')
 
@@ -372,6 +395,89 @@ export async function POST(request: NextRequest) {
 
         console.log('SUCCESS: Ticket created:', ticketId)
         return vapiResponse(toolCallId, name, responseMessage)
+      }
+
+      case 'logEmergency': {
+        const { emergencyType, location, situation, reporterName, reporterPhone } = params as {
+          emergencyType: 'KEBAKARAN' | 'KECELAKAAN' | 'KEJAHATAN' | 'MEDIS' | 'BENCANA'
+          location: string
+          situation: string
+          reporterName?: string
+          reporterPhone?: string
+        }
+
+        // Validate required fields
+        if (!emergencyType || !location || !situation) {
+          return vapiResponse(toolCallId, name, 'Maaf, saya perlu informasi lokasi dan kondisi darurat. Bisa diinfokan lokasinya dimana?')
+        }
+
+        // Map emergency type to category
+        const emergencyToCategory: Record<string, TicketCategory> = {
+          'KEBAKARAN': 'DARURAT',
+          'KECELAKAAN': 'DARURAT',
+          'KEJAHATAN': 'DARURAT',
+          'MEDIS': 'DARURAT',
+          'BENCANA': 'DARURAT',
+        }
+
+        // Generate ticket ID for emergency
+        const ticketId = generateTicketId()
+        const category = emergencyToCategory[emergencyType] || 'DARURAT'
+        const assignedDinas = CATEGORY_TO_DINAS[category] || ['admin']
+
+        // Create emergency ticket with CRITICAL urgency
+        const { error: ticketError } = await supabaseAdmin
+          .from('tickets')
+          .insert({
+            id: ticketId,
+            category: category,
+            subcategory: emergencyType,
+            location: location,
+            description: `[DARURAT - ${emergencyType}] ${situation}`,
+            reporter_phone: reporterPhone || customerPhone || '+62000000000',
+            reporter_name: reporterName || 'Pelapor Darurat',
+            validated_address: location,
+            status: 'PENDING',
+            urgency: 'CRITICAL' as TicketUrgency,
+            assigned_dinas: assignedDinas,
+            transcription: `Jenis: ${emergencyType}, Lokasi: ${location}, Situasi: ${situation}`,
+          })
+
+        if (ticketError) {
+          console.error('Failed to create emergency ticket:', ticketError)
+          return vapiResponse(toolCallId, name, 'Laporan darurat gagal dicatat, tapi saya akan tetap menyambungkan Anda ke layanan darurat.')
+        }
+
+        // Add timeline entries
+        await supabaseAdmin.from('ticket_timeline').insert([
+          {
+            ticket_id: ticketId,
+            action: 'CREATED',
+            message: `Laporan darurat ${emergencyType} diterima via telepon`,
+            created_by: 'system',
+          },
+          {
+            ticket_id: ticketId,
+            action: 'ESCALATED', 
+            message: `TRANSFER KE LAYANAN DARURAT 112 - ${emergencyType} di ${location}`,
+            created_by: 'system',
+          },
+        ])
+
+        // Log the emergency
+        console.log('=== EMERGENCY LOGGED ===')
+        console.log('Ticket ID:', ticketId)
+        console.log('Emergency Type:', emergencyType)
+        console.log('Location:', location)
+        console.log('Situation:', situation)
+        console.log('========================')
+
+        // Return success message - Vapi will handle the actual transfer via native transferCall tool
+        return vapiResponse(
+          toolCallId, 
+          name, 
+          `Laporan darurat telah dicatat dengan nomor ${ticketId}. Saya akan segera menyambungkan Anda ke layanan darurat 112.`
+        )
       }
 
       default:

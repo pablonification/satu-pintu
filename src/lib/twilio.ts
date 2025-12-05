@@ -107,4 +107,7 @@ export const SMS_TEMPLATES = {
   
   trackingResponse: (ticketId: string, status: string, category: string, lastUpdate: string) =>
     `[SatuPintu] Status ${ticketId}\n\nKategori: ${category}\nStatus: ${status}\n\nUpdate terakhir:\n${lastUpdate}\n\nDetail: satupintu.id/track/${ticketId}`,
+  
+  ratingOTP: (otp: string, ticketId: string) =>
+    `[SatuPintu] Kode OTP untuk rating tiket ${ticketId}: ${otp}. Berlaku 30 menit. Jangan bagikan kode ini.`,
 }

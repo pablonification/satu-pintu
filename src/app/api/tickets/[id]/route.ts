@@ -2,7 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { sendSmsNotification, SMS_TEMPLATES } from '@/lib/twilio'
 import { STATUS_LABELS, TicketStatus } from '@/types/database'
+import { invalidateTicketCaches } from '@/lib/cache'
 import jwt from 'jsonwebtoken'
+
+// Validate that URL is from Supabase Storage
+function isValidPhotoUrl(url: string | null | undefined): boolean {
+  if (!url) return true // null/undefined is valid (no photo)
+  try {
+    const parsed = new URL(url)
+    // Accept Supabase storage URLs
+    return parsed.hostname.endsWith('.supabase.co') || 
+           parsed.hostname.endsWith('.supabase.in')
+  } catch {
+    return false
+  }
+}
 
 const JWT_SECRET = process.env.JWT_SECRET!
 
@@ -116,11 +130,46 @@ export async function PATCH(
     }
     
     const body = await request.json()
-    const { status, note, sendSms } = body
+    const { status, note, sendSms, resolution_photo_before, resolution_photo_after } = body
+    
+    // Validate photo URLs are from Supabase
+    if (resolution_photo_before && !isValidPhotoUrl(resolution_photo_before)) {
+      return NextResponse.json(
+        { success: false, error: 'URL foto sebelum tidak valid', code: 'INVALID_PHOTO_URL' },
+        { status: 400 }
+      )
+    }
+
+    if (resolution_photo_after && !isValidPhotoUrl(resolution_photo_after)) {
+      return NextResponse.json(
+        { success: false, error: 'URL foto sesudah tidak valid', code: 'INVALID_PHOTO_URL' },
+        { status: 400 }
+      )
+    }
+    
+    // Validate: when status changes to RESOLVED, require resolution_photo_after
+    if (status === 'RESOLVED' && !resolution_photo_after && !ticket.resolution_photo_after) {
+      return NextResponse.json(
+        { success: false, error: 'Foto bukti penyelesaian (sesudah) wajib diisi untuk menyelesaikan laporan', code: 'PHOTO_REQUIRED' },
+        { status: 400 }
+      )
+    }
     
     // Update ticket
     const updateData: Record<string, unknown> = {}
-    if (status) updateData.status = status
+    if (status) {
+      updateData.status = status
+      // Set resolved_at timestamp when status changes to RESOLVED
+      if (status === 'RESOLVED' && ticket.status !== 'RESOLVED') {
+        updateData.resolved_at = new Date().toISOString()
+      }
+      // Clear resolved_at if status changes away from RESOLVED
+      if (status !== 'RESOLVED' && ticket.status === 'RESOLVED') {
+        updateData.resolved_at = null
+      }
+    }
+    if (resolution_photo_before !== undefined) updateData.resolution_photo_before = resolution_photo_before
+    if (resolution_photo_after !== undefined) updateData.resolution_photo_after = resolution_photo_after
     
     const { data: updatedTicket, error: updateError } = await supabaseAdmin
       .from('tickets')
@@ -167,6 +216,9 @@ export async function PATCH(
         })
       }
     }
+    
+    // Invalidate caches after update
+    invalidateTicketCaches(id)
     
     return NextResponse.json({
       success: true,

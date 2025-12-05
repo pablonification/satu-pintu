@@ -44,9 +44,17 @@ export async function GET(
       assignedTo: (ticket.assigned_dinas as DinasId[]).map(d => DINAS_NAMES[d]),
       createdAt: ticket.created_at,
       updatedAt: ticket.updated_at,
+      // Photo proof fields
+      resolutionPhotoBefore: ticket.resolution_photo_before,
+      resolutionPhotoAfter: ticket.resolution_photo_after,
+      // Rating fields
+      rating: ticket.rating,
+      feedback: ticket.feedback,
+      ratedAt: ticket.rated_at,
       timeline: (timeline || []).map(t => ({
         time: t.created_at,
         message: t.message,
+        action: t.action,
       })),
     }
     
