@@ -37,6 +37,7 @@ import { StatusProgress } from '@/components/StatusProgress'
 import { ImageLightbox } from '@/components/ImageLightbox'
 import { ImageCompare } from '@/components/ImageCompare'
 import { TicketStatus } from '@/types/database'
+import Image from 'next/image'
 
 interface TicketData {
   id: string
@@ -265,10 +266,7 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
       <header className="border-b border-white/5 bg-background/60 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/10">
-                <Phone className="h-4 w-4 text-white" />
-            </div>
-            <h1 className="text-lg font-bold text-white">SatuPintu</h1>
+            <Image src="/logo-white.svg" alt="SatuPintu" width={120} height={60} />
           </Link>
           <Link href="/">
             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white">
@@ -733,11 +731,18 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
 
             {/* Help Text */}
             <div className="text-center mt-8 p-6 rounded-2xl bg-white/5 border border-white/5">
-                 <p className="text-sm text-muted-foreground">
-                    Butuh bantuan? Kirim SMS <strong>CEK {ticket.id}</strong> ke nomor SatuPintu
-                    <br />
-                    atau hubungi <span className="text-white font-medium">112</span> untuk keadaan darurat.
-                </p>
+              <p className="text-sm text-muted-foreground">
+                Butuh bantuan? Hubungi kami via&nbsp;
+                <a
+                  href={`https://wa.me/6285155347701?text=${encodeURIComponent(`Halo SatuPintu, saya ingin menanyakan status laporan dengan ID ${ticket?.id}`)}`}
+                  className="underline font-medium hover:text-white"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  WhatsApp
+                </a>
+                &nbsp;atau hubungi <span className="text-white font-medium">112</span> untuk keadaan darurat.
+              </p>
             </div>
           </div>
         )}

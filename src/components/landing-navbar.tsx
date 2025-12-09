@@ -6,6 +6,7 @@ import { Phone, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { MobileNav } from './MobileNav'
+import Image from 'next/image'
 
 export function LandingNavbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -30,30 +31,36 @@ export function LandingNavbar() {
         )}
       >
         <div className={cn(
-          "flex items-center justify-between w-full h-full mx-auto px-4 md:px-8 transition-all duration-700",
+          "relative flex items-center justify-between w-full h-full mx-auto px-4 md:px-8 transition-all duration-700",
           "max-w-7xl",
           isScrolled ? "h-16" : "h-20"
         )}>
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/10">
-              <Phone className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-bold text-lg tracking-tight text-white">SatuPintu</span>
+          {/* Logo */}
+          <div className="shrink-0">
+            <Link href="/">
+              <Image src="/logo-white.svg" alt="SatuPintu" width={120} height={60} />
+            </Link>
           </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+
+          {/* Centered Nav */}
+          <nav className="hidden md:absolute md:left-1/2 md:-translate-x-1/2 md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+            <Link href="/" className="hover:text-white transition-colors">Beranda</Link>
             <Link href="#features" className="hover:text-white transition-colors">Fitur</Link>
-            <Link href="#how-it-works" className="hover:text-white transition-colors">Cara Kerja</Link>
-            <Link href="/track/SP-20251203-0001" className="hover:text-white transition-colors">Lacak Laporan</Link>
+            <Link href="#report" className="hover:text-white transition-colors">Lapor</Link>
           </nav>
-          <div className="flex items-center gap-4">
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-6">
+            <Link href="/track/SP-20251203-0001" className="hidden md:block text-sm font-medium text-muted-foreground hover:text-white transition-colors">
+              Lacak Laporan
+            </Link>
+            
             <Link href="/login">
-              <Button variant="ghost" size="sm" className="hidden sm:flex text-muted-foreground hover:text-white">
-                Login Dinas
+              <Button size="sm" className="hidden sm:flex bg-white text-black hover:bg-white/90 font-medium rounded-full px-6">
+                Login
               </Button>
             </Link>
-            <Button size="sm" className="hidden sm:flex bg-white text-black hover:bg-white/90 font-medium rounded-full">
-              Lapor Sekarang
-            </Button>
+
             <Button 
               variant="ghost" 
               size="icon" 

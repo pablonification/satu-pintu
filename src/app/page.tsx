@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Phone, Search, Zap, Shield, Activity, ArrowRight, CheckCircle2, BarChart3, Globe2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LandingNavbar } from '@/components/landing-navbar'
+import Image from 'next/image'
 
 export default function Home() {
   return (
@@ -35,10 +36,10 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
-            <Link href="tel:+6281234567890">
+            <Link href="tel:+19148280709" target="_blank">
               <Button size="lg" className="h-12 px-8 bg-white text-black hover:bg-white/90 text-base rounded-full">
                 <Phone className="mr-2 h-4 w-4" />
-                Hubungi 0812-3456-7890
+                Hubungi Hotline SatuPintu
               </Button>
             </Link>
             <Link href="/track/SP-20251203-0001">
@@ -56,7 +57,7 @@ export default function Home() {
               <div className="absolute inset-0 flex items-center justify-center bg-grid-white/[0.02]">
                  {/* Abstract representation of a dashboard */}
                  <div className="w-full h-full p-8 flex flex-col gap-6 opacity-80">
-                    <div className="w-full h-8 bg-white/10 rounded-lg w-1/3"></div>
+                    <div className="h-8 bg-white/10 rounded-lg w-1/3"></div>
                     <div className="grid grid-cols-3 gap-6">
                         <div className="h-32 bg-white/5 rounded-lg border border-white/5"></div>
                         <div className="h-32 bg-white/5 rounded-lg border border-white/5"></div>
@@ -156,7 +157,7 @@ export default function Home() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-24 relative overflow-hidden">
+        <section id="report" className="py-24 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-indigo-950/20 pointer-events-none" />
             <div className="container mx-auto px-4 relative z-10">
                 <div className="max-w-4xl mx-auto text-center">
@@ -168,10 +169,13 @@ export default function Home() {
                         jadilah bagian dari perubahan.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link href="tel:+6281234567890" className="w-full sm:w-auto">
-                             <Button size="lg" className="w-full h-14 px-8 bg-white text-black hover:bg-white/90 text-lg rounded-full shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_-15px_rgba(255,255,255,0.5)] transition-all duration-300">
-                                Hubungi Sekarang
-                                <ArrowRight className="ml-2 h-5 w-5" />
+                        <Link href="tel:+19148280709" target="_blank" className="w-full sm:w-auto relative group">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full blur opacity-70 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+                             <Button size="lg" className="relative w-full h-16 px-10 bg-white text-black hover:bg-indigo-50 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 hover:-translate-y-1 ring-1 ring-white/50">
+                                <span className="flex items-center gap-3">
+                                    Hubungi SatuPintu Sekarang
+                                    <ArrowRight className="h-6 w-6 transition-transform duration-300 group-hover:translate-x-1" />
+                                </span>
                             </Button>
                         </Link>
                     </div>
@@ -185,21 +189,16 @@ export default function Home() {
 
       <footer className="border-t border-white/10 bg-black py-12">
         <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded bg-white/10 border border-white/10">
-                    <Phone className="h-3 w-3 text-white" />
-                </div>
-                <span className="font-semibold text-white">SatuPintu</span>
-            </div>
+            <Image src="/logo-white.svg" alt="SatuPintu" width={120} height={60} />
             
             <div className="text-sm text-muted-foreground">
-                © 2025 Pemerintah Kota Bandung • Ekraf Tech Summit
+                © 2025 SatuPintu • SIAGA Teams
             </div>
 
             <div className="flex gap-6 text-sm font-medium text-muted-foreground">
-                <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
-                <Link href="#" className="hover:text-white transition-colors">Terms</Link>
-                <Link href="#" className="hover:text-white transition-colors">Contact</Link>
+                {/* <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
+                <Link href="#" className="hover:text-white transition-colors">Terms</Link> */}
+                <Link href="mailto:arqilasp@gmail.com" target="_blank" className="hover:text-white transition-colors">Contact</Link>
             </div>
         </div>
       </footer>

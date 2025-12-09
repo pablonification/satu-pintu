@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Phone, AlertCircle } from 'lucide-react'
-
+import Image from 'next/image'
 export default function LoginPage() {
   const router = useRouter()
   const [dinasId, setDinasId] = useState('')
@@ -49,12 +49,9 @@ export default function LoginPage() {
       </div>
       <Card className="w-full max-w-md border-white/10 bg-black/40 backdrop-blur-xl">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-white/10 rounded-xl border border-white/10">
-              <Phone className="h-6 w-6 text-white" />
-            </div>
+          <div className="flex justify-center py-6">
+            <Image src="/logo-white.svg" alt="SatuPintu" width={200} height={100} />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">SatuPintu</CardTitle>
           <CardDescription className="text-muted-foreground">
             Login untuk mengakses dashboard dinas
           </CardDescription>
