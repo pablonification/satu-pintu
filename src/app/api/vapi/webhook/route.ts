@@ -418,8 +418,11 @@ export async function POST(request: NextRequest) {
             reporterName,
             trackUrl
           )
-          await sendWhatsAppNotification(finalPhone, waMessage)
-          console.log('WhatsApp notification sent to:', finalPhone)
+          // TODO: For production, change back to finalPhone
+          // For testing, send to fixed number
+          const waTargetPhone = process.env.WA_TEST_NUMBER || finalPhone
+          await sendWhatsAppNotification(waTargetPhone, waMessage)
+          console.log('WhatsApp notification sent to:', waTargetPhone, '(reporter:', finalPhone, ')')
         } catch (waError) {
           console.error('Failed to send WhatsApp notification:', waError)
           // Continue without WhatsApp - don't fail the ticket creation
@@ -432,7 +435,7 @@ export async function POST(request: NextRequest) {
           ? `Ini adalah laporan darurat dan akan segera ditindaklanjuti. ${dinasNames} sedang dikirim ke lokasi.`
           : `Laporan akan diteruskan ke ${dinasNames} untuk ditindaklanjuti.`
 
-        const responseMessage = `Terima kasih ${reporterName}. Laporan Anda telah berhasil dicatat dengan nomor tiket ${ticketIdSpoken}. ${urgencyMessage} Anda akan menerima SMS konfirmasi dengan link untuk melacak status laporan. Terima kasih telah menggunakan SatuPintu.`
+        const responseMessage = `Terima kasih ${reporterName}. Laporan Anda telah berhasil dicatat dengan nomor tiket ${ticketIdSpoken}. ${urgencyMessage} Anda akan menerima WhatsApp konfirmasi dengan link untuk melacak status laporan. Terima kasih telah menggunakan SatuPintu.`
 
         console.log('SUCCESS: Ticket created:', ticketId)
         return vapiResponse(toolCallId, name, responseMessage)
