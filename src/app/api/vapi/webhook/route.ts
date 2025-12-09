@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, generateTicketId } from '@/lib/supabase'
 import { formatTicketIdForSpeech } from '@/lib/vapi'
-import { CATEGORY_TO_DINAS, DINAS_NAMES, DinasId, TicketCategory, TicketUrgency } from '@/types/database'
+import { CATEGORY_TO_DINAS, DINAS_NAMES, DinasId, TicketCategory, TicketUrgency, CATEGORY_LABELS } from '@/types/database'
 import { validateAddressEnhanced } from '@/lib/address-validation'
-import { sendSmsNotification, SMS_TEMPLATES } from '@/lib/twilio'
+import { sendWhatsAppNotification, WA_TEMPLATES } from '@/lib/fonnte'
 
 // ============================================================================
 // UNIVERSAL TOOL CALL EXTRACTOR
@@ -373,15 +373,20 @@ export async function POST(request: NextRequest) {
           },
         ])
 
-        // Send SMS notification (wrapped in try-catch so it doesn't break ticket creation)
+        // Send WhatsApp notification (wrapped in try-catch so it doesn't break ticket creation)
         try {
           const trackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/track/${ticketId}`
-          const smsMessage = SMS_TEMPLATES.ticketCreated(ticketId, category, trackUrl)
-          await sendSmsNotification(finalPhone, smsMessage)
-          console.log('SMS notification sent to:', finalPhone)
-        } catch (smsError) {
-          console.error('Failed to send SMS notification:', smsError)
-          // Continue without SMS - don't fail the ticket creation
+          const waMessage = WA_TEMPLATES.ticketCreated(
+            ticketId,
+            CATEGORY_LABELS[category],
+            reporterName,
+            trackUrl
+          )
+          await sendWhatsAppNotification(finalPhone, waMessage)
+          console.log('WhatsApp notification sent to:', finalPhone)
+        } catch (waError) {
+          console.error('Failed to send WhatsApp notification:', waError)
+          // Continue without WhatsApp - don't fail the ticket creation
         }
 
         const ticketIdSpoken = formatTicketIdForSpeech(ticketId)

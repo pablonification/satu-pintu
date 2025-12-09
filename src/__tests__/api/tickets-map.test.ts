@@ -124,9 +124,10 @@ function buildFilterParams(urgencyFilter: string): URLSearchParams {
 
 /**
  * Simulates ticket filtering by urgency (what Supabase does)
+ * Empty string is treated as "no filter" - same as null
  */
 function filterTicketsByUrgency(tickets: typeof mockTickets, urgency: string | null) {
-  if (!urgency) return tickets
+  if (!urgency || urgency === '') return tickets
   return tickets.filter(t => t.urgency === urgency)
 }
 
@@ -296,8 +297,12 @@ describe('Tickets Map API', () => {
       
       // Assert
       // Invalid values should return no results (empty array)
-      // This is the expected behavior - the API will simply not find matching records
-      expect(filtered).toHaveLength(0)
+      // EXCEPT empty string "" which is treated as "no filter" and returns all
+      if (invalidValue === '') {
+        expect(filtered).toHaveLength(mockTickets.length)
+      } else {
+        expect(filtered).toHaveLength(0)
+      }
     })
 
     it('should handle URL-encoded urgency parameter', () => {

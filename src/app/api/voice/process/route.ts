@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateTwiML, sendSmsNotification, SMS_TEMPLATES, formatPhoneNumber } from '@/lib/twilio'
+import { generateTwiML, formatPhoneNumber } from '@/lib/twilio'
 import { processAudioWithGemini, analyzeComplaint } from '@/lib/gemini'
 import { supabaseAdmin, generateTicketId } from '@/lib/supabase'
 import { CATEGORY_LABELS, DINAS_NAMES, DinasId } from '@/types/database'
+import { sendWhatsAppNotification, WA_TEMPLATES } from '@/lib/fonnte'
 
 export async function POST(request: NextRequest) {
   try {
@@ -94,23 +95,24 @@ export async function POST(request: NextRequest) {
       status: 'COMPLETED',
     })
     
-    // Send SMS confirmation
+    // Send WhatsApp confirmation
     const trackUrl = `${process.env.NEXT_PUBLIC_APP_URL}/track/${ticketId}`
-    const smsMessage = SMS_TEMPLATES.ticketCreated(
+    const waMessage = WA_TEMPLATES.ticketCreated(
       ticketId,
       CATEGORY_LABELS[analysis.category],
+      'Pelapor', // Name not available in voice processing
       trackUrl
     )
     
-    const smsSid = await sendSmsNotification(from, smsMessage)
+    const waResult = await sendWhatsAppNotification(from, waMessage)
     
-    if (smsSid) {
+    if (waResult.success) {
       await supabaseAdmin.from('sms_logs').insert({
         ticket_id: ticketId,
         phone_to: formatPhoneNumber(from),
-        message: smsMessage,
+        message: waMessage,
         direction: 'OUTBOUND',
-        twilio_sid: smsSid,
+        twilio_sid: waResult.messageId || null,
         status: 'SENT',
       })
     }
