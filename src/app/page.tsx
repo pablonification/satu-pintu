@@ -43,7 +43,10 @@ export default function Home() {
               </Button>
             </Link>
             <Link href="/track/SP-20251203-0001">
-              <Button variant="outline" size="lg" className="h-12 px-8 border-white/10 bg-transparent text-white hover:bg-white/5 text-base rounded-full">
+              <Button
+                size="lg"
+                className="h-12 px-8 bg-black text-white hover:bg-black/90 text-base rounded-full"
+              >
                 <Search className="mr-2 h-4 w-4" />
                 Lacak Status
               </Button>
