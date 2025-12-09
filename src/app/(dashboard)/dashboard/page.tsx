@@ -83,6 +83,8 @@ interface Ticket {
   status: string
   urgency: string
   assigned_dinas: string[]
+  resolution_photo_before: string | null
+  resolution_photo_after: string | null
   created_at: string
   updated_at: string
 }
@@ -437,6 +439,12 @@ export default function DashboardPage() {
 
   async function handleUpdateTicket() {
     if (!selectedTicket || !newStatus) return
+    
+    // Validate: if changing to IN_PROGRESS from PENDING, require photo before (unless already uploaded)
+    if (newStatus === 'IN_PROGRESS' && selectedTicket.status === 'PENDING' && !selectedTicket.resolution_photo_before && !photoBefore) {
+      setPhotoError('Foto sebelum (kondisi awal) wajib diisi untuk memulai pengerjaan')
+      return
+    }
     
     // Validate: if status is RESOLVED, require photo after
     if (newStatus === 'RESOLVED' && !photoAfter) {
@@ -991,17 +999,19 @@ export default function DashboardPage() {
                 </Select>
               </div>
               
-              {/* Photo Upload Section - Show when status is RESOLVED */}
-              {newStatus === 'RESOLVED' && (
-                <div className="space-y-4 p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
+              {/* Photo Upload Section - Foto Sebelum for IN_PROGRESS */}
+              {newStatus === 'IN_PROGRESS' && selectedTicket?.status === 'PENDING' && !selectedTicket?.resolution_photo_before && (
+                <div className="space-y-4 p-4 bg-blue-500/5 rounded-lg border border-blue-500/20">
                   <div className="flex items-center gap-2">
-                    <ImageIcon className="h-5 w-5 text-emerald-400" />
-                    <Label className="text-emerald-400 font-medium">Bukti Penyelesaian</Label>
+                    <ImageIcon className="h-5 w-5 text-blue-400" />
+                    <Label className="text-blue-400 font-medium">Dokumentasi Kondisi Awal</Label>
                   </div>
                   
-                  {/* Photo Before (Optional) */}
+                  {/* Photo Before (Required for IN_PROGRESS) */}
                   <div className="space-y-2">
-                    <Label className="text-white text-sm">Foto Sebelum (opsional)</Label>
+                    <Label className="text-white text-sm">
+                      Foto Sebelum <span className="text-red-400">*</span>
+                    </Label>
                     <div className="flex items-center gap-3">
                       <input
                         ref={photoBeforeInputRef}
@@ -1028,13 +1038,41 @@ export default function DashboardPage() {
                       ) : (
                         <label
                           htmlFor="photo-before"
-                          className="flex flex-col items-center justify-center h-24 w-24 border-2 border-dashed border-white/20 rounded-lg cursor-pointer hover:border-white/40 transition-colors"
+                          className="flex flex-col items-center justify-center h-24 w-24 border-2 border-dashed border-blue-500/40 rounded-lg cursor-pointer hover:border-blue-500/60 transition-colors bg-blue-500/5"
                         >
-                          <Upload className="h-6 w-6 text-white/40" />
-                          <span className="text-xs text-white/40 mt-1">Upload</span>
+                          <Upload className="h-6 w-6 text-blue-400/60" />
+                          <span className="text-xs text-blue-400/60 mt-1">Wajib</span>
                         </label>
                       )}
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Foto kondisi sebelum dikerjakan wajib diupload untuk memulai pengerjaan
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Show existing photo before if already uploaded (read-only) */}
+              {selectedTicket?.resolution_photo_before && (
+                <div className="space-y-2 p-4 bg-white/5 rounded-lg border border-white/10">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5 text-white/60" />
+                    <Label className="text-white/60 font-medium">Foto Sebelum (sudah diupload)</Label>
+                  </div>
+                  <img 
+                    src={selectedTicket.resolution_photo_before} 
+                    alt="Foto sebelum" 
+                    className="h-24 w-24 object-cover rounded-lg border border-white/10"
+                  />
+                </div>
+              )}
+              
+              {/* Photo Upload Section - Foto Sesudah for RESOLVED */}
+              {newStatus === 'RESOLVED' && (
+                <div className="space-y-4 p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-5 w-5 text-emerald-400" />
+                    <Label className="text-emerald-400 font-medium">Bukti Penyelesaian</Label>
                   </div>
                   
                   {/* Photo After (Required) */}
@@ -1123,7 +1161,11 @@ export default function DashboardPage() {
             </Button>
             <Button 
               onClick={handleUpdateTicket} 
-              disabled={updating || (newStatus === 'RESOLVED' && !photoAfter)} 
+              disabled={
+                updating || 
+                (newStatus === 'RESOLVED' && !photoAfter) ||
+                (newStatus === 'IN_PROGRESS' && selectedTicket?.status === 'PENDING' && !selectedTicket?.resolution_photo_before && !photoBefore)
+              } 
               className="bg-white text-black hover:bg-white/90"
             >
               {updating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
