@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin, generateTicketId } from '@/lib/supabase'
-import { formatTicketIdForSpeech } from '@/lib/vapi'
+import { formatTicketIdForSpeech, getAssistantConfig } from '@/lib/vapi'
 import { CATEGORY_TO_DINAS, DINAS_NAMES, DinasId, TicketCategory, TicketUrgency, CATEGORY_LABELS } from '@/types/database'
 import { validateAddressEnhanced } from '@/lib/address-validation'
 import { sendWhatsAppNotification, WA_TEMPLATES } from '@/lib/fonnte'
@@ -253,8 +253,44 @@ export async function POST(request: NextRequest) {
     const payload = await request.json()
     
     console.log('=== VAPI WEBHOOK ===')
+    console.log('Event type:', payload.message?.type)
     console.log(JSON.stringify(payload, null, 2))
 
+    // =========================================================================
+    // HANDLE ASSISTANT-REQUEST EVENT (untuk transient assistant)
+    // Ini adalah event pertama yang dikirim Vapi saat ada panggilan masuk
+    // =========================================================================
+    const messageType = payload.message?.type
+    
+    if (messageType === 'assistant-request') {
+      console.log('=== ASSISTANT REQUEST - Returning transient assistant config ===')
+      const assistantConfig = getAssistantConfig()
+      return NextResponse.json({
+        assistant: assistantConfig
+      })
+    }
+
+    // =========================================================================
+    // HANDLE STATUS-UPDATE EVENTS
+    // =========================================================================
+    if (messageType === 'status-update') {
+      console.log('Status update:', payload.message?.status)
+      return NextResponse.json({ result: 'OK' })
+    }
+
+    // =========================================================================
+    // HANDLE END-OF-CALL-REPORT
+    // =========================================================================
+    if (messageType === 'end-of-call-report') {
+      console.log('Call ended:', payload.message?.endedReason)
+      console.log('Summary:', payload.message?.summary)
+      return NextResponse.json({ result: 'OK' })
+    }
+
+    // =========================================================================
+    // HANDLE TOOL CALLS
+    // =========================================================================
+    
     // Extract tool call using universal extractor
     const toolCall = extractToolCall(payload)
     
