@@ -113,17 +113,19 @@ export async function sendWhatsAppNotification(
   try {
     console.log(`[Fonnte] Sending WhatsApp to: ${phone}`)
     
+    // Fonnte API uses form-data, not JSON
+    const formData = new FormData()
+    formData.append('target', phone)
+    formData.append('message', message)
+    formData.append('countryCode', '62')
+    
     const response = await fetch(FONNTE_API_URL, {
       method: 'POST',
       headers: {
         'Authorization': FONNTE_TOKEN,
-        'Content-Type': 'application/json',
+        // Note: Don't set Content-Type for FormData, browser/node will set it automatically with boundary
       },
-      body: JSON.stringify({
-        target: phone,
-        message: message,
-        countryCode: '62', // Indonesia
-      }),
+      body: formData,
     })
 
     if (!response.ok) {
