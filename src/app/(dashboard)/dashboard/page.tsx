@@ -47,6 +47,7 @@ import { motion } from 'framer-motion'
 import { id as idLocale } from 'date-fns/locale'
 import { STATUS_LABELS, URGENCY_LABELS, CATEGORY_LABELS, TicketStatus, TicketUrgency, TicketCategory } from '@/types/database'
 import type { MapTicket } from '@/components/HeatmapView'
+import Image from 'next/image'
 
 // Initialize Supabase client for storage
 const supabase = createClient(
@@ -546,9 +547,7 @@ export default function DashboardPage() {
       <header className="bg-background/60 backdrop-blur-xl border-b border-white/5 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/10">
-              <Phone className="h-4 w-4 text-white" />
-            </div>
+            <Image src="/s-logo.svg" alt="SatuPintu" width={30} height={30} />
             <div>
               <h1 className="font-bold text-lg text-white">SatuPintu</h1>
               <p className="text-xs text-muted-foreground">{user?.dinasName}</p>

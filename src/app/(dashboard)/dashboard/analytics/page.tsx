@@ -19,6 +19,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import Image from 'next/image'
 
 // Dynamic imports for charts (heavy recharts library)
 const DailyTicketsChart = dynamic(
@@ -160,9 +161,7 @@ export default function AnalyticsPage() {
       <header className="bg-background/60 backdrop-blur-xl border-b border-white/5 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/10">
-              <Phone className="h-4 w-4 text-white" />
-            </div>
+            <Image src="/s-logo.svg" alt="SatuPintu" width={30} height={30} />
             <div>
               <h1 className="font-bold text-lg text-white">SatuPintu</h1>
               <p className="text-xs text-muted-foreground">{user?.dinasName}</p>
