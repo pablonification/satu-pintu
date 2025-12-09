@@ -324,6 +324,9 @@ export async function POST(request: NextRequest) {
       }
 
       case 'createTicket': {
+        console.log('=== CREATE TICKET CALLED ===')
+        console.log('Params:', JSON.stringify(params, null, 2))
+        
         const {
           category,
           subcategory,
@@ -342,7 +345,10 @@ export async function POST(request: NextRequest) {
           urgency?: TicketUrgency
         }
 
+        console.log('Extracted - Category:', category, 'Reporter:', reporterName, 'Phone:', reporterPhone, 'Address:', address)
+
         if (!category || !description || !reporterName || !address) {
+          console.log('VALIDATION FAILED - missing fields')
           return vapiResponse(toolCallId, name, 'Maaf, ada informasi yang belum lengkap. Pastikan kategori, deskripsi, nama pelapor, dan alamat sudah diisi.')
         }
 
@@ -421,8 +427,12 @@ export async function POST(request: NextRequest) {
           // TODO: For production, change back to finalPhone
           // For testing, send to fixed number
           const waTargetPhone = process.env.WA_TEST_NUMBER || finalPhone
-          await sendWhatsAppNotification(waTargetPhone, waMessage)
-          console.log('WhatsApp notification sent to:', waTargetPhone, '(reporter:', finalPhone, ')')
+          console.log('=== SENDING WHATSAPP ===')
+          console.log('Target:', waTargetPhone, '| Reporter phone:', finalPhone)
+          console.log('Message:', waMessage.substring(0, 100) + '...')
+          
+          const waResult = await sendWhatsAppNotification(waTargetPhone, waMessage)
+          console.log('WhatsApp result:', JSON.stringify(waResult))
         } catch (waError) {
           console.error('Failed to send WhatsApp notification:', waError)
           // Continue without WhatsApp - don't fail the ticket creation
