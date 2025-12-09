@@ -14,7 +14,7 @@
 // CONFIGURATION
 // ============================================================================
 
-const FONNTE_TOKEN = process.env.FONNTE_TOKEN || ''
+const FONNTE_TOKEN = process.env.FONNTE_API_TOKEN || ''
 const FONNTE_API_URL = 'https://api.fonnte.com/send'
 
 // ============================================================================
