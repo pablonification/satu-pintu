@@ -208,7 +208,7 @@ describe('getAssistantConfig', () => {
     
     expect(config.transcriber.provider).toBe('google')
     expect(config.transcriber.model).toBe('gemini-2.0-flash')
-    expect(config.transcriber.language).toBe('id')
+    expect(config.transcriber.language).toBe('Indonesian')
   })
 
   // Note: Google Chirp doesn't support keyword boosting like Deepgram

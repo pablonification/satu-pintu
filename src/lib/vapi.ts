@@ -653,7 +653,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     transcriber: {
       provider: 'google' as const,
       model: 'gemini-2.0-flash' as const,
-      language: 'id' as const, // Indonesian
+      language: 'Indonesian' as const,
     },
 
     // Konfigurasi Stop Speaking Plan
