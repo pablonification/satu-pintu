@@ -203,29 +203,16 @@ describe('getAssistantConfig', () => {
     expect(endCallTool).toBeDefined()
   })
 
-  it('should have Indonesian transcriber', () => {
+  it('should have Google Gemini transcriber for Indonesian', () => {
     const config = getAssistantConfig()
     
-    expect(config.transcriber.provider).toBe('deepgram')
-    expect(config.transcriber.language).toBe('id')
+    expect(config.transcriber.provider).toBe('google')
+    expect(config.transcriber.model).toBe('gemini-2.0-flash')
+    expect(config.transcriber.language).toBe('Indonesian')
   })
 
-  it('should have Indonesian keywords boosting for short responses', () => {
-    const config = getAssistantConfig()
-    
-    expect(config.transcriber.keywords).toBeDefined()
-    expect(Array.isArray(config.transcriber.keywords)).toBe(true)
-    
-    // Should include common Indonesian affirmative/negative short words
-    const keywords = config.transcriber.keywords as string[]
-    expect(keywords.some(k => k.startsWith('iya:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('ya:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('betul:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('bukan:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('tidak:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('ga:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('nggak:'))).toBe(true)
-  })
+  // Note: Google Gemini doesn't use keywords boosting like Deepgram
+  // It relies on its training data for Indonesian language recognition
 
   it('should have ElevenLabs voice configured for Indonesian', () => {
     const config = getAssistantConfig()
@@ -296,8 +283,47 @@ describe('getAssistantConfig', () => {
   it('should have silenceTimeoutSeconds configured for auto-end', () => {
     const config = getAssistantConfig()
     
-    // Should be configured to end call after 30 seconds of silence (increased for web calls)
-    expect(config.silenceTimeoutSeconds).toBe(30)
+    // Should be configured to end call after 60 seconds of silence
+    // Increased to allow time for AI to speak long responses without premature call ending
+    expect(config.silenceTimeoutSeconds).toBe(60)
+  })
+
+  it('should have idle message hook configured to prevent premature call ending', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.hooks).toBeDefined()
+    expect(Array.isArray(config.hooks)).toBe(true)
+    expect(config.hooks.length).toBeGreaterThan(0)
+    
+    // Find the idle check hook
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const idleHook = config.hooks.find((h: any) => h.name === 'idle_check') as any
+    
+    expect(idleHook).toBeDefined()
+    expect(idleHook!.on).toBe('customer.speech.timeout')
+    expect(idleHook!.options.timeoutSeconds).toBe(45)
+    expect(idleHook!.options.triggerMaxCount).toBe(2)
+    expect(idleHook!.options.triggerResetMode).toBe('onUserSpeech')
+  })
+
+  it('should have Indonesian idle messages in hook', () => {
+    const config = getAssistantConfig()
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const idleHook = config.hooks.find((h: any) => h.name === 'idle_check') as any
+    
+    expect(idleHook).toBeDefined()
+    expect(idleHook!.do).toBeDefined()
+    expect(idleHook!.do.length).toBeGreaterThan(0)
+    
+    const sayAction = idleHook!.do[0]
+    expect(sayAction.type).toBe('say')
+    expect(sayAction.exact).toBeDefined()
+    expect(Array.isArray(sayAction.exact)).toBe(true)
+    
+    // Should have Indonesian messages
+    const messages = sayAction.exact as string[]
+    expect(messages.some(m => m.includes('tersambung'))).toBe(true)
   })
 
   it('should have server URL configured', () => {

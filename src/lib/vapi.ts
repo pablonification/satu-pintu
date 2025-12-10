@@ -561,7 +561,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // - similarity_boost: 0.80 (higher = sticks closer to voice character)  
     // - style: 0.15 (lower = less expressive, more stable accent)
     // - use_speaker_boost: true (improves clarity)
-    // - speed: 0.95 (slightly slower for clearer Indonesian pronunciation)
+    // - speed: 1.05 (slightly faster for more responsive conversation)
     // =========================================================================
     voice: {
       provider: '11labs' as const,
@@ -572,7 +572,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       similarityBoost: 0.80,
       style: 0.15,
       useSpeakerBoost: true,
-      speed: 0.95,
+      speed: 1.05,
     },
 
     // Server configuration untuk function calls - PENTING!
@@ -590,42 +590,16 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     ],
 
     // Konfigurasi Percakapan
-    silenceTimeoutSeconds: 30, // Auto-end setelah 30 detik silence (dinaikkan dari 12 untuk web call)
+    silenceTimeoutSeconds: 60, // Auto-end setelah 60 detik silence (untuk beri waktu saat AI bicara panjang)
     maxDurationSeconds: 600,
 
     // Konfigurasi Transkripsi
-    // Using Deepgram Nova-2 with Indonesian keywords boosting
-    // to improve recognition of short responses like "iya", "ya", "betul", etc.
+    // Menggunakan Google Gemini untuk akurasi yang lebih baik pada Bahasa Indonesia
+    // Google memiliki data training yang lebih banyak untuk bahasa Indonesia
     transcriber: {
-      provider: 'deepgram' as const,
-      model: 'nova-2' as const,
-      language: 'id' as const,
-      keywords: [
-        // Affirmative responses (boost strongly)
-        'iya:5',
-        'ya:5',
-        'betul:5',
-        'benar:5',
-        'yoi:4',
-        'yup:4',
-        'oke:4',
-        'siap:4',
-        'baik:3',
-        'boleh:3',
-        // Negative responses (boost strongly)
-        'bukan:5',
-        'tidak:5',
-        'ga:5',
-        'nggak:5',
-        'salah:4',
-        'jangan:3',
-        // Other common short words
-        'udah:4',
-        'sudah:4',
-        'belum:4',
-        'mau:3',
-        'bisa:3',
-      ],
+      provider: 'google' as const,
+      model: 'gemini-2.0-flash' as const,
+      language: 'Indonesian' as const,
     },
 
     // Konfigurasi Stop Speaking Plan
@@ -657,6 +631,34 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       },
       waitSeconds: 0.4, // Final wait before AI speaks
     },
+
+    // =========================================================================
+    // Konfigurasi Hooks - Idle Message
+    // =========================================================================
+    // Hook untuk menangani situasi ketika user diam terlalu lama
+    // Ini mencegah call ended tiba-tiba saat user sedang mendengarkan AI bicara panjang
+    // Setelah 45 detik silence, AI akan bertanya apakah user masih tersambung
+    hooks: [
+      {
+        on: 'customer.speech.timeout' as const,
+        options: {
+          timeoutSeconds: 45,           // Trigger setelah 45 detik silence
+          triggerMaxCount: 2,           // Maksimal 2x tanya sebelum call ended
+          triggerResetMode: 'onUserSpeech' as const, // Reset counter jika user bicara
+        },
+        do: [
+          {
+            type: 'say' as const,
+            exact: [
+              'Mohon maaf, apakah masih tersambung?',
+              'Apakah ada informasi lain yang bisa saya bantu?',
+              'Silakan dilanjutkan jika masih ada yang ingin disampaikan.',
+            ],
+          },
+        ],
+        name: 'idle_check',
+      },
+    ],
   }
 }
 
