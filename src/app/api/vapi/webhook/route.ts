@@ -378,11 +378,19 @@ export async function POST(request: NextRequest) {
         let addressLat: number | null = null
         let addressLng: number | null = null
 
-        if (validation.isValid && validation.isInCoverage) {
+        // Simpan formatted address jika valid
+        if (validation.isValid) {
           validatedAddress = validation.formattedAddress || address
-          addressLat = validation.lat || null
-          addressLng = validation.lng || null
         }
+        
+        // Simpan koordinat jika tersedia (meskipun di luar coverage area)
+        // Ini memastikan tiket tetap muncul di peta
+        if (validation.lat && validation.lng) {
+          addressLat = validation.lat
+          addressLng = validation.lng
+        }
+        
+        console.log(`[Geocoding Result] Source: ${validation.source}, Valid: ${validation.isValid}, InCoverage: ${validation.isInCoverage}, Coords: ${addressLat}, ${addressLng}`)
 
         const { error: ticketError } = await supabaseAdmin
           .from('tickets')
@@ -489,6 +497,22 @@ export async function POST(request: NextRequest) {
         const category = emergencyToCategory[emergencyType] || 'DARURAT'
         const assignedDinas = CATEGORY_TO_DINAS[category] || ['admin']
 
+        // Validate and geocode emergency location (NEW!)
+        const validation = await validateAddressEnhanced(location)
+        let validatedAddress = location
+        let addressLat: number | null = null
+        let addressLng: number | null = null
+        
+        if (validation.isValid) {
+          validatedAddress = validation.formattedAddress || location
+        }
+        if (validation.lat && validation.lng) {
+          addressLat = validation.lat
+          addressLng = validation.lng
+        }
+        
+        console.log(`[Emergency Geocoding] Source: ${validation.source}, Valid: ${validation.isValid}, Coords: ${addressLat}, ${addressLng}`)
+
         // Create emergency ticket with CRITICAL urgency
         const { error: ticketError } = await supabaseAdmin
           .from('tickets')
@@ -500,7 +524,9 @@ export async function POST(request: NextRequest) {
             description: `[DARURAT - ${emergencyType}] ${situation}`,
             reporter_phone: reporterPhone || customerPhone || '+62000000000',
             reporter_name: reporterName || 'Pelapor Darurat',
-            validated_address: location,
+            validated_address: validatedAddress,
+            address_lat: addressLat,
+            address_lng: addressLng,
             status: 'PENDING',
             urgency: 'CRITICAL' as TicketUrgency,
             assigned_dinas: assignedDinas,

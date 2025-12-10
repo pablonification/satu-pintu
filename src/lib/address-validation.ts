@@ -601,7 +601,95 @@ export const BANDUNG_LANDMARKS: Landmark[] = [
 ]
 
 // ============================================================================
-// GOOGLE MAPS GEOCODING
+// LOCATIONIQ GEOCODING (Primary - Free tier: 5000 req/day)
+// ============================================================================
+
+const LOCATIONIQ_API_KEY = process.env.LOCATIONIQ_API_KEY || ''
+
+async function geocodeWithLocationIQ(address: string): Promise<AddressValidationResult | null> {
+  if (!LOCATIONIQ_API_KEY) {
+    console.warn('[Geocoding] LOCATIONIQ_API_KEY not configured')
+    return null
+  }
+  
+  try {
+    // Add Bandung context if not present
+    let searchQuery = address
+    if (!address.toLowerCase().includes('bandung')) {
+      searchQuery = `${address}, Bandung, Indonesia`
+    }
+    
+    const params = new URLSearchParams({
+      key: LOCATIONIQ_API_KEY,
+      q: searchQuery,
+      format: 'json',
+      addressdetails: '1',
+      limit: '1',
+      countrycodes: 'id',
+      // Bias results to Bandung area (viewbox format: lon1,lat1,lon2,lat2)
+      viewbox: `${BANDUNG_BOUNDS.west},${BANDUNG_BOUNDS.north},${BANDUNG_BOUNDS.east},${BANDUNG_BOUNDS.south}`,
+      bounded: '0', // prefer viewbox but don't strictly limit
+    })
+    
+    const response = await fetch(
+      `https://us1.locationiq.com/v1/search?${params}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
+    )
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[Geocoding] LocationIQ API error:', response.status, errorText)
+      return null
+    }
+    
+    const results = await response.json()
+    
+    if (!results || results.length === 0) {
+      console.log('[Geocoding] LocationIQ: No results for', address)
+      return null
+    }
+    
+    const result = results[0]
+    const lat = parseFloat(result.lat)
+    const lng = parseFloat(result.lon)
+    const inBandung = isInBandung(lat, lng)
+    const addressInBandung = result.display_name?.toLowerCase().includes('bandung')
+    
+    // Determine confidence based on result type
+    let confidence: 'high' | 'medium' | 'low' = 'medium'
+    if (result.type === 'house' || result.type === 'building' || result.class === 'place') {
+      confidence = 'high'
+    } else if (result.type === 'administrative' || result.type === 'suburb') {
+      confidence = 'low'
+    }
+    
+    console.log(`[Geocoding] LocationIQ SUCCESS: "${address}" → ${lat}, ${lng} (${result.type}, confidence: ${confidence})`)
+    
+    return {
+      isValid: true,
+      isInCoverage: inBandung || addressInBandung,
+      formattedAddress: result.display_name,
+      lat,
+      lng,
+      rawAddress: address,
+      confidence,
+      message: inBandung || addressInBandung
+        ? `Alamat ditemukan: ${result.display_name}`
+        : `Alamat ditemukan tapi di luar jangkauan Kota Bandung: ${result.display_name}`,
+      source: 'locationiq',
+    }
+  } catch (error) {
+    console.error('[Geocoding] LocationIQ error:', error)
+    return null
+  }
+}
+
+// ============================================================================
+// GOOGLE MAPS GEOCODING (Legacy - kept for reference, skipped in new flow)
 // ============================================================================
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || ''
@@ -629,7 +717,7 @@ export interface AddressValidationResult {
   rawAddress: string
   confidence: 'high' | 'medium' | 'low'
   message: string
-  source: 'landmark' | 'google_maps' | 'fallback'
+  source: 'landmark' | 'google_maps' | 'locationiq' | 'nominatim' | 'fallback'
   landmark?: Landmark
   needsClarification?: boolean
   clarificationQuestion?: string
@@ -890,6 +978,8 @@ async function geocodeWithNominatim(address: string): Promise<AddressValidationR
             const inBandung = isInBandung(lat, lng)
             const addressInBandung = result.display_name.toLowerCase().includes('bandung')
             
+            console.log(`[Geocoding] Nominatim (simplified) SUCCESS: "${address}" → ${lat}, ${lng}`)
+            
             return {
               isValid: true,
               isInCoverage: inBandung || addressInBandung,
@@ -901,7 +991,7 @@ async function geocodeWithNominatim(address: string): Promise<AddressValidationR
               message: inBandung || addressInBandung
                 ? `Alamat ditemukan (area): ${result.display_name}`
                 : `Alamat ditemukan tapi di luar jangkauan Kota Bandung`,
-              source: 'google_maps',
+              source: 'nominatim',
             }
           }
         }
@@ -919,6 +1009,8 @@ async function geocodeWithNominatim(address: string): Promise<AddressValidationR
     // Check if display_name mentions Bandung
     const addressInBandung = result.display_name.toLowerCase().includes('bandung')
     
+    console.log(`[Geocoding] Nominatim SUCCESS: "${address}" → ${lat}, ${lng}`)
+    
     return {
       isValid: true,
       isInCoverage: inBandung || addressInBandung,
@@ -930,10 +1022,10 @@ async function geocodeWithNominatim(address: string): Promise<AddressValidationR
       message: inBandung || addressInBandung
         ? `Alamat ditemukan: ${result.display_name}`
         : `Alamat ditemukan tapi di luar jangkauan Kota Bandung: ${result.display_name}`,
-      source: 'google_maps', // Keep as google_maps for compatibility
+      source: 'nominatim',
     }
   } catch (error) {
-    console.error('Nominatim geocoding error:', error)
+    console.error('[Geocoding] Nominatim error:', error)
     return null
   }
 }
@@ -945,18 +1037,21 @@ async function geocodeWithNominatim(address: string): Promise<AddressValidationR
 /**
  * Validate address dengan flow:
  * 1. Check landmark database (fuzzy match)
- * 2. Google Maps Geocoding
+ * 2. LocationIQ Geocoding (primary - free, accurate)
  * 3. Nominatim (OSM) fallback
  * 4. Generate clarification jika ambigu
  */
 export async function validateAddressEnhanced(address: string): Promise<AddressValidationResult> {
   const trimmedAddress = address.trim()
   
+  console.log(`[Geocoding] Starting validation for: "${trimmedAddress}"`)
+  
   // === STEP 1: Check Landmark Database ===
   const landmarkMatch = findLandmark(trimmedAddress)
   
   if (landmarkMatch && landmarkMatch.score >= 0.7) {
     const { landmark } = landmarkMatch
+    console.log(`[Geocoding] Landmark MATCH: "${trimmedAddress}" → ${landmark.name} (score: ${landmarkMatch.score})`)
     return {
       isValid: true,
       isInCoverage: true,
@@ -971,18 +1066,17 @@ export async function validateAddressEnhanced(address: string): Promise<AddressV
     }
   }
   
-  // === STEP 2: Google Maps Geocoding ===
-  const googleResult = await geocodeWithGoogle(trimmedAddress)
+  // === STEP 2: LocationIQ Geocoding (Primary - Free tier) ===
+  const locationIQResult = await geocodeWithLocationIQ(trimmedAddress)
   
-  if (googleResult) {
-    // If Google found something but confidence is low, suggest clarification
-    if (googleResult.confidence === 'low' || !googleResult.isInCoverage) {
-      // Find nearby landmarks for suggestion
+  if (locationIQResult) {
+    // If LocationIQ found something but confidence is low, suggest clarification
+    if (locationIQResult.confidence === 'low' || !locationIQResult.isInCoverage) {
       const suggestions = findNearbyLandmarkSuggestions(trimmedAddress)
       
       if (suggestions.length > 0) {
         return {
-          ...googleResult,
+          ...locationIQResult,
           needsClarification: true,
           clarificationQuestion: `Untuk memastikan lokasi yang tepat, apakah lokasi tersebut dekat dengan ${suggestions[0]}?`,
           suggestions,
@@ -990,11 +1084,11 @@ export async function validateAddressEnhanced(address: string): Promise<AddressV
       }
     }
     
-    return googleResult
+    return locationIQResult
   }
   
   // === STEP 3: Nominatim (OSM) Fallback ===
-  console.log('Google Maps failed, trying Nominatim fallback...')
+  console.log('[Geocoding] LocationIQ failed, trying Nominatim fallback...')
   const nominatimResult = await geocodeWithNominatim(trimmedAddress)
   
   if (nominatimResult) {
@@ -1016,6 +1110,7 @@ export async function validateAddressEnhanced(address: string): Promise<AddressV
   }
   
   // === STEP 4: Fallback - Generate clarification question ===
+  console.log(`[Geocoding] All geocoders FAILED for: "${trimmedAddress}"`)
   const suggestions = findNearbyLandmarkSuggestions(trimmedAddress)
   
   return {
