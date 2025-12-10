@@ -565,7 +565,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // =========================================================================
     voice: {
       provider: '11labs' as const,
-      voiceId: 'gedzfqL7OGdPbwm0ynTP',
+      voiceId: 'c470sxKWDq6tA74TL3yB',
       model: 'eleven_multilingual_v2',
       language: 'id', // Indonesian
       stability: 0.65,

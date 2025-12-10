@@ -231,7 +231,7 @@ describe('getAssistantConfig', () => {
     const config = getAssistantConfig()
     
     expect(config.voice.provider).toBe('11labs')
-    expect(config.voice.voiceId).toBe('gedzfqL7OGdPbwm0ynTP')
+    expect(config.voice.voiceId).toBe('c470sxKWDq6tA74TL3yB')
   })
 
   it('should accept customerPhone parameter for system prompt', () => {
