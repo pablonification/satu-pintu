@@ -11,7 +11,8 @@ export async function GET() {
   )
   
   const configured = isFonnteConfigured()
-  const testNumber = process.env.WA_TEST_NUMBER || '6285155347701'
+  // Default test number for this endpoint only
+  const testNumber = '6285155347701'
   const fonnteToken = process.env.FONNTE_API_TOKEN || ''
   
   // Debug: show first 5 and last 5 chars of token
@@ -25,7 +26,7 @@ export async function GET() {
       FONNTE_API_TOKEN_SET: !!process.env.FONNTE_API_TOKEN,
       FONNTE_API_TOKEN_LENGTH: fonnteToken.length,
       FONNTE_API_TOKEN_PREVIEW: tokenPreview,
-      WA_TEST_NUMBER: testNumber,
+      TEST_NUMBER: testNumber,
       NODE_ENV: process.env.NODE_ENV,
       VERCEL_ENV: process.env.VERCEL_ENV,
       ALL_RELEVANT_ENV_KEYS: allEnvKeys,

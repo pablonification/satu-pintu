@@ -64,9 +64,9 @@ export async function GET() {
       trackUrl
     )
     
-    const waTargetPhone = process.env.WA_TEST_NUMBER || reporterPhone
+    // Use reporter phone directly (no ENV override)
+    const waTargetPhone = reporterPhone
     log(`WA Target: ${waTargetPhone}`)
-    log(`WA_TEST_NUMBER env: ${process.env.WA_TEST_NUMBER || '(not set)'}`)
     log(`Message preview: ${waMessage.substring(0, 100)}...`)
 
     const waResult = await sendWhatsAppNotification(waTargetPhone, waMessage)

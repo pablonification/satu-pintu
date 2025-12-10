@@ -27,13 +27,6 @@ export const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID || ''
  */
 export const EMERGENCY_TRANSFER_NUMBER = process.env.EMERGENCY_TRANSFER_NUMBER || '+628123456789'
 
-/**
- * WA Test Number for Testing
- * If set, this number will be used as the "registered phone number" in the system
- * If not set, the actual caller ID ({{customer.number}}) will be used
- */
-export const WA_TEST_NUMBER = process.env.WA_TEST_NUMBER || ''
-
 // ============================================================================
 // KONFIGURASI WEBHOOK
 // ============================================================================
@@ -52,12 +45,12 @@ export const getWebhookUrl = () => {
 // ============================================================================
 
 /**
- * Generate system prompt with dynamic phone number
- * If WA_TEST_NUMBER is set, use that; otherwise use VAPI's {{customer.number}}
+ * Generate system prompt
+ * Uses VAPI's {{customer.number}} variable to get caller's phone number
  */
 const getSystemPrompt = () => {
-  // Determine phone number source
-  const phoneNumberSource = WA_TEST_NUMBER || '{{customer.number}}'
+  // Use VAPI's customer number variable - this is the actual caller's phone number
+  const phoneNumberSource = '{{customer.number}}'
   
   return `Kamu adalah asisten AI bernama "Satu" untuk layanan SatuPintu, pusat pengaduan terpadu Pemerintah Kota Bandung.
 Tugasmu adalah membantu warga Kota Bandung melaporkan keluhan, masalah, atau pengaduan terkait layanan publik dan infrastruktur kota.

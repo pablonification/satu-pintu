@@ -424,9 +424,8 @@ export async function POST(request: NextRequest) {
             reporterName,
             trackUrl
           )
-          // Use the phone number from AI (reporterPhone) - this is what user confirmed
-          // Only fallback to WA_TEST_NUMBER if no reporterPhone was provided by AI
-          // finalPhone already prioritizes: reporterPhone > customerPhone > default
+          // Use the phone number confirmed by user via AI (reporterPhone)
+          // finalPhone prioritizes: reporterPhone > customerPhone > default
           const waTargetPhone = finalPhone
           console.log('=== SENDING WHATSAPP ===')
           console.log('Target:', waTargetPhone)

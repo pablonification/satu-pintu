@@ -12,7 +12,6 @@ import {
   getAssistantConfig,
   isVapiConfigured,
   getWebhookUrl,
-  WA_TEST_NUMBER,
 } from '@/lib/vapi'
 
 // ============================================================================
@@ -317,20 +316,7 @@ describe('getAssistantConfig', () => {
 describe('getWebhookUrl', () => {
   it('should return webhook URL', () => {
     const url = getWebhookUrl()
-    
     expect(url).toContain('/api/vapi/webhook')
-  })
-})
-
-describe('WA_TEST_NUMBER', () => {
-  it('should be exported as a string', () => {
-    expect(typeof WA_TEST_NUMBER).toBe('string')
-  })
-
-  it('should use env value or empty string as fallback', () => {
-    // WA_TEST_NUMBER should either be the env value or empty string
-    // This ensures it doesn't throw when accessed
-    expect(WA_TEST_NUMBER).toBeDefined()
   })
 })
 
