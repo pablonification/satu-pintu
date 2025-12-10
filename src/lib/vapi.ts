@@ -647,13 +647,46 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     maxDurationSeconds: 600,
 
     // Konfigurasi Transkripsi
-    // Menggunakan Google Gemini untuk akurasi yang lebih baik pada Bahasa Indonesia
-    // Google memiliki data training yang lebih banyak untuk bahasa Indonesia
-    // Model gemini-2.0-flash adalah model terbaru dengan performa baik
+    // Menggunakan Deepgram Nova-3 untuk akurasi terbaik pada Bahasa Indonesia
+    // Nova-3 adalah model terbaru Deepgram dengan performa lebih baik dari Nova-2
+    // Catatan: Nova-3 menggunakan 'keyterm' untuk phrase boosting, bukan 'keywords'
     transcriber: {
-      provider: 'google' as const,
-      model: 'gemini-2.0-flash' as const,
-      language: 'Indonesian' as const,
+      provider: 'deepgram' as const,
+      model: 'nova-3' as const,
+      language: 'id' as const,
+      // Keyterm prompting untuk Nova-3 (phrases, bukan single words dengan intensifier)
+      keyterm: [
+        // Affirmative responses
+        'iya',
+        'ya',
+        'betul',
+        'benar',
+        'yoi',
+        'yup',
+        'oke',
+        'siap',
+        'baik',
+        'boleh',
+        // Negative responses
+        'bukan',
+        'tidak',
+        'ga',
+        'nggak',
+        'salah',
+        'jangan',
+        // Other common words
+        'udah',
+        'sudah',
+        'belum',
+        'mau',
+        'bisa',
+        // Domain specific
+        'SatuPintu',
+        'ODGJ',
+        'Dinas',
+        'kelurahan',
+        'kecamatan',
+      ],
     },
 
     // Konfigurasi Stop Speaking Plan

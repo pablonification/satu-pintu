@@ -203,16 +203,28 @@ describe('getAssistantConfig', () => {
     expect(endCallTool).toBeDefined()
   })
 
-  it('should have Indonesian transcriber with Google Gemini', () => {
+  it('should have Indonesian transcriber with Deepgram Nova-3', () => {
     const config = getAssistantConfig()
     
-    expect(config.transcriber.provider).toBe('google')
-    expect(config.transcriber.model).toBe('gemini-2.0-flash')
-    expect(config.transcriber.language).toBe('Indonesian')
+    expect(config.transcriber.provider).toBe('deepgram')
+    expect(config.transcriber.model).toBe('nova-3')
+    expect(config.transcriber.language).toBe('id')
   })
 
-  // Note: Google Chirp doesn't support keyword boosting like Deepgram
-  // Accuracy improvement comes from Google's native Indonesian language model
+  it('should have keyterm prompting for Nova-3', () => {
+    const config = getAssistantConfig()
+    
+    // Nova-3 uses keyterm instead of keywords
+    expect(config.transcriber.keyterm).toBeDefined()
+    expect(Array.isArray(config.transcriber.keyterm)).toBe(true)
+    
+    const keyterms = config.transcriber.keyterm as string[]
+    // Should include common Indonesian words
+    expect(keyterms).toContain('iya')
+    expect(keyterms).toContain('ya')
+    expect(keyterms).toContain('bukan')
+    expect(keyterms).toContain('ga')
+  })
 
   it('should have ElevenLabs voice configured for Indonesian', () => {
     const config = getAssistantConfig()
