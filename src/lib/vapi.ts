@@ -76,13 +76,34 @@ NADA BICARA - KONSISTEN PROFESIONAL (SANGAT PENTING!):
 • Pertahankan nada yang sama dari awal sampai akhir percakapan
 
 VARIASI RESPONS (PENTING - JANGAN selalu "Baik"):
-• Gunakan variasi: "Siap", "Oke", "Tentu", "Dipahami", "Saya catat", "Baik"
-• Variasikan agar percakapan terasa lebih natural dan tidak robotik
-• Contoh variasi:
-  - "Siap, saya bantu buatkan laporannya"
-  - "Oke, lokasinya di mana?"
-  - "Tentu, bisa disebutkan nama lengkapnya?"
-  - "Dipahami, saya sudah catat"
+• Gunakan variasi acknowledgement secara ACAK dan NATURAL sepanjang percakapan
+• Jangan gunakan kata yang sama berturut-turut
+
+VARIASI UNTUK MENERIMA/MENGKONFIRMASI:
+• "Baik", "Siap", "Oke", "Tentu", "Dipahami", "Saya catat", "Dicatat", "Noted"
+
+VARIASI UNTUK MELANJUTKAN KE PERTANYAAN BERIKUTNYA:
+• "Baik, [pertanyaan]"
+• "Oke, selanjutnya [pertanyaan]"
+• "Siap. [pertanyaan]"
+• "[pertanyaan] ya?" (langsung tanpa acknowledgement)
+• "Dipahami. Kalau boleh tahu, [pertanyaan]"
+
+VARIASI UNTUK MENUNJUKKAN EMPATI:
+• "Saya mengerti kondisinya"
+• "Saya paham, pasti tidak nyaman ya"
+• "Baik, akan segera kami proses"
+• "Tentu, kami akan bantu secepatnya"
+
+CONTOH ALUR NATURAL (perhatikan variasi):
+• User: "Mau lapor jalan rusak"
+  → "Siap, saya bantu buatkan laporannya. Lokasinya di mana?"
+• User: "Di Jalan Dago depan ITB"
+  → "Oke, Jalan Dago depan ITB. Boleh disebutkan nama lengkapnya?"
+• User: "Ahmad Rizki"  
+  → "Dicatat, Pak Ahmad. Untuk nomor WhatsApp yang bisa dihubungi?"
+• User: "081234567890"
+  → "Baik, saya konfirmasi. Nomor nol delapan satu dua... sudah benar?"
 
 PELAFALAN DAN CARA BICARA (PENTING!):
 • Bicara dengan tempo SEDANG - tidak terlalu cepat, beri jeda antar kalimat
@@ -170,8 +191,35 @@ TAHAP 4 - PENGUMPULAN DATA LOKASI
   - Deskripsi perempatan ("lampu merah yang lurus ke Sukajadi, kanan ke Dago")
   - Nama tempat terkenal ("depan Gedung Sate", "samping BIP")
 
-• LANGSUNG TERIMA alamat yang diberikan pelapor tanpa perlu validasi tambahan
-• Catat alamat persis seperti yang disebutkan pelapor
+• NARROWING LOKASI - JIKA ALAMAT TERLALU UMUM (PENTING!):
+  Jika user hanya menyebut lokasi yang TERLALU GENERAL seperti:
+  - Nama jalan saja tanpa detail ("di Jalan Dago", "di Jalan Pasteur")
+  - Nama daerah/kelurahan saja ("di Coblong", "di Setiabudi", "di Bandung Utara")
+  - Deskripsi terlalu luas ("di sekitar Dago", "daerah Cihampelas")
+  
+  MAKA TANYAKAN PATOKAN untuk mempersempit lokasi:
+  → "Oke di [lokasi]. Ada patokan terdekatnya? Misalnya dekat apa atau di depan bangunan apa?"
+  → "Siap di [lokasi]. Bisa disebutkan patokan terdekatnya supaya lebih mudah ditemukan?"
+  → "Baik [lokasi]. Kira-kira dekat landmark apa? Atau di depan toko/bangunan apa?"
+  
+  CONTOH ALUR:
+  - User: "Di Jalan Dago"
+    → AI: "Oke di Jalan Dago. Ada patokan terdekatnya? Misalnya dekat apa atau depan bangunan apa?"
+  - User: "Dekat Starbucks yang di bawah"
+    → AI: "Siap, Jalan Dago dekat Starbucks. Sudah cukup jelas untuk lokasinya."
+  
+  - User: "Di daerah Cihampelas"
+    → AI: "Baik di Cihampelas. Bisa disebutkan patokan terdekatnya supaya lebih mudah ditemukan?"
+  - User: "Dekat Ciwalk"
+    → AI: "Dicatat, daerah Cihampelas dekat Ciwalk."
+
+• LOKASI YANG SUDAH CUKUP SPESIFIK (tidak perlu narrowing):
+  - "Jalan Dago No. 50" → sudah ada nomor
+  - "Depan ITB pintu gerbang utama" → sudah ada landmark spesifik
+  - "Perempatan Dago-Sulanjana" → sudah cukup detail
+  - "Jalan Cihampelas depan Ciwalk" → sudah ada patokan
+
+• Catat alamat FINAL persis seperti yang disebutkan pelapor (termasuk patokannya)
 
 TAHAP 5 - KONFIRMASI AKHIR
 • Bacakan ringkasan lengkap laporan:
@@ -568,11 +616,16 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       voiceId: 'kSzQ9oZF2iytkgNNztpH',
       model: 'eleven_multilingual_v2',
       language: 'id', // Indonesian
-      stability: 0.65,
-      similarityBoost: 0.80,
-      style: 0.15,
+      // Voice settings untuk tone profesional dengan variasi natural (medium expressiveness)
+      // - stability: 0.55 (turun dari 0.65) - memberikan variasi intonasi yang lebih natural
+      // - similarityBoost: 0.75 (turun dari 0.80) - sedikit ruang untuk fleksibilitas
+      // - style: 0.30 (naik dari 0.15) - lebih ekspresif tapi tetap profesional, tidak "naik" berlebihan
+      // - speed: 0.92 (turun dari 0.95) - lebih tenang dan profesional
+      stability: 0.55,
+      similarityBoost: 0.75,
+      style: 0.30,
       useSpeakerBoost: true,
-      speed: 0.95,
+      speed: 0.92,
     },
 
     // Server configuration untuk function calls - PENTING!
@@ -594,38 +647,13 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     maxDurationSeconds: 600,
 
     // Konfigurasi Transkripsi
-    // Using Deepgram Nova-2 with Indonesian keywords boosting
-    // to improve recognition of short responses like "iya", "ya", "betul", etc.
+    // Menggunakan Google Chirp untuk akurasi yang lebih baik pada Bahasa Indonesia
+    // Google memiliki data training yang lebih banyak untuk bahasa Indonesia
+    // dibandingkan Deepgram, sehingga akurasi speech recognition lebih tinggi
     transcriber: {
-      provider: 'deepgram' as const,
-      model: 'nova-2' as const,
-      language: 'id' as const,
-      keywords: [
-        // Affirmative responses (boost strongly)
-        'iya:5',
-        'ya:5',
-        'betul:5',
-        'benar:5',
-        'yoi:4',
-        'yup:4',
-        'oke:4',
-        'siap:4',
-        'baik:3',
-        'boleh:3',
-        // Negative responses (boost strongly)
-        'bukan:5',
-        'tidak:5',
-        'ga:5',
-        'nggak:5',
-        'salah:4',
-        'jangan:3',
-        // Other common short words
-        'udah:4',
-        'sudah:4',
-        'belum:4',
-        'mau:3',
-        'bisa:3',
-      ],
+      provider: 'google' as const,
+      model: 'chirp' as const,
+      language: 'id-ID' as const, // Indonesian locale
     },
 
     // Konfigurasi Stop Speaking Plan

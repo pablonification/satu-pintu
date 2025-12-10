@@ -203,29 +203,16 @@ describe('getAssistantConfig', () => {
     expect(endCallTool).toBeDefined()
   })
 
-  it('should have Indonesian transcriber', () => {
+  it('should have Indonesian transcriber with Google Chirp', () => {
     const config = getAssistantConfig()
     
-    expect(config.transcriber.provider).toBe('deepgram')
-    expect(config.transcriber.language).toBe('id')
+    expect(config.transcriber.provider).toBe('google')
+    expect(config.transcriber.model).toBe('chirp')
+    expect(config.transcriber.language).toBe('id-ID')
   })
 
-  it('should have Indonesian keywords boosting for short responses', () => {
-    const config = getAssistantConfig()
-    
-    expect(config.transcriber.keywords).toBeDefined()
-    expect(Array.isArray(config.transcriber.keywords)).toBe(true)
-    
-    // Should include common Indonesian affirmative/negative short words
-    const keywords = config.transcriber.keywords as string[]
-    expect(keywords.some(k => k.startsWith('iya:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('ya:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('betul:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('bukan:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('tidak:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('ga:'))).toBe(true)
-    expect(keywords.some(k => k.startsWith('nggak:'))).toBe(true)
-  })
+  // Note: Google Chirp doesn't support keyword boosting like Deepgram
+  // Accuracy improvement comes from Google's native Indonesian language model
 
   it('should have ElevenLabs voice configured for Indonesian', () => {
     const config = getAssistantConfig()

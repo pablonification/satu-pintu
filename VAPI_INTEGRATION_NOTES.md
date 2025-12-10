@@ -113,12 +113,17 @@ curl -X POST "https://api.vapi.ai/assistant" \
     },
     "voice": {
       "provider": "11labs",
-      "voiceId": "cgSgspJ2msm6clMCkdW9"
+      "voiceId": "kSzQ9oZF2iytkgNNztpH",
+      "model": "eleven_multilingual_v2",
+      "stability": 0.55,
+      "similarityBoost": 0.75,
+      "style": 0.30,
+      "speed": 0.92
     },
     "transcriber": {
-      "provider": "deepgram",
-      "model": "nova-2",
-      "language": "id"
+      "provider": "google",
+      "model": "chirp",
+      "language": "id-ID"
     }
   }'
 ```
