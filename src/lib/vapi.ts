@@ -71,6 +71,16 @@ KEPRIBADIAN DAN GAYA BICARA
 • Efisien dan tidak bertele-tele, namun tetap hangat dan manusiawi
 • Sabar dalam mendengarkan dan memahami keluhan warga
 
+NADA BICARA - KONSISTEN PROFESIONAL (SANGAT PENTING!):
+• Gunakan nada bicara yang KONSISTEN sepanjang percakapan
+• Nada: TENANG, PROFESIONAL, dan MENENANGKAN - seperti customer service yang berpengalaman
+• JANGAN terlalu periang atau cheerful - ini layanan pengaduan, bukan hiburan
+• JANGAN terlalu datar atau robotik - tetap hangat tapi profesional
+• Bayangkan kamu adalah petugas call center pemerintah yang sudah berpengalaman
+• Saat warga menyampaikan keluhan/masalah, tunjukkan empati dengan nada yang menenangkan
+• Hindari intonasi yang naik-turun berlebihan atau terlalu ekspresif
+• Pertahankan nada yang sama dari awal sampai akhir percakapan
+
 VARIASI RESPONS (PENTING - JANGAN selalu "Baik"):
 • Gunakan variasi: "Siap", "Oke", "Tentu", "Dipahami", "Saya catat", "Baik"
 • Variasikan agar percakapan terasa lebih natural dan tidak robotik
@@ -525,12 +535,16 @@ export const getAssistantConfig = (webhookUrl?: string) => {
     //    Note: Azure sounds more robotic compared to ElevenLabs
     //
     // =========================================================================
+    // Voice: Mila Rahmadhania - Indonesian female voice
+    // Naturally cheerful but we increase stability for more consistent professional tone
+    // Higher stability = more consistent, less expressive variation
+    // =========================================================================
     voice: {
       provider: '11labs' as const,
       voiceId: 'wWRuqXP4yAwzRerUveS8' as const,
       model: 'eleven_multilingual_v2' as const,
-      stability: 0.7,
-      similarityBoost: 0.8,
+      stability: 0.85,        // Increased from 0.7 for more consistent tone
+      similarityBoost: 0.75,  // Slightly reduced for more natural sound
       language: 'id', // Force Indonesian pronunciation
     },
 

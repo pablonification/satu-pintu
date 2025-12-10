@@ -424,11 +424,14 @@ export async function POST(request: NextRequest) {
             reporterName,
             trackUrl
           )
-          // TODO: For production, change back to finalPhone
-          // For testing, send to fixed number
-          const waTargetPhone = process.env.WA_TEST_NUMBER || finalPhone
+          // Use the phone number from AI (reporterPhone) - this is what user confirmed
+          // Only fallback to WA_TEST_NUMBER if no reporterPhone was provided by AI
+          // finalPhone already prioritizes: reporterPhone > customerPhone > default
+          const waTargetPhone = finalPhone
           console.log('=== SENDING WHATSAPP ===')
-          console.log('Target:', waTargetPhone, '| Reporter phone:', finalPhone)
+          console.log('Target:', waTargetPhone)
+          console.log('reporterPhone from AI:', reporterPhone)
+          console.log('customerPhone from call:', customerPhone)
           console.log('Message:', waMessage.substring(0, 100) + '...')
           
           const waResult = await sendWhatsAppNotification(waTargetPhone, waMessage)
