@@ -230,10 +230,8 @@ describe('getAssistantConfig', () => {
   it('should have PlayHT voice configured for Indonesian', () => {
     const config = getAssistantConfig()
     
-    expect(config.voice.provider).toBe('playht')
-    expect(config.voice.voiceId).toBe('ruby')
-    expect(config.voice.language).toBe('indonesian')
-    expect(config.voice.model).toBe('PlayDialog')
+    expect(config.voice.provider).toBe('11labs')
+    expect(config.voice.voiceId).toBe('IMaRqUzeNVCT6ks9SI4Y')
   })
 
   it('should accept customerPhone parameter for system prompt', () => {
