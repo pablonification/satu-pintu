@@ -19,29 +19,61 @@ import {
 // ============================================================================
 
 describe('formatPhoneForSpeech', () => {
-  it('should format phone number with spaces between digit words', () => {
+  it('should format phone number with Indonesian digit words', () => {
     const result = formatPhoneForSpeech('085155347701')
     
     // Should contain Indonesian digit words
     expect(result).toContain('nol')
     expect(result).toContain('delapan')
     expect(result).toContain('lima')
+    
+    // Should be grouped per 4 digits with comma separator
+    expect(result).toBe('nol delapan lima satu, lima lima tiga empat, tujuh tujuh nol satu')
   })
 
-  it('should group digits for easier pronunciation', () => {
+  it('should group digits per 4 for easier pronunciation', () => {
     const result = formatPhoneForSpeech('081234567890')
     
-    // Should have comma separators for grouping
+    // Should have comma separators for grouping (per 4 digits)
     expect(result).toContain(',')
+    // 12 digits = 3 groups of 4
+    expect(result.split(',').length).toBe(3)
   })
 
-  it('should handle phone numbers with non-digits', () => {
+  it('should convert +62 prefix to 0', () => {
+    const result = formatPhoneForSpeech('+6285155347701')
+    
+    // Should start with "nol" not "enam dua"
+    expect(result.startsWith('nol')).toBe(true)
+    expect(result).not.toContain('enam dua')
+    
+    // Should produce same output as without +62
+    expect(result).toBe('nol delapan lima satu, lima lima tiga empat, tujuh tujuh nol satu')
+  })
+
+  it('should convert 62 prefix (without +) to 0', () => {
+    const result = formatPhoneForSpeech('6285155347701')
+    
+    // Should start with "nol"
+    expect(result.startsWith('nol')).toBe(true)
+    expect(result).toBe('nol delapan lima satu, lima lima tiga empat, tujuh tujuh nol satu')
+  })
+
+  it('should handle phone numbers with special characters', () => {
     const result = formatPhoneForSpeech('+62 812-3456-7890')
     
-    // Should still produce valid output
+    // Should clean and format properly
     expect(result).toBeTruthy()
-    expect(result).toContain('enam')
-    expect(result).toContain('dua')
+    expect(result.startsWith('nol')).toBe(true)
+    // After cleaning: 081234567890 (12 digits)
+    expect(result).toBe('nol delapan satu dua, tiga empat lima enam, tujuh delapan sembilan nol')
+  })
+
+  it('should handle short phone numbers', () => {
+    const result = formatPhoneForSpeech('08123')
+    
+    // 5 digits = 1 group of 4 + 1 group of 1
+    expect(result).toBe('nol delapan satu dua, tiga')
   })
 })
 
@@ -207,7 +239,7 @@ describe('getAssistantConfig', () => {
     const config = getAssistantConfig()
     
     expect(config.transcriber.provider).toBe('google')
-    expect(config.transcriber.model).toBe('gemini-2.0-flash')
+    expect(config.transcriber.model).toBe('gemini-2.5-flash')
     expect(config.transcriber.language).toBe('Indonesian')
   })
 
@@ -224,9 +256,13 @@ describe('getAssistantConfig', () => {
   it('should accept customerPhone parameter for system prompt', () => {
     const config = getAssistantConfig(undefined, '+6281234567890')
     
-    // System prompt should contain the phone number
+    // System prompt should contain the phone number (raw for reference)
     const systemPrompt = config.model.messages[0].content
     expect(systemPrompt).toContain('+6281234567890')
+    
+    // System prompt should also contain the spoken format for TTS
+    // +6281234567890 -> 081234567890 -> "nol delapan satu dua, tiga empat lima enam, tujuh delapan sembilan nol"
+    expect(systemPrompt).toContain('nol delapan satu dua')
   })
 
   it('should handle missing customerPhone gracefully', () => {
@@ -282,7 +318,7 @@ describe('getAssistantConfig', () => {
     
     expect(config.startSpeakingPlan.transcriptionEndpointingPlan).toBeDefined()
     expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onPunctuationSeconds).toBe(0.05) // Aggressive: was 0.1
-    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNoPunctuationSeconds).toBe(0.8) // Aggressive: was 1.5
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNoPunctuationSeconds).toBe(0.2) // Aggressive: was 1.5
     expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNumberSeconds).toBe(0.4) // Aggressive: was 0.5
   })
 
