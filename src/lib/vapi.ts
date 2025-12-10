@@ -541,16 +541,15 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     //    Note: Azure sounds more robotic compared to ElevenLabs
     //
     // =========================================================================
-    // Voice: OpenAI TTS - Nova
-    // Warm, friendly, professional - ideal for government customer service
-    // More consistent accent than ElevenLabs for Indonesian
+    // Voice: PlayHT - Donna
+    // Natural Indonesian voice with PlayDialog model for conversational tone
+    // Better Indonesian pronunciation than OpenAI TTS
     // =========================================================================
     voice: {
-      provider: 'openai' as const,
-      voiceId: 'nova' as const,
-      // Instructions to help Nova speak Indonesian more naturally
-      // This guides the TTS to use proper Indonesian pronunciation and intonation
-      instructions: 'Speak in Indonesian (Bahasa Indonesia) with natural Indonesian pronunciation, rhythm, and intonation. Pronounce Indonesian words clearly and naturally, not with English accent.',
+      provider: 'playht' as const,
+      voiceId: 'donna',
+      language: 'indonesian',
+      model: 'PlayDialog',
     },
 
     // Server configuration untuk function calls - PENTING!

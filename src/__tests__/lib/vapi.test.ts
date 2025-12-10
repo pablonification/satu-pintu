@@ -227,11 +227,13 @@ describe('getAssistantConfig', () => {
     expect(keywords.some(k => k.startsWith('nggak:'))).toBe(true)
   })
 
-  it('should have OpenAI TTS voice configured', () => {
+  it('should have PlayHT voice configured for Indonesian', () => {
     const config = getAssistantConfig()
     
-    expect(config.voice.provider).toBe('openai')
-    expect(config.voice.voiceId).toBe('nova')
+    expect(config.voice.provider).toBe('playht')
+    expect(config.voice.voiceId).toBe('donna')
+    expect(config.voice.language).toBe('indonesian')
+    expect(config.voice.model).toBe('PlayDialog')
   })
 
   it('should accept customerPhone parameter for system prompt', () => {
