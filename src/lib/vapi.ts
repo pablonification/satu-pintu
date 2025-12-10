@@ -550,9 +550,12 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     //    Note: Azure sounds more robotic compared to ElevenLabs
     //
     // =========================================================================
-    // Voice: ElevenLabs - Custom Indonesian voice
+    // Voice: ElevenLabs - Jessica (Premade Voice)
     // Using eleven_multilingual_v2 for best Indonesian pronunciation
     // 
+    // Jessica: Soft, expressive female voice - great for conversational AI
+    // Voice ID: cgSgspJ2msm6clMCkdW9
+    //
     // Voice Settings Optimization for Indonesian (prevent accent slipping):
     // - stability: 0.65 (higher = more consistent pronunciation)
     // - similarity_boost: 0.80 (higher = sticks closer to voice character)  
@@ -562,7 +565,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // =========================================================================
     voice: {
       provider: '11labs' as const,
-      voiceId: 'gpzZjtWbZNetDrq8CXKD',
+      voiceId: 'cgSgspJ2msm6clMCkdW9', // Jessica
       model: 'eleven_multilingual_v2',
       stability: 0.65,
       similarityBoost: 0.80,
