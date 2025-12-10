@@ -128,24 +128,22 @@ TAHAP 3 - PENGUMPULAN DATA PELAPOR
 • Minta nama lengkap pelapor
   → "Boleh saya tahu nama lengkapnya?"
 • SETELAH dapat nama, gunakan sapaan Bapak/Ibu sesuai nama (lihat aturan sapaan di atas)
-• KONFIRMASI NOMOR TELEPON (PENTING - IKUTI ALUR INI!):
-  → Nomor telepon yang terdata di sistem untuk pelapor ini: ${phoneNumberSource}
+• KONFIRMASI NOMOR TELEPON - WAJIB IKUTI 2 LANGKAH INI:
+  → Nomor telepon penelepon yang terdata: ${phoneNumberSource}
   
-  LANGKAH 1 - TANYA DULU:
-  → "Apakah nomor yang digunakan untuk menelepon ini yang bisa dihubungi untuk perkembangan laporan?"
-  → JANGAN langsung sebutkan nomornya, tanya dulu!
+  LANGKAH 1 - TANYA APAKAH NOMOR SAMA ATAU BEDA (WAJIB TANYA INI DULU!):
+  → Tanyakan: "Untuk nomor WhatsApp yang bisa dihubungi, apakah sama dengan nomor yang dipakai menelepon ini, atau berbeda?"
+  → TUNGGU JAWABAN USER! Jangan langsung lanjut ke langkah 2!
   
-  LANGKAH 2A - JIKA USER BILANG "IYA" / "YA" / "SAMA" / "BETUL":
-  → SEBUTKAN/ULANGI nomor DARI SISTEM (${phoneNumberSource}) dengan jelas (per 4 digit)
-  → Contoh: "Baik, saya ulangi nomornya: nol delapan lima satu, lima lima tiga empat, tujuh tujuh nol satu. Apakah sudah benar?"
-  → Tunggu konfirmasi user
+  LANGKAH 2 - SETELAH USER MENJAWAB:
+  → JIKA USER JAWAB "SAMA" / "IYA" / "YA" / "BETUL" / "INI AJA":
+    • Bacakan nomor dari sistem: ${phoneNumberSource} (per 4 digit)
+    • Contoh: "Baik, saya konfirmasi nomornya: nol delapan lima satu, lima lima tiga empat, tujuh tujuh nol satu. Sudah benar?"
   
-  LANGKAH 2B - JIKA USER BILANG "BUKAN" / "BEDA" / "TIDAK" / "PAKAI NOMOR LAIN":
-  → Minta user SEBUTKAN nomor yang benar
-  → Contoh: "Baik, boleh disebutkan nomor yang bisa dihubungi?"
-  → Setelah user menyebutkan, ULANGI nomor YANG USER SEBUTKAN (bukan nomor sistem!)
-  → Contoh: "Saya ulangi, nomornya nol delapan satu dua, ... Apakah sudah benar?"
-  → Tunggu konfirmasi user
+  → JIKA USER JAWAB "BEDA" / "BUKAN" / "TIDAK" / "LAIN":
+    • Minta user sebutkan nomornya: "Boleh disebutkan nomor WhatsApp yang bisa dihubungi?"
+    • Setelah user sebut, ULANGI nomor yang user sebutkan (bukan nomor sistem!)
+    • Contoh: "Saya ulangi, nomornya nol delapan satu dua, ... Sudah benar?"
 
 TAHAP 4 - PENGUMPULAN DATA LOKASI
 • Minta informasi lokasi dengan FLEKSIBEL - tidak harus alamat lengkap!
@@ -529,7 +527,7 @@ export const getAssistantConfig = (webhookUrl?: string) => {
     // =========================================================================
     voice: {
       provider: '11labs' as const,
-      voiceId: 'plgKUYgnlZ1DCNh54DwJ' as const,
+      voiceId: 'wWRuqXP4yAwzRerUveS8' as const,
       model: 'eleven_multilingual_v2' as const,
       stability: 0.7,
       similarityBoost: 0.8,
