@@ -647,13 +647,13 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     maxDurationSeconds: 600,
 
     // Konfigurasi Transkripsi
-    // Menggunakan Google Chirp untuk akurasi yang lebih baik pada Bahasa Indonesia
+    // Menggunakan Google Gemini untuk akurasi yang lebih baik pada Bahasa Indonesia
     // Google memiliki data training yang lebih banyak untuk bahasa Indonesia
-    // dibandingkan Deepgram, sehingga akurasi speech recognition lebih tinggi
+    // Model gemini-2.0-flash adalah model terbaru dengan performa baik
     transcriber: {
       provider: 'google' as const,
-      model: 'chirp' as const,
-      language: 'id-ID' as const, // Indonesian locale
+      model: 'gemini-2.0-flash' as const,
+      language: 'id' as const, // Indonesian
     },
 
     // Konfigurasi Stop Speaking Plan

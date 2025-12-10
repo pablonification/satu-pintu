@@ -122,8 +122,8 @@ curl -X POST "https://api.vapi.ai/assistant" \
     },
     "transcriber": {
       "provider": "google",
-      "model": "chirp",
-      "language": "id-ID"
+      "model": "gemini-2.0-flash",
+      "language": "id"
     }
   }'
 ```
