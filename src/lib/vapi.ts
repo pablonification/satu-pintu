@@ -548,6 +548,9 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     voice: {
       provider: 'openai' as const,
       voiceId: 'nova' as const,
+      // Instructions to help Nova speak Indonesian more naturally
+      // This guides the TTS to use proper Indonesian pronunciation and intonation
+      instructions: 'Speak in Indonesian (Bahasa Indonesia) with natural Indonesian pronunciation, rhythm, and intonation. Pronounce Indonesian words clearly and naturally, not with English accent.',
     },
 
     // Server configuration untuk function calls - PENTING!
