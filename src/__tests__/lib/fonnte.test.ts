@@ -159,8 +159,9 @@ describe('WA_TEMPLATES', () => {
       )
 
       expect(message).toContain('Siti')
-      expect(message).toContain('diselesaikan')
+      expect(message).toContain('selesai')
       expect(message).toContain('penilaian')
+      expect(message).toContain('SP-20251209-0001')
     })
   })
 
@@ -177,6 +178,17 @@ describe('WA_TEMPLATES', () => {
       expect(message).toContain('Ahmad')
       expect(message).toContain('KEBAKARAN')
       expect(message).toContain('Jl. Dago No. 10')
+    })
+  })
+
+  describe('ratingOTP', () => {
+    it('should generate correct OTP message', () => {
+      const message = WA_TEMPLATES.ratingOTP('123456', 'SP-20251209-0001')
+
+      expect(message).toContain('123456')
+      expect(message).toContain('SP-20251209-0001')
+      expect(message).toContain('OTP')
+      expect(message).toContain('30 menit')
     })
   })
 })

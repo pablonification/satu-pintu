@@ -12,6 +12,7 @@ AI-powered centralized call center untuk smart city. Warga cukup menelepon satu 
 - **STT/TTS**: Deepgram + ElevenLabs (via Vapi)
 - **Address Validation**: Nominatim (OpenStreetMap) + Gemini fallback
 - **SMS**: Twilio SMS (optional)
+- **WhatsApp**: Fonnte (untuk notifikasi & OTP)
 - **UI**: Tailwind CSS + shadcn/ui
 - **Hosting**: Vercel
 
@@ -71,6 +72,15 @@ npm install
 
 > **Note**: Twilio hanya digunakan untuk SMS notifikasi. Voice call sekarang menggunakan Vapi.ai
 
+### 5b. Setup Fonnte (WhatsApp Notifikasi) - GRATIS 100 msg/hari
+
+1. Buka [fonnte.com](https://fonnte.com) dan buat akun
+2. Connect nomor WhatsApp Anda (scan QR code)
+3. Di dashboard, copy **API Token**
+4. Catat token → untuk `FONNTE_TOKEN`
+
+> **Note**: Fonnte digunakan untuk notifikasi WhatsApp (ticket created, resolved, OTP rating)
+
 ### 6. Setup Environment Variables
 
 ```bash
@@ -93,6 +103,9 @@ TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxx
 TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxx
 TWILIO_PHONE_NUMBER=+1234567890
 
+# Fonnte (dari langkah 5b) - untuk WhatsApp
+FONNTE_TOKEN=xxxxxxxxxxxxxxxx
+
 # App Config (generate random string di terminal dengan: openssl rand -hex 16)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 INTERNAL_API_KEY=<hasil_openssl_rand_hex_16>
@@ -103,13 +116,19 @@ JWT_SECRET=<hasil_openssl_rand_hex_16>
 
 > **Tip**: Generate random string dengan menjalankan `openssl rand -hex 16` di terminal
 
-### 7. Run Database Migration
+### 7. Run Database Migrations
 
-Jalankan migration kedua untuk field baru (reporter_name, validated_address):
+Jalankan migration di Supabase SQL Editor secara berurutan:
 
 ```sql
--- Di Supabase SQL Editor, jalankan:
--- File: supabase/migrations/002_add_reporter_fields.sql
+-- Di Supabase SQL Editor, jalankan file-file berikut:
+-- 1. supabase/migrations/001_initial_schema.sql (sudah di langkah 2)
+-- 2. supabase/migrations/002_add_reporter_fields.sql
+-- 3. supabase/migrations/003_add_photo_rating.sql
+-- 4. supabase/migrations/004_add_rating_otp.sql
+-- 5. supabase/migrations/005_add_performance_indexes.sql
+-- 6. supabase/migrations/006_setup_storage_policies.sql
+-- 7. supabase/migrations/007_add_more_dinas.sql (tambah 7 dinas baru)
 ```
 
 ### 8. Run Development Server
@@ -124,9 +143,10 @@ Buka [http://localhost:3000](http://localhost:3000)
 
 ### Untuk Warga
 - **Telepon AI**: Lapor keluhan via telepon, AI memahami dan mencatat
+- **WhatsApp Notifikasi**: Notifikasi otomatis saat tiket dibuat & selesai
+- **Rating**: Beri rating setelah keluhan selesai (OTP via WhatsApp)
 - **SMS Tracking**: Kirim `CEK SP-XXXXXXXX-XXXX` untuk cek status
 - **Web Tracking**: Lacak status di `/track/[ticketId]`
-- **Notifikasi Otomatis**: SMS setiap ada update status
 
 ### Untuk Dinas
 - **Dashboard**: Lihat dan kelola tiket di `/dashboard`
@@ -154,8 +174,26 @@ Buka [http://localhost:3000](http://localhost:3000)
 ## Demo Login
 
 Untuk testing dashboard, gunakan:
-- **ID**: `admin` (atau `pupr`, `polisi`, `dlh`, `dinsos`, `damkar`, `ambulans`)
+- **ID**: `admin` (atau dinas ID di bawah)
 - **Password**: `demo2025`
+
+## Dinas yang Terintegrasi
+
+| ID | Nama Dinas | Kategori Keluhan |
+|----|------------|------------------|
+| `pupr` | Dinas PUPR | Jalan rusak, trotoar, drainase, jembatan |
+| `dlh` | Dinas Lingkungan Hidup | Sampah, polusi, pohon tumbang, limbah |
+| `dishub` | Dinas Perhubungan | Lampu lalu lintas, rambu, parkir liar, kemacetan |
+| `dinkes` | Dinas Kesehatan | Puskesmas, wabah penyakit, sanitasi |
+| `disperkimtan` | Dinas Perkim & Pertanahan | Bangunan liar, sengketa tanah, rusun |
+| `satpolpp` | Satpol PP | PKL, ketertiban umum, bangunan melanggar |
+| `disdik` | Dinas Pendidikan | Sekolah, fasilitas pendidikan |
+| `pdam` | PDAM Tirtawening | Air mati, pipa bocor, kualitas air |
+| `dispangtan` | Dinas Pangan & Pertanian | Harga pangan, pertanian kota |
+| `dinsos` | Dinas Sosial | Tunawisma, PMKS, bantuan sosial |
+| `damkar` | Dinas Pemadam Kebakaran | Kebakaran, penyelamatan |
+| `ambulans` | Layanan Ambulans | Darurat medis |
+| `polisi` | Kepolisian | Kriminalitas, keamanan |
 
 ## Project Structure
 
@@ -199,6 +237,7 @@ git push -u origin main
    - `TWILIO_ACCOUNT_SID`
    - `TWILIO_AUTH_TOKEN`
    - `TWILIO_PHONE_NUMBER`
+   - `FONNTE_TOKEN`
    - `NEXT_PUBLIC_APP_URL` → ganti ke `https://your-app.vercel.app`
    - `INTERNAL_API_KEY`
    - `JWT_SECRET`

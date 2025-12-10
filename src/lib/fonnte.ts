@@ -211,25 +211,27 @@ Lihat detail lengkap di:
 
 _SatuPintu - Layanan Pengaduan Terpadu Kota Bandung_`,
 
-  /**
-   * Template for resolved ticket notification
+/**
+   * Template for resolved ticket notification with rating link
    */
   ticketResolved: (
     ticketId: string, 
     reporterName: string, 
     trackUrl: string
   ): string =>
-`Halo ${reporterName} 👋
+`Halo ${reporterName}
 
-🎉 *Laporan Anda telah diselesaikan!*
+*Kabar Baik!* Laporan Anda telah selesai ditangani.
 
-📋 *No. Tiket:* ${ticketId}
-📊 *Status:* ✅ Selesai
+*No. Tiket:* ${ticketId}
+*Status:* Selesai
 
-Mohon berikan penilaian terhadap penanganan laporan Anda di:
-🔗 ${trackUrl}
+Kami ingin mendengar pendapat Anda! Mohon berikan penilaian melalui link berikut:
+${trackUrl}
 
-Terima kasih atas partisipasi Anda dalam membangun Kota Bandung yang lebih baik! 🙏
+Penilaian Anda sangat berarti untuk peningkatan layanan kami.
+
+Terima kasih telah berpartisipasi membangun Kota Bandung yang lebih baik!
 
 _SatuPintu - Layanan Pengaduan Terpadu Kota Bandung_`,
 
@@ -242,17 +244,32 @@ _SatuPintu - Layanan Pengaduan Terpadu Kota Bandung_`,
     location: string,
     reporterName: string
   ): string =>
-`🚨 *LAPORAN DARURAT DITERIMA* 🚨
+`*LAPORAN DARURAT DITERIMA*
 
 Halo ${reporterName},
 
 Laporan darurat Anda telah diterima dan sedang ditindaklanjuti.
 
-📋 *No. Tiket:* ${ticketId}
-⚠️ *Jenis Darurat:* ${emergencyType}
-📍 *Lokasi:* ${location}
+*No. Tiket:* ${ticketId}
+*Jenis Darurat:* ${emergencyType}
+*Lokasi:* ${location}
 
 Tim darurat sedang dalam perjalanan ke lokasi.
 
 _SatuPintu - Layanan Pengaduan Terpadu Kota Bandung_`,
+
+  /**
+   * Template for rating OTP via WhatsApp
+   */
+  ratingOTP: (otp: string, ticketId: string): string =>
+`*Kode OTP Rating*
+
+Kode verifikasi untuk rating tiket *${ticketId}*:
+
+*${otp}*
+
+Berlaku 30 menit.
+Jangan bagikan kode ini kepada siapapun.
+
+_SatuPintu Bandung_`,
 }

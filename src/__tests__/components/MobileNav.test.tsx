@@ -52,7 +52,9 @@ const defaultProps = {
 }
 
 const NAVIGATION_ITEMS = [
+  { label: 'Beranda', href: '/' },
   { label: 'Fitur', href: '#features' },
+  { label: 'Lapor', href: '#report' },
   { label: 'Cara Kerja', href: '#how-it-works' },
   { label: 'Lacak Laporan', href: '/track/SP-20251203-0001' },
   { label: 'Login Dinas', href: '/login' },
@@ -77,8 +79,8 @@ describe('MobileNav Component', () => {
       // Arrange & Act
       render(<MobileNav {...defaultProps} isOpen={true} />)
       
-      // Assert
-      expect(screen.getByText('SatuPintu')).toBeInTheDocument()
+      // Assert - Logo is now an image with alt text
+      expect(screen.getByAltText('SatuPintu')).toBeInTheDocument()
     })
 
     it('should NOT render when isOpen is false', () => {
@@ -86,15 +88,15 @@ describe('MobileNav Component', () => {
       render(<MobileNav {...defaultProps} isOpen={false} />)
       
       // Assert
-      expect(screen.queryByText('SatuPintu')).not.toBeInTheDocument()
+      expect(screen.queryByAltText('SatuPintu')).not.toBeInTheDocument()
     })
 
     it('should render brand logo and name', () => {
       // Arrange & Act
       render(<MobileNav {...defaultProps} />)
       
-      // Assert
-      expect(screen.getByText('SatuPintu')).toBeInTheDocument()
+      // Assert - Logo is now an image
+      expect(screen.getByAltText('SatuPintu')).toBeInTheDocument()
     })
 
     it('should render close button', () => {
@@ -141,12 +143,14 @@ describe('MobileNav Component', () => {
       // Arrange & Act
       render(<MobileNav {...defaultProps} />)
       
-      // Assert
+      // Assert - navigation now includes Beranda and Lapor
       const links = screen.getAllByTestId('nav-link')
-      expect(links[0]).toHaveAttribute('href', '#features')
-      expect(links[1]).toHaveAttribute('href', '#how-it-works')
-      expect(links[2]).toHaveAttribute('href', '/track/SP-20251203-0001')
-      expect(links[3]).toHaveAttribute('href', '/login')
+      expect(links[0]).toHaveAttribute('href', '/')
+      expect(links[1]).toHaveAttribute('href', '#features')
+      expect(links[2]).toHaveAttribute('href', '#report')
+      expect(links[3]).toHaveAttribute('href', '#how-it-works')
+      expect(links[4]).toHaveAttribute('href', '/track/SP-20251203-0001')
+      expect(links[5]).toHaveAttribute('href', '/login')
     })
   })
 
@@ -276,8 +280,8 @@ describe('MobileNav Component', () => {
       rerender(<MobileNav isOpen={false} onClose={onClose} />)
       rerender(<MobileNav isOpen={true} onClose={onClose} />)
       
-      // Assert - Should be in final (open) state
-      expect(screen.getByText('SatuPintu')).toBeInTheDocument()
+      // Assert - Should be in final (open) state - logo is now an image
+      expect(screen.getByAltText('SatuPintu')).toBeInTheDocument()
     })
 
     it('should handle onClose being called multiple times', () => {

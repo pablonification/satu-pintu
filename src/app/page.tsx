@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { Phone, Search, Zap, Shield, Activity, ArrowRight, CheckCircle2, BarChart3, Globe2 } from 'lucide-react'
+import { Phone, Search, Zap, Shield, Activity, ArrowRight, CheckCircle2, Globe2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { LandingNavbar } from '@/components/landing-navbar'
 import Image from 'next/image'
+import { CallFlowAnimation } from '@/components/CallFlowAnimation'
 
 export default function Home() {
   return (
@@ -53,27 +54,11 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Dashboard Preview / Hero Image Placeholder */}
+          {/* Dashboard Preview / Call Flow Animation */}
           <div className="mt-20 relative max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-24 duration-1000 delay-700">
             <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-20"></div>
             <div className="relative rounded-xl border border-white/10 bg-black/50 backdrop-blur-sm overflow-hidden aspect-[16/9] shadow-2xl">
-              <div className="absolute inset-0 flex items-center justify-center bg-grid-white/[0.02]">
-                 {/* Abstract representation of a dashboard */}
-                 <div className="w-full h-full p-8 flex flex-col gap-6 opacity-80">
-                    <div className="h-8 bg-white/10 rounded-lg w-1/3"></div>
-                    <div className="grid grid-cols-3 gap-6">
-                        <div className="h-32 bg-white/5 rounded-lg border border-white/5"></div>
-                        <div className="h-32 bg-white/5 rounded-lg border border-white/5"></div>
-                        <div className="h-32 bg-white/5 rounded-lg border border-white/5"></div>
-                    </div>
-                    <div className="flex-1 bg-white/5 rounded-lg border border-white/5 flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                            <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>Real-time Analytics Dashboard</p>
-                        </div>
-                    </div>
-                 </div>
-              </div>
+              <CallFlowAnimation />
             </div>
           </div>
         </section>

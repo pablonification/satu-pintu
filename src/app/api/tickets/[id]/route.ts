@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { sendSmsNotification, SMS_TEMPLATES } from '@/lib/twilio'
+import { sendWhatsAppNotification, WA_TEMPLATES } from '@/lib/fonnte'
 import { STATUS_LABELS, TicketStatus } from '@/types/database'
 import { invalidateTicketCaches } from '@/lib/cache'
 import jwt from 'jsonwebtoken'
@@ -168,8 +168,8 @@ export async function PATCH(
         updateData.resolved_at = null
       }
     }
-    if (resolution_photo_before !== undefined) updateData.resolution_photo_before = resolution_photo_before
-    if (resolution_photo_after !== undefined) updateData.resolution_photo_after = resolution_photo_after
+    if (resolution_photo_before) updateData.resolution_photo_before = resolution_photo_before
+    if (resolution_photo_after) updateData.resolution_photo_after = resolution_photo_after
     
     const { data: updatedTicket, error: updateError } = await supabaseAdmin
       .from('tickets')
@@ -193,27 +193,63 @@ export async function PATCH(
       metadata: { old_status: ticket.status, new_status: status },
     })
     
-    // Send SMS if requested
-    let smsSent = false
-    if (sendSms && ticket.reporter_phone) {
-      const smsMessage = SMS_TEMPLATES.statusUpdate(
-        id,
-        STATUS_LABELS[status as TicketStatus],
-        note
-      )
+    // Auto-send WhatsApp when ticket is RESOLVED (with rating link)
+    let resolvedMessageSent = false
+    if (status === 'RESOLVED' && ticket.status !== 'RESOLVED' && ticket.reporter_phone) {
+      const trackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/track/${id}`
+      const reporterName = ticket.reporter_name || 'Bapak/Ibu'
       
-      const smsSid = await sendSmsNotification(ticket.reporter_phone, smsMessage)
-      smsSent = !!smsSid
+      // Send resolved notification with rating link
+      const resolvedMessage = WA_TEMPLATES.ticketResolved(id, reporterName, trackUrl)
+      const resolvedResult = await sendWhatsAppNotification(ticket.reporter_phone, resolvedMessage)
+      resolvedMessageSent = resolvedResult.success
       
-      if (smsSid) {
+      if (resolvedResult.success) {
+        // Log the resolved notification
         await supabaseAdmin.from('sms_logs').insert({
           ticket_id: id,
           phone_to: ticket.reporter_phone,
-          message: smsMessage,
+          message: resolvedMessage,
           direction: 'OUTBOUND',
-          twilio_sid: smsSid,
+          twilio_sid: resolvedResult.messageId || null,
           status: 'SENT',
         })
+      }
+    }
+    
+    // Send WhatsApp notification if requested (for other status updates)
+    let messageSent = false
+    if (sendSms && ticket.reporter_phone) {
+      // Generate track URL
+      const trackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/track/${id}`
+      
+      // Get reporter name (fallback to generic greeting)
+      const reporterName = ticket.reporter_name || 'Bapak/Ibu'
+      
+      // Send WhatsApp notification
+      const waMessage = WA_TEMPLATES.statusUpdate(
+        id,
+        STATUS_LABELS[status as TicketStatus],
+        reporterName,
+        note || null,
+        trackUrl
+      )
+      
+      const waResult = await sendWhatsAppNotification(ticket.reporter_phone, waMessage)
+      messageSent = waResult.success
+      
+      // Log to sms_logs table (keep using this table for compatibility)
+      if (waResult.success) {
+        await supabaseAdmin.from('sms_logs').insert({
+          ticket_id: id,
+          phone_to: ticket.reporter_phone,
+          message: waMessage,
+          direction: 'OUTBOUND',
+          twilio_sid: waResult.messageId || null,
+          status: 'SENT',
+        })
+      } else {
+        console.error('Failed to send WhatsApp notification:', waResult.error)
       }
     }
     
@@ -224,7 +260,8 @@ export async function PATCH(
       success: true,
       data: {
         ...updatedTicket,
-        smsSent,
+        messageSent,
+        resolvedMessageSent,
       },
     })
   } catch (error) {

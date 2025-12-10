@@ -38,7 +38,8 @@ import {
   Upload,
   ImageIcon,
   X,
-  BarChart3
+  BarChart3,
+  Eye
 } from 'lucide-react'
 import { ExportButton } from '@/components/ExportButton'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -81,6 +82,7 @@ interface Ticket {
   location: string
   description: string
   reporter_phone: string
+  reporter_name: string | null
   status: string
   urgency: string
   assigned_dinas: string[]
@@ -153,6 +155,11 @@ export default function DashboardPage() {
   const [photoError, setPhotoError] = useState<string | null>(null)
   const photoBeforeInputRef = useRef<HTMLInputElement>(null)
   const photoAfterInputRef = useRef<HTMLInputElement>(null)
+  
+  // Photo lightbox state
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null)
+  const [lightboxTitle, setLightboxTitle] = useState<string>('')
   
   // Map view state
   const [activeView, setActiveView] = useState<string>('table')
@@ -447,8 +454,8 @@ export default function DashboardPage() {
       return
     }
     
-    // Validate: if status is RESOLVED, require photo after
-    if (newStatus === 'RESOLVED' && !photoAfter) {
+    // Validate: if status is RESOLVED, require photo after (unless already uploaded)
+    if (newStatus === 'RESOLVED' && !photoAfter && !selectedTicket.resolution_photo_after) {
       setPhotoError('Foto sesudah (bukti penyelesaian) wajib diisi untuk menyelesaikan laporan')
       return
     }
@@ -531,6 +538,12 @@ export default function DashboardPage() {
     setPhotoAfterPreview(null)
     setPhotoError(null)
     setUpdateDialogOpen(true)
+  }
+
+  function openLightbox(imageUrl: string, title: string) {
+    setLightboxImage(imageUrl)
+    setLightboxTitle(title)
+    setLightboxOpen(true)
   }
 
   if (loading) {
@@ -1051,23 +1064,60 @@ export default function DashboardPage() {
                 </div>
               )}
               
-              {/* Show existing photo before if already uploaded (read-only) */}
-              {selectedTicket?.resolution_photo_before && (
+              {/* Show existing photo before if already uploaded */}
+              {selectedTicket?.resolution_photo_before && !(newStatus === 'IN_PROGRESS' && selectedTicket?.status === 'PENDING') && (
                 <div className="space-y-2 p-4 bg-white/5 rounded-lg border border-white/10">
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="h-5 w-5 text-white/60" />
-                    <Label className="text-white/60 font-medium">Foto Sebelum (sudah diupload)</Label>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5 text-white/60" />
+                      <Label className="text-white/60 font-medium">Foto Sebelum (sudah diupload)</Label>
+                    </div>
                   </div>
-                  <img 
-                    src={selectedTicket.resolution_photo_before} 
-                    alt="Foto sebelum" 
-                    className="h-24 w-24 object-cover rounded-lg border border-white/10"
-                  />
+                  <div 
+                    className="relative cursor-pointer group"
+                    onClick={() => openLightbox(selectedTicket.resolution_photo_before!, 'Foto Kondisi Awal')}
+                  >
+                    <img 
+                      src={selectedTicket.resolution_photo_before} 
+                      alt="Foto sebelum" 
+                      className="h-32 w-32 object-cover rounded-lg border border-white/10 group-hover:border-blue-500/40 transition-all"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                      <Eye className="h-8 w-8 text-white" />
+                    </div>
+                    <p className="text-xs text-blue-400 mt-2 group-hover:text-blue-300">Klik untuk melihat lebih besar</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Show existing photo after if already uploaded */}
+              {selectedTicket?.resolution_photo_after && (
+                <div className="space-y-2 p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5 text-emerald-400" />
+                      <Label className="text-emerald-400 font-medium">Foto Sesudah (sudah diupload)</Label>
+                    </div>
+                  </div>
+                  <div 
+                    className="relative cursor-pointer group"
+                    onClick={() => openLightbox(selectedTicket.resolution_photo_after!, 'Foto Bukti Penyelesaian')}
+                  >
+                    <img 
+                      src={selectedTicket.resolution_photo_after} 
+                      alt="Foto sesudah" 
+                      className="h-32 w-32 object-cover rounded-lg border border-white/10 group-hover:border-emerald-500/40 transition-all"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                      <Eye className="h-8 w-8 text-white" />
+                    </div>
+                    <p className="text-xs text-emerald-400 mt-2 group-hover:text-emerald-300">Klik untuk melihat lebih besar</p>
+                  </div>
                 </div>
               )}
               
               {/* Photo Upload Section - Foto Sesudah for RESOLVED */}
-              {newStatus === 'RESOLVED' && (
+              {newStatus === 'RESOLVED' && !selectedTicket?.resolution_photo_after && (
                 <div className="space-y-4 p-4 bg-emerald-500/5 rounded-lg border border-emerald-500/20">
                   <div className="flex items-center gap-2">
                     <ImageIcon className="h-5 w-5 text-emerald-400" />
@@ -1148,7 +1198,7 @@ export default function DashboardPage() {
                   className="rounded border-white/10 bg-black/20 text-primary focus:ring-primary"
                 />
                 <Label htmlFor="sendSms" className="cursor-pointer text-muted-foreground">
-                  Kirim SMS notifikasi ke pelapor
+                  Kirim notifikasi WhatsApp ke pelapor
                 </Label>
               </div>
             </div>
@@ -1162,7 +1212,7 @@ export default function DashboardPage() {
               onClick={handleUpdateTicket} 
               disabled={
                 updating || 
-                (newStatus === 'RESOLVED' && !photoAfter) ||
+                (newStatus === 'RESOLVED' && !photoAfter && !selectedTicket?.resolution_photo_after) ||
                 (newStatus === 'IN_PROGRESS' && selectedTicket?.status === 'PENDING' && !selectedTicket?.resolution_photo_before && !photoBefore)
               } 
               className="bg-white text-black hover:bg-white/90"
@@ -1171,6 +1221,33 @@ export default function DashboardPage() {
               {uploadingPhotos ? 'Mengupload foto...' : 'Simpan'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Lightbox Dialog */}
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="bg-black/95 border-white/10 max-w-4xl p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-4 border-b border-white/10">
+            <DialogTitle className="text-white">{lightboxTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 flex items-center justify-center min-h-[400px] max-h-[70vh]">
+            {lightboxImage && (
+              <img 
+                src={lightboxImage} 
+                alt={lightboxTitle}
+                className="max-w-full max-h-full object-contain rounded-lg"
+              />
+            )}
+          </div>
+          <div className="p-4 border-t border-white/10 flex justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setLightboxOpen(false)}
+              className="border-white/10 bg-transparent text-white hover:bg-white/5"
+            >
+              Tutup
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     // Select only needed columns for list view (performance optimization)
     let query = supabaseAdmin
       .from('tickets')
-      .select('id, category, subcategory, location, description, reporter_phone, status, urgency, assigned_dinas, created_at, updated_at', { count: 'exact' })
+      .select('id, category, subcategory, location, description, reporter_phone, reporter_name, status, urgency, assigned_dinas, resolution_photo_before, resolution_photo_after, created_at, updated_at', { count: 'exact' })
     
     // Filter by assigned dinas (unless admin)
     if (auth.dinas_id !== 'admin') {

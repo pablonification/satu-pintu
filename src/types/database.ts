@@ -5,7 +5,17 @@ export type TicketStatus = 'PENDING' | 'IN_PROGRESS' | 'ESCALATED' | 'RESOLVED' 
 export type TicketCategory = 'DARURAT' | 'INFRA' | 'KEBERSIHAN' | 'SOSIAL' | 'LAINNYA'
 export type TicketUrgency = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
 export type TimelineAction = 'CREATED' | 'ASSIGNED' | 'STATUS_CHANGE' | 'UPDATE' | 'ESCALATED' | 'RESOLVED' | 'CANCELLED' | 'NOTE'
-export type DinasId = 'polisi' | 'ambulans' | 'damkar' | 'pupr' | 'dlh' | 'dinsos' | 'admin'
+export type DinasId = 
+  | 'polisi' | 'ambulans' | 'damkar'  // DARURAT
+  | 'pupr' | 'dlh' | 'dinsos'          // INFRA, KEBERSIHAN, SOSIAL
+  | 'dishub'                           // Perhubungan (lampu lalu lintas, rambu)
+  | 'dinkes'                           // Kesehatan (puskesmas, outbreak)
+  | 'disperkimtan'                     // Perumahan & Permukiman
+  | 'satpolpp'                         // Satpol PP (ketertiban)
+  | 'disdik'                           // Pendidikan
+  | 'pdam'                             // PDAM Tirtawening (air)
+  | 'dispangtan'                       // Pangan & Pertanian
+  | 'admin'
 
 export interface Dinas {
   id: DinasId
@@ -133,6 +143,13 @@ export const DINAS_NAMES: Record<DinasId, string> = {
   pupr: 'Dinas PUPR',
   dlh: 'Dinas Lingkungan Hidup',
   dinsos: 'Dinas Sosial',
+  dishub: 'Dinas Perhubungan',
+  dinkes: 'Dinas Kesehatan',
+  disperkimtan: 'Dinas Perkim & Pertanahan',
+  satpolpp: 'Satpol PP',
+  disdik: 'Dinas Pendidikan',
+  pdam: 'PDAM Tirtawening',
+  dispangtan: 'Dinas Pangan & Pertanian',
   admin: 'Admin SatuPintu',
 }
 

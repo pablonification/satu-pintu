@@ -359,8 +359,8 @@ describe('Tickets Map API', () => {
 
     it('should combine status and urgency filters correctly', () => {
       // Arrange
-      const statusFilter = 'PENDING'
-      const urgencyFilter = 'CRITICAL'
+      const statusFilter: string = 'PENDING'
+      const urgencyFilter: string = 'CRITICAL'
       
       // Act - Build combined params
       const params = new URLSearchParams()

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { sendSmsNotification, SMS_TEMPLATES } from '@/lib/twilio'
+import { sendWhatsAppNotification, WA_TEMPLATES } from '@/lib/fonnte'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,7 +8,7 @@ const supabaseAdmin = createClient(
 )
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
@@ -78,16 +78,24 @@ export async function POST(
       )
     }
 
-    // Send OTP via SMS
-    const smsMessage = SMS_TEMPLATES.ratingOTP(otp, id)
-    await sendSmsNotification(ticket.reporter_phone, smsMessage)
+    // Send OTP via WhatsApp (using Fonnte instead of Twilio SMS)
+    const waMessage = WA_TEMPLATES.ratingOTP(otp, id)
+    const waResult = await sendWhatsAppNotification(ticket.reporter_phone, waMessage)
+
+    if (!waResult.success) {
+      console.error('Failed to send OTP via WhatsApp:', waResult.error)
+      return NextResponse.json(
+        { success: false, error: 'Gagal mengirim OTP via WhatsApp', code: 'WA_ERROR' },
+        { status: 500 }
+      )
+    }
 
     // Mask phone number for response
     const maskedPhone = ticket.reporter_phone.replace(/(\+62)(\d{3})(\d+)(\d{3})/, '$1$2****$4')
 
     return NextResponse.json({
       success: true,
-      message: `Kode OTP telah dikirim ke ${maskedPhone}`,
+      message: `Kode OTP telah dikirim via WhatsApp ke ${maskedPhone}`,
       expiresAt: expiresAt.toISOString(),
     })
 
