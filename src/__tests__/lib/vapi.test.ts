@@ -12,6 +12,7 @@ import {
   getAssistantConfig,
   isVapiConfigured,
   getWebhookUrl,
+  WA_TEST_NUMBER,
 } from '@/lib/vapi'
 
 // ============================================================================
@@ -249,6 +250,40 @@ describe('getAssistantConfig', () => {
     expect(config.stopSpeakingPlan.backoffSeconds).toBe(0.8) // Wait before resuming
   })
 
+  it('should have acknowledgementPhrases in stopSpeakingPlan for Indonesian', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.stopSpeakingPlan.acknowledgementPhrases).toBeDefined()
+    expect(Array.isArray(config.stopSpeakingPlan.acknowledgementPhrases)).toBe(true)
+    
+    const phrases = config.stopSpeakingPlan.acknowledgementPhrases as string[]
+    // Should include common Indonesian acknowledgement phrases
+    expect(phrases).toContain('iya')
+    expect(phrases).toContain('ya')
+    expect(phrases).toContain('oke')
+    expect(phrases).toContain('betul')
+    expect(phrases).toContain('bukan')
+    expect(phrases).toContain('ga')
+  })
+
+  it('should have startSpeakingPlan configured for Indonesian turn detection', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.startSpeakingPlan).toBeDefined()
+    expect(config.startSpeakingPlan.smartEndpointingPlan).toBeDefined()
+    expect(config.startSpeakingPlan.smartEndpointingPlan.provider).toBe('vapi') // For non-English
+    expect(config.startSpeakingPlan.waitSeconds).toBe(0.4)
+  })
+
+  it('should have transcriptionEndpointingPlan in startSpeakingPlan', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan).toBeDefined()
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onPunctuationSeconds).toBe(0.1)
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNoPunctuationSeconds).toBe(1.5)
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNumberSeconds).toBe(0.5)
+  })
+
   it('should have silenceTimeoutSeconds configured for auto-end', () => {
     const config = getAssistantConfig()
     
@@ -284,6 +319,18 @@ describe('getWebhookUrl', () => {
     const url = getWebhookUrl()
     
     expect(url).toContain('/api/vapi/webhook')
+  })
+})
+
+describe('WA_TEST_NUMBER', () => {
+  it('should be exported as a string', () => {
+    expect(typeof WA_TEST_NUMBER).toBe('string')
+  })
+
+  it('should use env value or empty string as fallback', () => {
+    // WA_TEST_NUMBER should either be the env value or empty string
+    // This ensures it doesn't throw when accessed
+    expect(WA_TEST_NUMBER).toBeDefined()
   })
 })
 

@@ -27,6 +27,13 @@ export const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID || ''
  */
 export const EMERGENCY_TRANSFER_NUMBER = process.env.EMERGENCY_TRANSFER_NUMBER || '+628123456789'
 
+/**
+ * WA Test Number for Testing
+ * If set, this number will be used as the "registered phone number" in the system
+ * If not set, the actual caller ID ({{customer.number}}) will be used
+ */
+export const WA_TEST_NUMBER = process.env.WA_TEST_NUMBER || ''
+
 // ============================================================================
 // KONFIGURASI WEBHOOK
 // ============================================================================
@@ -44,7 +51,15 @@ export const getWebhookUrl = () => {
 // SYSTEM PROMPT - KEPRIBADIAN DAN INSTRUKSI AI
 // ============================================================================
 
-const SYSTEM_PROMPT = `Kamu adalah asisten AI bernama "Satu" untuk layanan SatuPintu, pusat pengaduan terpadu Pemerintah Kota Bandung.
+/**
+ * Generate system prompt with dynamic phone number
+ * If WA_TEST_NUMBER is set, use that; otherwise use VAPI's {{customer.number}}
+ */
+const getSystemPrompt = () => {
+  // Determine phone number source
+  const phoneNumberSource = WA_TEST_NUMBER || '{{customer.number}}'
+  
+  return `Kamu adalah asisten AI bernama "Satu" untuk layanan SatuPintu, pusat pengaduan terpadu Pemerintah Kota Bandung.
 Tugasmu adalah membantu warga Kota Bandung melaporkan keluhan, masalah, atau pengaduan terkait layanan publik dan infrastruktur kota.
 
 ═══════════════════════════════════════════════════════════════════════════════
@@ -114,21 +129,21 @@ TAHAP 3 - PENGUMPULAN DATA PELAPOR
   → "Boleh saya tahu nama lengkapnya?"
 • SETELAH dapat nama, gunakan sapaan Bapak/Ibu sesuai nama (lihat aturan sapaan di atas)
 • KONFIRMASI NOMOR TELEPON (PENTING - IKUTI ALUR INI!):
-  → Kamu SUDAH PUNYA nomor telepon penelepon dari sistem (caller ID)
+  → Nomor telepon yang terdata di sistem untuk pelapor ini: ${phoneNumberSource}
   
   LANGKAH 1 - TANYA DULU:
   → "Apakah nomor yang digunakan untuk menelepon ini yang bisa dihubungi untuk perkembangan laporan?"
   → JANGAN langsung sebutkan nomornya, tanya dulu!
   
   LANGKAH 2A - JIKA USER BILANG "IYA" / "YA" / "SAMA" / "BETUL":
-  → SEBUTKAN/ULANGI nomor caller ID dengan jelas (per 4 digit)
+  → SEBUTKAN/ULANGI nomor DARI SISTEM (${phoneNumberSource}) dengan jelas (per 4 digit)
   → Contoh: "Baik, saya ulangi nomornya: nol delapan lima satu, lima lima tiga empat, tujuh tujuh nol satu. Apakah sudah benar?"
   → Tunggu konfirmasi user
   
   LANGKAH 2B - JIKA USER BILANG "BUKAN" / "BEDA" / "TIDAK" / "PAKAI NOMOR LAIN":
   → Minta user SEBUTKAN nomor yang benar
   → Contoh: "Baik, boleh disebutkan nomor yang bisa dihubungi?"
-  → Setelah user menyebutkan, ULANGI nomor tersebut dengan jelas
+  → Setelah user menyebutkan, ULANGI nomor YANG USER SEBUTKAN (bukan nomor sistem!)
   → Contoh: "Saya ulangi, nomornya nol delapan satu dua, ... Apakah sudah benar?"
   → Tunggu konfirmasi user
 
@@ -338,6 +353,7 @@ JIKA TIDAK MENDENGAR JELAS:
 HANDLING GANGGUAN/PAUSE:
 • Jika user diam lebih dari 5 detik: "Apakah masih di sana? Ada yang bisa saya bantu?"
 • Jika user bilang "tunggu sebentar": "Siap, saya tunggu."`
+}
 
 // ============================================================================
 // PESAN PEMBUKA
@@ -378,7 +394,7 @@ export const getAssistantConfig = (webhookUrl?: string) => {
       messages: [
         {
           role: 'system' as const,
-          content: SYSTEM_PROMPT,
+          content: getSystemPrompt(),
         },
       ],
       // Tools dalam format Vapi native (bukan nested OpenAI format)
@@ -477,9 +493,40 @@ export const getAssistantConfig = (webhookUrl?: string) => {
       ],
     },
 
+    // =========================================================================
     // Konfigurasi Suara (ElevenLabs)
+    // =========================================================================
     // Using eleven_multilingual_v2 for better Indonesian language adherence
     // (eleven_turbo_v2_5 sometimes slips into English accent)
+    //
+    // ALTERNATIVE VOICE PROVIDERS (all included in VAPI pricing, no extra API keys):
+    // 
+    // 1. PlayHT - 142 languages including Indonesian
+    //    voice: {
+    //      provider: 'playht',
+    //      voiceId: '<indonesian-voice-id>',  // Find IDs at play.ht/studio
+    //    }
+    //
+    // 2. OpenAI TTS - 50+ languages, consistent quality
+    //    voice: {
+    //      provider: 'openai',
+    //      voiceId: 'alloy',  // Options: alloy, echo, fable, onyx, nova, shimmer
+    //    }
+    //
+    // 3. Cartesia - Ultrafast, realistic (verify Indonesian support)
+    //    voice: {
+    //      provider: 'cartesia',
+    //      voiceId: '<voice-id>',
+    //    }
+    //
+    // 4. Azure - Native Indonesian voices (id-ID-GadisNeural, id-ID-ArdiNeural)
+    //    voice: {
+    //      provider: 'azure',
+    //      voiceId: 'id-ID-GadisNeural',  // Female Indonesian
+    //    }
+    //    Note: Azure sounds more robotic compared to ElevenLabs
+    //
+    // =========================================================================
     voice: {
       provider: '11labs' as const,
       voiceId: 'cgSgspJ2msm6clMCkdW9' as const,
@@ -549,6 +596,27 @@ export const getAssistantConfig = (webhookUrl?: string) => {
       numWords: 1,         // Stop AI after user says just 1 word
       voiceSeconds: 0.1,   // Detect user voice very quickly (100ms)
       backoffSeconds: 0.8, // Wait 0.8s before AI resumes speaking
+      // Indonesian acknowledgement phrases - these won't trigger interruption
+      // but will be recognized as backchanneling (user showing they're listening)
+      acknowledgementPhrases: [
+        'iya', 'ya', 'oke', 'ok', 'betul', 'benar', 'siap', 'oh', 'ah', 'hmm',
+        'bukan', 'tidak', 'ga', 'nggak', 'belum', 'udah', 'sudah', 'yoi', 'yup',
+      ],
+    },
+
+    // Konfigurasi Start Speaking Plan
+    // Controls when AI starts speaking after user stops
+    // Using 'vapi' provider for non-English (Indonesian) language support
+    startSpeakingPlan: {
+      smartEndpointingPlan: {
+        provider: 'vapi', // For non-English languages like Indonesian
+      },
+      transcriptionEndpointingPlan: {
+        onPunctuationSeconds: 0.1,    // Quick response after punctuation
+        onNoPunctuationSeconds: 1.5,  // Wait longer if no punctuation (user might still be talking)
+        onNumberSeconds: 0.5,         // Medium wait after numbers (phone number, address number)
+      },
+      waitSeconds: 0.4, // Final wait before AI speaks
     },
   }
 }
