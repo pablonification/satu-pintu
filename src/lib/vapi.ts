@@ -468,12 +468,15 @@ export const getAssistantConfig = (webhookUrl?: string) => {
     },
 
     // Konfigurasi Suara (ElevenLabs)
+    // Using eleven_multilingual_v2 for better Indonesian language adherence
+    // (eleven_turbo_v2_5 sometimes slips into English accent)
     voice: {
       provider: '11labs' as const,
       voiceId: 'cgSgspJ2msm6clMCkdW9' as const,
-      model: 'eleven_turbo_v2_5' as const,
+      model: 'eleven_multilingual_v2' as const,
       stability: 0.7,
       similarityBoost: 0.8,
+      language: 'id', // Force Indonesian pronunciation
     },
 
     // Server configuration untuk function calls - PENTING!
@@ -495,10 +498,38 @@ export const getAssistantConfig = (webhookUrl?: string) => {
     maxDurationSeconds: 600,
 
     // Konfigurasi Transkripsi
+    // Using Deepgram Nova-2 with Indonesian keywords boosting
+    // to improve recognition of short responses like "iya", "ya", "betul", etc.
     transcriber: {
       provider: 'deepgram' as const,
       model: 'nova-2' as const,
       language: 'id' as const,
+      keywords: [
+        // Affirmative responses (boost strongly)
+        'iya:5',
+        'ya:5',
+        'betul:5',
+        'benar:5',
+        'yoi:4',
+        'yup:4',
+        'oke:4',
+        'siap:4',
+        'baik:3',
+        'boleh:3',
+        // Negative responses (boost strongly)
+        'bukan:5',
+        'tidak:5',
+        'ga:5',
+        'nggak:5',
+        'salah:4',
+        'jangan:3',
+        // Other common short words
+        'udah:4',
+        'sudah:4',
+        'belum:4',
+        'mau:3',
+        'bisa:3',
+      ],
     },
   }
 }

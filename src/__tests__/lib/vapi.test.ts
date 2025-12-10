@@ -210,6 +210,36 @@ describe('getAssistantConfig', () => {
     expect(config.transcriber.language).toBe('id')
   })
 
+  it('should have Indonesian keywords boosting for short responses', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.transcriber.keywords).toBeDefined()
+    expect(Array.isArray(config.transcriber.keywords)).toBe(true)
+    
+    // Should include common Indonesian affirmative/negative short words
+    const keywords = config.transcriber.keywords as string[]
+    expect(keywords.some(k => k.startsWith('iya:'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('ya:'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('betul:'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('bukan:'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('tidak:'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('ga:'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('nggak:'))).toBe(true)
+  })
+
+  it('should have ElevenLabs voice with multilingual model', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.voice.provider).toBe('11labs')
+    expect(config.voice.model).toBe('eleven_multilingual_v2')
+  })
+
+  it('should have Indonesian language hint for voice', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.voice.language).toBe('id')
+  })
+
   it('should have silenceTimeoutSeconds configured for auto-end', () => {
     const config = getAssistantConfig()
     

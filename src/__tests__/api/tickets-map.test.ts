@@ -539,10 +539,10 @@ describe('Tickets API - Rating Filter', () => {
   /**
    * Simulates ticket filtering by rating (what Supabase does)
    */
-  function filterTicketsByRating(
-    tickets: { rating: number | null; status: string }[], 
+  function filterTicketsByRating<T extends { rating: number | null; status: string }>(
+    tickets: T[], 
     ratingFilter: string | null
-  ) {
+  ): T[] {
     if (!ratingFilter) return tickets
     if (ratingFilter === 'rated') {
       return tickets.filter(t => t.rating !== null)
