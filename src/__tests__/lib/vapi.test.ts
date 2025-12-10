@@ -241,9 +241,15 @@ describe('getAssistantConfig', () => {
     const config = getAssistantConfig()
     
     expect(config.stopSpeakingPlan).toBeDefined()
-    expect(config.stopSpeakingPlan.numWords).toBe(1) // Stop after 1 word like "ya"
-    expect(config.stopSpeakingPlan.voiceSeconds).toBe(0.1) // Detect voice quickly
+    expect(config.stopSpeakingPlan.numWords).toBe(2) // Stop after 2 words (lebih robust terhadap noise)
+    expect(config.stopSpeakingPlan.voiceSeconds).toBe(0.2) // 200ms buffer untuk filter noise
     expect(config.stopSpeakingPlan.backoffSeconds).toBe(0.8) // Wait before resuming
+  })
+
+  it('should have backgroundDenoisingEnabled for noisy environments', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.backgroundDenoisingEnabled).toBe(true)
   })
 
   it('should have acknowledgementPhrases in stopSpeakingPlan for Indonesian', () => {

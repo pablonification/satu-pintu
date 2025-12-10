@@ -593,6 +593,10 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     silenceTimeoutSeconds: 60, // Auto-end setelah 60 detik silence (untuk beri waktu saat AI bicara panjang)
     maxDurationSeconds: 600,
 
+    // Background Speech Denoising - filter background noise dan suara orang lain
+    // Berguna untuk situasi noisy (TV, orang bicara di sekitar, dll)
+    backgroundDenoisingEnabled: true,
+
     // Konfigurasi Transkripsi
     // Menggunakan Google Gemini untuk akurasi yang lebih baik pada Bahasa Indonesia
     // Google memiliki data training yang lebih banyak untuk bahasa Indonesia
@@ -606,8 +610,8 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // Makes AI more responsive to short user inputs like "ya", "iya", "betul"
     // Without this, AI may not detect user trying to respond/confirm
     stopSpeakingPlan: {
-      numWords: 1,         // Stop AI after user says just 1 word
-      voiceSeconds: 0.1,   // Detect user voice very quickly (100ms)
+      numWords: 2,         // Stop AI after user says 2 words (lebih robust terhadap noise)
+      voiceSeconds: 0.2,   // Detect user voice (200ms buffer untuk filter noise singkat)
       backoffSeconds: 0.8, // Wait 0.8s before AI resumes speaking
       // Indonesian acknowledgement phrases - these won't trigger interruption
       // but will be recognized as backchanneling (user showing they're listening)
