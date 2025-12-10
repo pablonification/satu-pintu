@@ -231,7 +231,7 @@ describe('getAssistantConfig', () => {
     const config = getAssistantConfig()
     
     expect(config.voice.provider).toBe('playht')
-    expect(config.voice.voiceId).toBe('donna')
+    expect(config.voice.voiceId).toBe('ruby')
     expect(config.voice.language).toBe('indonesian')
     expect(config.voice.model).toBe('PlayDialog')
   })

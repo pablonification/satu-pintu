@@ -541,13 +541,13 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     //    Note: Azure sounds more robotic compared to ElevenLabs
     //
     // =========================================================================
-    // Voice: PlayHT - Donna
+    // Voice: PlayHT - Ruby (Australian female)
     // Natural Indonesian voice with PlayDialog model for conversational tone
     // Better Indonesian pronunciation than OpenAI TTS
     // =========================================================================
     voice: {
       provider: 'playht' as const,
-      voiceId: 'donna',
+      voiceId: 'ruby',
       language: 'indonesian',
       model: 'PlayDialog',
     },
