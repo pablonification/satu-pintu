@@ -45,12 +45,13 @@ export const getWebhookUrl = () => {
 // ============================================================================
 
 /**
- * Generate system prompt
- * Uses VAPI's {{customer.number}} variable to get caller's phone number
+ * Generate system prompt with customer phone number
+ * @param customerPhone - The caller's phone number from VAPI (if available)
  */
-const getSystemPrompt = () => {
-  // Use VAPI's customer number variable - this is the actual caller's phone number
-  const phoneNumberSource = '{{customer.number}}'
+const getSystemPrompt = (customerPhone?: string) => {
+  // Determine if we have a valid phone number
+  const hasPhoneNumber = customerPhone && customerPhone.length > 5
+  const phoneDisplay = hasPhoneNumber ? customerPhone : '(tidak terdeteksi)'
   
   return `Kamu adalah asisten AI bernama "Satu" untuk layanan SatuPintu, pusat pengaduan terpadu Pemerintah Kota Bandung.
 Tugasmu adalah membantu warga Kota Bandung melaporkan keluhan, masalah, atau pengaduan terkait layanan publik dan infrastruktur kota.
@@ -131,22 +132,33 @@ TAHAP 3 - PENGUMPULAN DATA PELAPOR
 • Minta nama lengkap pelapor
   → "Boleh saya tahu nama lengkapnya?"
 • SETELAH dapat nama, gunakan sapaan Bapak/Ibu sesuai nama (lihat aturan sapaan di atas)
-• KONFIRMASI NOMOR TELEPON - WAJIB IKUTI 2 LANGKAH INI:
-  → Nomor telepon penelepon yang terdata: ${phoneNumberSource}
+• KONFIRMASI NOMOR TELEPON - IKUTI ALUR SESUAI KONDISI:
   
-  LANGKAH 1 - TANYA APAKAH NOMOR SAMA ATAU BEDA (WAJIB TANYA INI DULU!):
-  → Tanyakan: "Untuk nomor WhatsApp yang bisa dihubungi, apakah sama dengan nomor yang dipakai menelepon ini, atau berbeda?"
-  → TUNGGU JAWABAN USER! Jangan langsung lanjut ke langkah 2!
+  Nomor telepon penelepon yang terdeteksi sistem: ${phoneDisplay}
+  
+  ${hasPhoneNumber ? `
+  === JIKA NOMOR TERDETEKSI (ada nomor ${phoneDisplay}) ===
+  
+  LANGKAH 1 - TANYA APAKAH NOMOR SAMA ATAU BEDA:
+  → Tanyakan: "Untuk nomor WhatsApp yang bisa dihubungi, apakah sama dengan nomor yang dipakai menelepon ini, yaitu ${phoneDisplay}, atau ingin pakai nomor lain?"
+  → TUNGGU JAWABAN USER!
   
   LANGKAH 2 - SETELAH USER MENJAWAB:
   → JIKA USER JAWAB "SAMA" / "IYA" / "YA" / "BETUL" / "INI AJA":
-    • Bacakan nomor dari sistem: ${phoneNumberSource} (per 4 digit)
-    • Contoh: "Baik, saya konfirmasi nomornya: nol delapan lima satu, lima lima tiga empat, tujuh tujuh nol satu. Sudah benar?"
+    • Konfirmasi: "Baik, saya konfirmasi nomornya ${phoneDisplay}. Sudah benar?"
+    • Gunakan nomor ${phoneDisplay} untuk parameter reporterPhone
   
   → JIKA USER JAWAB "BEDA" / "BUKAN" / "TIDAK" / "LAIN":
-    • Minta user sebutkan nomornya: "Boleh disebutkan nomor WhatsApp yang bisa dihubungi?"
-    • Setelah user sebut, ULANGI nomor yang user sebutkan (bukan nomor sistem!)
-    • Contoh: "Saya ulangi, nomornya nol delapan satu dua, ... Sudah benar?"
+    • Minta user sebutkan: "Boleh disebutkan nomor WhatsApp yang bisa dihubungi?"
+    • Setelah user sebut, ULANGI nomor yang user sebutkan
+    • Contoh: "Saya ulangi, nomornya nol delapan satu dua... Sudah benar?"
+  ` : `
+  === JIKA NOMOR TIDAK TERDETEKSI ===
+  
+  → Langsung minta nomor: "Boleh disebutkan nomor WhatsApp yang bisa dihubungi untuk perkembangan laporan?"
+  → Setelah user sebutkan, ULANGI nomor yang disebutkan untuk konfirmasi
+  → Contoh: "Saya ulangi, nomornya nol delapan lima satu... Sudah benar?"
+  `}
 
 TAHAP 4 - PENGUMPULAN DATA LOKASI
 • Minta informasi lokasi dengan FLEKSIBEL - tidak harus alamat lengkap!
@@ -375,9 +387,10 @@ const FIRST_MESSAGE = `Halo, selamat datang di SatuPintu Bandung. Saya Satu, asi
  * - tools format menggunakan Vapi native format (bukan OpenAI nested format)
  * 
  * @param webhookUrl - URL webhook untuk function calls (opsional, default dari env)
+ * @param customerPhone - Nomor telepon penelepon dari VAPI (opsional)
  * @returns Konfigurasi assistant untuk Vapi
  */
-export const getAssistantConfig = (webhookUrl?: string) => {
+export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) => {
   const serverUrl = webhookUrl || getWebhookUrl()
   
   return {
@@ -395,7 +408,7 @@ export const getAssistantConfig = (webhookUrl?: string) => {
       messages: [
         {
           role: 'system' as const,
-          content: getSystemPrompt(),
+          content: getSystemPrompt(customerPhone),
         },
       ],
       // Tools dalam format Vapi native (bukan nested OpenAI format)
@@ -528,17 +541,13 @@ export const getAssistantConfig = (webhookUrl?: string) => {
     //    Note: Azure sounds more robotic compared to ElevenLabs
     //
     // =========================================================================
-    // Voice: Mila Rahmadhania - Indonesian female voice
-    // Naturally cheerful but we increase stability for more consistent professional tone
-    // Higher stability = more consistent, less expressive variation
+    // Voice: OpenAI TTS - Nova
+    // Warm, friendly, professional - ideal for government customer service
+    // More consistent accent than ElevenLabs for Indonesian
     // =========================================================================
     voice: {
-      provider: '11labs' as const,
-      voiceId: 'wWRuqXP4yAwzRerUveS8' as const,
-      model: 'eleven_multilingual_v2' as const,
-      stability: 0.85,        // Increased from 0.7 for more consistent tone
-      similarityBoost: 0.75,  // Slightly reduced for more natural sound
-      language: 'id', // Force Indonesian pronunciation
+      provider: 'openai' as const,
+      voiceId: 'nova' as const,
     },
 
     // Server configuration untuk function calls - PENTING!

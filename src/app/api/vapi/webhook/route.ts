@@ -264,7 +264,15 @@ export async function POST(request: NextRequest) {
     
     if (messageType === 'assistant-request') {
       console.log('=== ASSISTANT REQUEST - Returning transient assistant config ===')
-      const assistantConfig = getAssistantConfig()
+      
+      // Extract customer phone number from the call object
+      const callData = payload.message?.call as Record<string, unknown> | undefined
+      const customer = callData?.customer as Record<string, unknown> | undefined
+      const customerPhone = customer?.number as string | undefined
+      
+      console.log('Customer phone from call:', customerPhone || '(not available)')
+      
+      const assistantConfig = getAssistantConfig(undefined, customerPhone)
       return NextResponse.json({
         assistant: assistantConfig
       })

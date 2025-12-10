@@ -227,17 +227,27 @@ describe('getAssistantConfig', () => {
     expect(keywords.some(k => k.startsWith('nggak:'))).toBe(true)
   })
 
-  it('should have ElevenLabs voice with multilingual model', () => {
+  it('should have OpenAI TTS voice configured', () => {
     const config = getAssistantConfig()
     
-    expect(config.voice.provider).toBe('11labs')
-    expect(config.voice.model).toBe('eleven_multilingual_v2')
+    expect(config.voice.provider).toBe('openai')
+    expect(config.voice.voiceId).toBe('nova')
   })
 
-  it('should have Indonesian language hint for voice', () => {
+  it('should accept customerPhone parameter for system prompt', () => {
+    const config = getAssistantConfig(undefined, '+6281234567890')
+    
+    // System prompt should contain the phone number
+    const systemPrompt = config.model.messages[0].content
+    expect(systemPrompt).toContain('+6281234567890')
+  })
+
+  it('should handle missing customerPhone gracefully', () => {
     const config = getAssistantConfig()
     
-    expect(config.voice.language).toBe('id')
+    // System prompt should indicate phone not detected
+    const systemPrompt = config.model.messages[0].content
+    expect(systemPrompt).toContain('tidak terdeteksi')
   })
 
   it('should have stopSpeakingPlan configured for responsive turn-taking', () => {
