@@ -240,6 +240,15 @@ describe('getAssistantConfig', () => {
     expect(config.voice.language).toBe('id')
   })
 
+  it('should have stopSpeakingPlan configured for responsive turn-taking', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.stopSpeakingPlan).toBeDefined()
+    expect(config.stopSpeakingPlan.numWords).toBe(1) // Stop after 1 word like "ya"
+    expect(config.stopSpeakingPlan.voiceSeconds).toBe(0.1) // Detect voice quickly
+    expect(config.stopSpeakingPlan.backoffSeconds).toBe(0.8) // Wait before resuming
+  })
+
   it('should have silenceTimeoutSeconds configured for auto-end', () => {
     const config = getAssistantConfig()
     

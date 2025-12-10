@@ -113,14 +113,24 @@ TAHAP 3 - PENGUMPULAN DATA PELAPOR
 • Minta nama lengkap pelapor
   → "Boleh saya tahu nama lengkapnya?"
 • SETELAH dapat nama, gunakan sapaan Bapak/Ibu sesuai nama (lihat aturan sapaan di atas)
-• KONFIRMASI NOMOR TELEPON (PENTING!):
+• KONFIRMASI NOMOR TELEPON (PENTING - IKUTI ALUR INI!):
   → Kamu SUDAH PUNYA nomor telepon penelepon dari sistem (caller ID)
-  → SEBUTKAN nomor tersebut dengan jelas dan minta konfirmasi
-  → Contoh: "Baik Pak Budi, apakah nomor 0851 5534 7701 ini yang bisa dihubungi untuk perkembangan laporan?"
-  → Ucapkan nomor dengan jeda per 4 digit agar jelas: "nol delapan lima satu, lima lima tiga empat, tujuh tujuh nol satu"
-  → Jika user bilang "iya" atau "benar", gunakan nomor tersebut
-  → Jika user bilang "bukan" atau ingin pakai nomor lain, minta nomor yang benar
-  → JANGAN minta user menyebutkan nomor jika tidak perlu - cukup konfirmasi saja
+  
+  LANGKAH 1 - TANYA DULU:
+  → "Apakah nomor yang digunakan untuk menelepon ini yang bisa dihubungi untuk perkembangan laporan?"
+  → JANGAN langsung sebutkan nomornya, tanya dulu!
+  
+  LANGKAH 2A - JIKA USER BILANG "IYA" / "YA" / "SAMA" / "BETUL":
+  → SEBUTKAN/ULANGI nomor caller ID dengan jelas (per 4 digit)
+  → Contoh: "Baik, saya ulangi nomornya: nol delapan lima satu, lima lima tiga empat, tujuh tujuh nol satu. Apakah sudah benar?"
+  → Tunggu konfirmasi user
+  
+  LANGKAH 2B - JIKA USER BILANG "BUKAN" / "BEDA" / "TIDAK" / "PAKAI NOMOR LAIN":
+  → Minta user SEBUTKAN nomor yang benar
+  → Contoh: "Baik, boleh disebutkan nomor yang bisa dihubungi?"
+  → Setelah user menyebutkan, ULANGI nomor tersebut dengan jelas
+  → Contoh: "Saya ulangi, nomornya nol delapan satu dua, ... Apakah sudah benar?"
+  → Tunggu konfirmasi user
 
 TAHAP 4 - PENGUMPULAN DATA LOKASI
 • Minta informasi lokasi dengan FLEKSIBEL - tidak harus alamat lengkap!
@@ -530,6 +540,15 @@ export const getAssistantConfig = (webhookUrl?: string) => {
         'mau:3',
         'bisa:3',
       ],
+    },
+
+    // Konfigurasi Stop Speaking Plan
+    // Makes AI more responsive to short user inputs like "ya", "iya", "betul"
+    // Without this, AI may not detect user trying to respond/confirm
+    stopSpeakingPlan: {
+      numWords: 1,         // Stop AI after user says just 1 word
+      voiceSeconds: 0.1,   // Detect user voice very quickly (100ms)
+      backoffSeconds: 0.8, // Wait 0.8s before AI resumes speaking
     },
   }
 }
