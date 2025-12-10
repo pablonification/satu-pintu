@@ -39,7 +39,8 @@ import {
   ImageIcon,
   X,
   BarChart3,
-  Eye
+  Eye,
+  Star
 } from 'lucide-react'
 import { ExportButton } from '@/components/ExportButton'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -90,6 +91,10 @@ interface Ticket {
   resolution_photo_after: string | null
   created_at: string
   updated_at: string
+  // Rating fields
+  rating: number | null
+  feedback: string | null
+  rated_at: string | null
 }
 
 interface Stats {
@@ -125,6 +130,30 @@ const URGENCY_COLORS: Record<string, string> = {
   LOW: 'bg-green-100 text-green-800',
 }
 
+// Star rating display component
+function StarRating({ rating, size = 'sm' }: { rating: number | null; size?: 'sm' | 'md' }) {
+  if (rating === null) {
+    return <span className="text-muted-foreground text-xs">-</span>
+  }
+  
+  const starSize = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'
+  
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`${starSize} ${
+            star <= rating 
+              ? 'fill-yellow-400 text-yellow-400' 
+              : 'fill-transparent text-white/20'
+          }`}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
@@ -136,6 +165,7 @@ export default function DashboardPage() {
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [urgencyFilter, setUrgencyFilter] = useState<string>('all')
+  const [ratingFilter, setRatingFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   
   // Update dialog
@@ -145,6 +175,14 @@ export default function DashboardPage() {
   const [updateNote, setUpdateNote] = useState('')
   const [sendSms, setSendSms] = useState(true)
   const [updating, setUpdating] = useState(false)
+  
+  // Auto-disable sendSms when status changes to RESOLVED
+  // to prevent duplicate notifications (resolved notification is auto-sent)
+  useEffect(() => {
+    if (newStatus === 'RESOLVED') {
+      setSendSms(false)
+    }
+  }, [newStatus])
   
   // Photo upload state
   const [photoBefore, setPhotoBefore] = useState<File | null>(null)
@@ -244,14 +282,14 @@ export default function DashboardPage() {
       fetchStats()
       fetchTickets()
     }
-  }, [user, statusFilter, urgencyFilter])
+  }, [user, statusFilter, urgencyFilter, ratingFilter])
 
   // Fetch map tickets when switching to map view
   useEffect(() => {
     if (user && activeView === 'map') {
       fetchMapTickets()
     }
-  }, [user, activeView, statusFilter, urgencyFilter])
+  }, [user, activeView, statusFilter, urgencyFilter, ratingFilter])
 
   // Track critical tickets (PENDING only) and play alert sound
   useEffect(() => {
@@ -320,6 +358,7 @@ export default function DashboardPage() {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (urgencyFilter !== 'all') params.set('urgency', urgencyFilter)
+      if (ratingFilter !== 'all') params.set('rating', ratingFilter)
       if (searchQuery) params.set('search', searchQuery)
       
       const res = await fetch(`/api/tickets?${params}`)
@@ -774,6 +813,16 @@ export default function DashboardPage() {
                 <SelectItem value="LOW">Rendah</SelectItem>
             </SelectContent>
             </Select>
+            <Select value={ratingFilter} onValueChange={setRatingFilter}>
+            <SelectTrigger className="w-full md:w-36 bg-card border-white/10 text-white">
+                <SelectValue placeholder="Rating" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="all">Semua Rating</SelectItem>
+                <SelectItem value="rated">Sudah Dinilai</SelectItem>
+                <SelectItem value="unrated">Belum Dinilai</SelectItem>
+            </SelectContent>
+            </Select>
             <Button onClick={() => { fetchTickets(); if (activeView === 'map') fetchMapTickets(); }} variant="outline" className="bg-card border-white/10 hover:bg-white/5 text-white">
             <RefreshCw className="h-4 w-4" />
             </Button>
@@ -781,6 +830,7 @@ export default function DashboardPage() {
               filters={{
                 status: statusFilter,
                 urgency: urgencyFilter,
+                rating: ratingFilter,
               }}
             />
         </div>
@@ -817,6 +867,7 @@ export default function DashboardPage() {
                         <TableHead className="text-muted-foreground">Lokasi</TableHead>
                         <TableHead className="text-muted-foreground">Prioritas</TableHead>
                         <TableHead className="text-muted-foreground">Status</TableHead>
+                        <TableHead className="text-muted-foreground">Rating</TableHead>
                         <TableHead className="text-muted-foreground">Waktu</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -833,6 +884,7 @@ export default function DashboardPage() {
                           <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                           <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                           <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                           <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                         </TableRow>
                       ))}
@@ -855,6 +907,7 @@ export default function DashboardPage() {
                             <TableHead className="text-muted-foreground">Lokasi</TableHead>
                             <TableHead className="text-muted-foreground">Prioritas</TableHead>
                             <TableHead className="text-muted-foreground">Status</TableHead>
+                            <TableHead className="text-muted-foreground">Rating</TableHead>
                             <TableHead className="text-muted-foreground">Waktu</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -896,6 +949,13 @@ export default function DashboardPage() {
                                   {STATUS_LABELS[ticket.status as TicketStatus]}
                                 </Badge>
                               </TableCell>
+                              <TableCell>
+                                {ticket.status === 'RESOLVED' ? (
+                                  <StarRating rating={ticket.rating} />
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">-</span>
+                                )}
+                              </TableCell>
                               <TableCell className="text-sm text-muted-foreground">
                                 {format(new Date(ticket.created_at), 'dd/MM HH:mm', { locale: idLocale })}
                               </TableCell>
@@ -934,15 +994,20 @@ export default function DashboardPage() {
                           <p className="text-sm text-white/80 mb-3 line-clamp-2">{ticket.location}</p>
                           
                           <div className="flex justify-between items-center pt-3 border-t border-white/5">
-                            <Badge className={`border text-xs ${
-                                ticket.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                                ticket.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                                ticket.status === 'ESCALATED' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                                ticket.status === 'RESOLVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                              }`}>
-                              {STATUS_LABELS[ticket.status as TicketStatus]}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className={`border text-xs ${
+                                  ticket.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                                  ticket.status === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                  ticket.status === 'ESCALATED' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                                  ticket.status === 'RESOLVED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                  'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                }`}>
+                                {STATUS_LABELS[ticket.status as TicketStatus]}
+                              </Badge>
+                              {ticket.status === 'RESOLVED' && (
+                                <StarRating rating={ticket.rating} />
+                              )}
+                            </div>
                             <span className="text-xs text-muted-foreground">
                               {format(new Date(ticket.created_at), 'dd MMM HH:mm', { locale: idLocale })}
                             </span>
@@ -995,6 +1060,38 @@ export default function DashboardPage() {
                 <p className="font-medium mb-1 text-white">Deskripsi:</p>
                 <p className="text-muted-foreground">{selectedTicket.description}</p>
               </div>
+              
+              {/* Rating & Feedback Section - only show for RESOLVED tickets */}
+              {selectedTicket.status === 'RESOLVED' && (
+                <div className="p-4 bg-yellow-500/5 rounded-lg border border-yellow-500/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Star className="h-5 w-5 text-yellow-400" />
+                    <Label className="text-yellow-400 font-medium">Rating dari Pelapor</Label>
+                  </div>
+                  
+                  {selectedTicket.rating !== null ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <StarRating rating={selectedTicket.rating} size="md" />
+                        <span className="text-white font-medium">{selectedTicket.rating}/5</span>
+                      </div>
+                      {selectedTicket.feedback && (
+                        <div className="p-3 bg-black/20 rounded-lg">
+                          <p className="text-xs text-muted-foreground mb-1">Feedback:</p>
+                          <p className="text-white/90 text-sm">{selectedTicket.feedback}</p>
+                        </div>
+                      )}
+                      {selectedTicket.rated_at && (
+                        <p className="text-xs text-muted-foreground">
+                          Dinilai pada {format(new Date(selectedTicket.rated_at), 'dd MMM yyyy, HH:mm', { locale: idLocale })}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm">Belum ada rating dari pelapor</p>
+                  )}
+                </div>
+              )}
               
               <div className="space-y-2">
                 <Label className="text-white">Status Baru</Label>
@@ -1195,12 +1292,18 @@ export default function DashboardPage() {
                   id="sendSms"
                   checked={sendSms}
                   onChange={(e) => setSendSms(e.target.checked)}
-                  className="rounded border-white/10 bg-black/20 text-primary focus:ring-primary"
+                  disabled={newStatus === 'RESOLVED'}
+                  className="rounded border-white/10 bg-black/20 text-primary focus:ring-primary disabled:opacity-50"
                 />
-                <Label htmlFor="sendSms" className="cursor-pointer text-muted-foreground">
+                <Label htmlFor="sendSms" className={`cursor-pointer ${newStatus === 'RESOLVED' ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>
                   Kirim notifikasi WhatsApp ke pelapor
                 </Label>
               </div>
+              {newStatus === 'RESOLVED' && (
+                <p className="text-xs text-emerald-400/70 mt-1 ml-6">
+                  Notifikasi selesai + link rating akan dikirim otomatis
+                </p>
+              )}
             </div>
           )}
           

@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status')
   const urgency = searchParams.get('urgency')
   const category = searchParams.get('category')
+  const ratingFilter = searchParams.get('rating') // 'rated', 'unrated', or null for all
   const page = parseInt(searchParams.get('page') || '1')
   const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50)
   const search = searchParams.get('search')
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
         status: status || undefined, 
         urgency: urgency || undefined, 
         category: category || undefined,
+        rating: ratingFilter || undefined,
         page: page.toString(),
         limit: limit.toString()
       })
@@ -77,9 +79,10 @@ export async function GET(request: NextRequest) {
   
   try {
     // Select only needed columns for list view (performance optimization)
+    // Include rating fields for dashboard display
     let query = supabaseAdmin
       .from('tickets')
-      .select('id, category, subcategory, location, description, reporter_phone, reporter_name, status, urgency, assigned_dinas, resolution_photo_before, resolution_photo_after, created_at, updated_at', { count: 'exact' })
+      .select('id, category, subcategory, location, description, reporter_phone, reporter_name, status, urgency, assigned_dinas, resolution_photo_before, resolution_photo_after, created_at, updated_at, rating, feedback, rated_at', { count: 'exact' })
     
     // Filter by assigned dinas (unless admin)
     if (auth.dinas_id !== 'admin') {
@@ -90,6 +93,12 @@ export async function GET(request: NextRequest) {
     if (status) query = query.eq('status', status)
     if (urgency) query = query.eq('urgency', urgency)
     if (category) query = query.eq('category', category)
+    // Rating filter: 'rated' = has rating, 'unrated' = no rating (for RESOLVED tickets)
+    if (ratingFilter === 'rated') {
+      query = query.not('rating', 'is', null)
+    } else if (ratingFilter === 'unrated') {
+      query = query.is('rating', null).eq('status', 'RESOLVED')
+    }
     if (search) {
       // Use optimized search with index
       query = query.or(`id.ilike.%${search}%,location.ilike.%${search}%`)

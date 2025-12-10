@@ -217,9 +217,11 @@ export async function PATCH(
       }
     }
     
-    // Send WhatsApp notification if requested (for other status updates)
+    // Send WhatsApp notification if requested (for status updates OTHER than RESOLVED)
+    // When transitioning to RESOLVED, we already send ticketResolved notification above
+    // so skip the generic statusUpdate to prevent duplicate notifications
     let messageSent = false
-    if (sendSms && ticket.reporter_phone) {
+    if (sendSms && ticket.reporter_phone && status !== 'RESOLVED') {
       // Generate track URL
       const trackUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/track/${id}`
       

@@ -154,6 +154,8 @@ TAHAP 7 - PENUTUP
 • Tanyakan apakah ada keluhan lain yang ingin dilaporkan
 • Jika tidak ada, ucapkan terima kasih dan salam penutup NETRAL (tanpa waktu)
 • Contoh: "Terima kasih telah menggunakan layanan SatuPintu, Bu Rina. Semoga masalahnya segera tertangani. Sampai jumpa!"
+• PENTING: Setelah mengucapkan salam penutup seperti "Sampai jumpa!", SEGERA gunakan tool endCall untuk menutup panggilan secara otomatis
+• Jangan menunggu respons user setelah salam penutup - langsung panggil endCall
 
 ═══════════════════════════════════════════════════════════════════════════════
 LANDMARK TERKENAL DI BANDUNG (untuk referensi)
@@ -458,6 +460,10 @@ export const getAssistantConfig = (webhookUrl?: string) => {
             },
           ],
         },
+        {
+          type: 'endCall' as const,
+          // Native Vapi tool - ends the call gracefully after saying goodbye
+        },
       ],
     },
 
@@ -485,7 +491,7 @@ export const getAssistantConfig = (webhookUrl?: string) => {
     ],
 
     // Konfigurasi Percakapan
-    silenceTimeoutSeconds: 30,
+    silenceTimeoutSeconds: 12, // Auto-end setelah 12 detik silence (sebelumnya 30)
     maxDurationSeconds: 600,
 
     // Konfigurasi Transkripsi

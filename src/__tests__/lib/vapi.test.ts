@@ -193,11 +193,28 @@ describe('getAssistantConfig', () => {
     expect(transferCallTool).toBeDefined()
   })
 
+  it('should include endCall tool for programmatic call ending', () => {
+    const config = getAssistantConfig()
+    
+    const endCallTool = config.model.tools.find(
+      (t: Record<string, unknown>) => t.type === 'endCall'
+    )
+    
+    expect(endCallTool).toBeDefined()
+  })
+
   it('should have Indonesian transcriber', () => {
     const config = getAssistantConfig()
     
     expect(config.transcriber.provider).toBe('deepgram')
     expect(config.transcriber.language).toBe('id')
+  })
+
+  it('should have silenceTimeoutSeconds configured for auto-end', () => {
+    const config = getAssistantConfig()
+    
+    // Should be configured to end call after 12 seconds of silence
+    expect(config.silenceTimeoutSeconds).toBe(12)
   })
 
   it('should have server URL configured', () => {

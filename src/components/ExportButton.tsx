@@ -11,6 +11,7 @@ interface ExportButtonProps {
     status?: string
     category?: string
     urgency?: string
+    rating?: string
   }
 }
 
