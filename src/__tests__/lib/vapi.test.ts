@@ -268,22 +268,22 @@ describe('getAssistantConfig', () => {
     expect(phrases).toContain('ga')
   })
 
-  it('should have startSpeakingPlan configured for Indonesian turn detection', () => {
+  it('should have startSpeakingPlan configured for Indonesian turn detection with aggressive timing', () => {
     const config = getAssistantConfig()
     
     expect(config.startSpeakingPlan).toBeDefined()
     expect(config.startSpeakingPlan.smartEndpointingPlan).toBeDefined()
     expect(config.startSpeakingPlan.smartEndpointingPlan.provider).toBe('vapi') // For non-English
-    expect(config.startSpeakingPlan.waitSeconds).toBe(0.4)
+    expect(config.startSpeakingPlan.waitSeconds).toBe(0.25) // Aggressive: reduced from 0.4
   })
 
-  it('should have transcriptionEndpointingPlan in startSpeakingPlan', () => {
+  it('should have aggressive transcriptionEndpointingPlan for faster response', () => {
     const config = getAssistantConfig()
     
     expect(config.startSpeakingPlan.transcriptionEndpointingPlan).toBeDefined()
-    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onPunctuationSeconds).toBe(0.1)
-    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNoPunctuationSeconds).toBe(1.5)
-    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNumberSeconds).toBe(0.5)
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onPunctuationSeconds).toBe(0.05) // Aggressive: was 0.1
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNoPunctuationSeconds).toBe(0.8) // Aggressive: was 1.5
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNumberSeconds).toBe(0.4) // Aggressive: was 0.5
   })
 
   it('should have silenceTimeoutSeconds configured for auto-end', () => {

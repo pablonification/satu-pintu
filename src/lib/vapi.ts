@@ -624,16 +624,17 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // Konfigurasi Start Speaking Plan
     // Controls when AI starts speaking after user stops
     // Using 'vapi' provider for non-English (Indonesian) language support
+    // Aggressive timing for faster AI response after user finishes speaking
     startSpeakingPlan: {
       smartEndpointingPlan: {
         provider: 'vapi', // For non-English languages like Indonesian
       },
       transcriptionEndpointingPlan: {
-        onPunctuationSeconds: 0.1,    // Quick response after punctuation
-        onNoPunctuationSeconds: 1.5,  // Wait longer if no punctuation (user might still be talking)
-        onNumberSeconds: 0.5,         // Medium wait after numbers (phone number, address number)
+        onPunctuationSeconds: 0.05,   // Quick response after punctuation (was 0.1)
+        onNoPunctuationSeconds: 0.8,  // Faster response when no punctuation (was 1.5) - saves ~700ms
+        onNumberSeconds: 0.4,         // Faster after numbers (was 0.5)
       },
-      waitSeconds: 0.4, // Final wait before AI speaks
+      waitSeconds: 0.25, // Reduced final wait before AI speaks (was 0.4) - saves ~150ms
     },
 
     // =========================================================================
