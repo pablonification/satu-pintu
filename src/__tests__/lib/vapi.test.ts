@@ -287,8 +287,8 @@ describe('getAssistantConfig', () => {
   it('should have silenceTimeoutSeconds configured for auto-end', () => {
     const config = getAssistantConfig()
     
-    // Should be configured to end call after 12 seconds of silence
-    expect(config.silenceTimeoutSeconds).toBe(12)
+    // Should be configured to end call after 30 seconds of silence (increased for web calls)
+    expect(config.silenceTimeoutSeconds).toBe(30)
   })
 
   it('should have server URL configured', () => {

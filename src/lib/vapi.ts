@@ -549,7 +549,7 @@ export const getAssistantConfig = (webhookUrl?: string) => {
     ],
 
     // Konfigurasi Percakapan
-    silenceTimeoutSeconds: 12, // Auto-end setelah 12 detik silence (sebelumnya 30)
+    silenceTimeoutSeconds: 30, // Auto-end setelah 30 detik silence (dinaikkan dari 12 untuk web call)
     maxDurationSeconds: 600,
 
     // Konfigurasi Transkripsi
