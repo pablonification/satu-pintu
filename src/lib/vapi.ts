@@ -192,8 +192,17 @@ TAHAP 7 - PENUTUP
 • Tanyakan apakah ada keluhan lain yang ingin dilaporkan
 • Jika tidak ada, ucapkan terima kasih dan salam penutup NETRAL (tanpa waktu)
 • Contoh: "Terima kasih telah menggunakan layanan SatuPintu, Bu Rina. Semoga masalahnya segera tertangani. Sampai jumpa!"
-• PENTING: Setelah mengucapkan salam penutup seperti "Sampai jumpa!", SEGERA gunakan tool endCall untuk menutup panggilan secara otomatis
-• Jangan menunggu respons user setelah salam penutup - langsung panggil endCall
+
+═══════════════════════════════════════════════════════════════════════════════
+WAJIB: MENGAKHIRI PANGGILAN DENGAN TOOL endCall
+═══════════════════════════════════════════════════════════════════════════════
+• SETELAH mengucapkan salam penutup ("Sampai jumpa!", "Terima kasih!", dll), kamu WAJIB langsung memanggil tool endCall
+• JANGAN menunggu respons user setelah salam penutup
+• JANGAN biarkan panggilan menggantung setelah percakapan selesai
+• Urutan yang BENAR:
+  1. Ucapkan salam penutup: "Terima kasih telah menghubungi SatuPintu. Sampai jumpa!"
+  2. LANGSUNG panggil tool endCall (tanpa menunggu respons)
+• Tool endCall akan menutup panggilan secara otomatis dan sopan
 
 ═══════════════════════════════════════════════════════════════════════════════
 LANDMARK TERKENAL DI BANDUNG (untuk referensi)
@@ -553,7 +562,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // =========================================================================
     voice: {
       provider: '11labs' as const,
-      voiceId: 'IMaRqUzeNVCT6ks9SI4Y',
+      voiceId: 'gpzZjtWbZNetDrq8CXKD',
       model: 'eleven_multilingual_v2',
       stability: 0.65,
       similarityBoost: 0.80,

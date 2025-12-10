@@ -227,11 +227,11 @@ describe('getAssistantConfig', () => {
     expect(keywords.some(k => k.startsWith('nggak:'))).toBe(true)
   })
 
-  it('should have PlayHT voice configured for Indonesian', () => {
+  it('should have ElevenLabs voice configured for Indonesian', () => {
     const config = getAssistantConfig()
     
     expect(config.voice.provider).toBe('11labs')
-    expect(config.voice.voiceId).toBe('IMaRqUzeNVCT6ks9SI4Y')
+    expect(config.voice.voiceId).toBe('gpzZjtWbZNetDrq8CXKD')
   })
 
   it('should accept customerPhone parameter for system prompt', () => {
