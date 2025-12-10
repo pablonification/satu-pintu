@@ -542,10 +542,24 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     //
     // =========================================================================
     // Voice: ElevenLabs - Custom Indonesian voice
+    // Using eleven_multilingual_v2 for best Indonesian pronunciation
+    // 
+    // Voice Settings Optimization for Indonesian (prevent accent slipping):
+    // - stability: 0.65 (higher = more consistent pronunciation)
+    // - similarity_boost: 0.80 (higher = sticks closer to voice character)  
+    // - style: 0.15 (lower = less expressive, more stable accent)
+    // - use_speaker_boost: true (improves clarity)
+    // - speed: 0.95 (slightly slower for clearer Indonesian pronunciation)
     // =========================================================================
     voice: {
       provider: '11labs' as const,
       voiceId: 'IMaRqUzeNVCT6ks9SI4Y',
+      model: 'eleven_multilingual_v2',
+      stability: 0.65,
+      similarityBoost: 0.80,
+      style: 0.15,
+      useSpeakerBoost: true,
+      speed: 0.95,
     },
 
     // Server configuration untuk function calls - PENTING!
