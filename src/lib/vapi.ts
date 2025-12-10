@@ -602,7 +602,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // Google memiliki data training yang lebih banyak untuk bahasa Indonesia
     transcriber: {
       provider: 'google' as const,
-      model: 'gemini-2.0-flash' as const,
+      model: 'gemini-2.5-flash' as const,
       language: 'Indonesian' as const,
     },
 
@@ -631,7 +631,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       },
       transcriptionEndpointingPlan: {
         onPunctuationSeconds: 0.05,   // Quick response after punctuation (was 0.1)
-        onNoPunctuationSeconds: 0.8,  // Faster response when no punctuation (was 1.5) - saves ~700ms
+        onNoPunctuationSeconds: 0.5,  // Reduced from 0.8 to minimize worst-case latency spikes
         onNumberSeconds: 0.4,         // Faster after numbers (was 0.5)
       },
       waitSeconds: 0.25, // Reduced final wait before AI speaks (was 0.4) - saves ~150ms
