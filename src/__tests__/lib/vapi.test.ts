@@ -310,16 +310,45 @@ describe('getAssistantConfig', () => {
     expect(config.startSpeakingPlan).toBeDefined()
     expect(config.startSpeakingPlan.smartEndpointingPlan).toBeDefined()
     expect(config.startSpeakingPlan.smartEndpointingPlan.provider).toBe('vapi') // For non-English
-    expect(config.startSpeakingPlan.waitSeconds).toBe(0.25) // Aggressive: reduced from 0.4
+    expect(config.startSpeakingPlan.waitSeconds).toBe(0.2) // Fast response after endpointing
   })
 
-  it('should have aggressive transcriptionEndpointingPlan for faster response', () => {
+  it('should have transcriptionEndpointingPlan with balanced timing', () => {
     const config = getAssistantConfig()
     
     expect(config.startSpeakingPlan.transcriptionEndpointingPlan).toBeDefined()
-    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onPunctuationSeconds).toBe(0.05) // Aggressive: was 0.1
-    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNoPunctuationSeconds).toBe(0.2) // Aggressive: was 1.5
-    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNumberSeconds).toBe(0.4) // Aggressive: was 0.5
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onPunctuationSeconds).toBe(0.1) // Slightly tolerant for stability
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNoPunctuationSeconds).toBe(0.4) // Middle ground
+    expect(config.startSpeakingPlan.transcriptionEndpointingPlan.onNumberSeconds).toBe(0.5) // More tolerant for phone numbers
+  })
+
+  it('should have customEndpointingRules for context-aware timeout', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.startSpeakingPlan.customEndpointingRules).toBeDefined()
+    expect(config.startSpeakingPlan.customEndpointingRules.length).toBeGreaterThan(0)
+    
+    // Should have rule for complaints/reports
+    const reportRule = config.startSpeakingPlan.customEndpointingRules.find(
+      (r: { type: string; regex: string }) => r.regex.includes('keluhan') || r.regex.includes('laporan')
+    )
+    expect(reportRule).toBeDefined()
+    expect(reportRule!.type).toBe('assistant')
+    expect(reportRule!.timeoutSeconds).toBeGreaterThanOrEqual(1.0)
+    
+    // Should have rule for phone numbers
+    const phoneRule = config.startSpeakingPlan.customEndpointingRules.find(
+      (r: { type: string; regex: string }) => r.regex.includes('telepon') || r.regex.includes('whatsapp')
+    )
+    expect(phoneRule).toBeDefined()
+    expect(phoneRule!.timeoutSeconds).toBeGreaterThanOrEqual(1.5)
+    
+    // Should have rule for address/location
+    const addressRule = config.startSpeakingPlan.customEndpointingRules.find(
+      (r: { type: string; regex: string }) => r.regex.includes('alamat') || r.regex.includes('lokasi')
+    )
+    expect(addressRule).toBeDefined()
+    expect(addressRule!.timeoutSeconds).toBeGreaterThanOrEqual(1.5)
   })
 
   it('should have silenceTimeoutSeconds configured for auto-end', () => {

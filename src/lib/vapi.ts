@@ -633,6 +633,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       acknowledgementPhrases: [
         'iya', 'ya', 'oke', 'ok', 'betul', 'benar', 'siap', 'oh', 'ah', 'hmm',
         'bukan', 'tidak', 'ga', 'nggak', 'belum', 'udah', 'sudah', 'yoi', 'yup',
+        'oh gitu', 'oke deh', 'ya ya', 'iya iya', 'he eh', 'heem', 'sip',
       ],
     },
 
@@ -645,11 +646,45 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
         provider: 'vapi', // For non-English languages like Indonesian
       },
       transcriptionEndpointingPlan: {
-        onPunctuationSeconds: 0.05,   // Quick response after punctuation (was 0.1)
-        onNoPunctuationSeconds: 0.45,  // Aggressive: 200ms timeout for fastest response
-        onNumberSeconds: 0.4,         // Faster after numbers (was 0.5)
+        onPunctuationSeconds: 0.1,    // Slightly more tolerant for stability
+        onNoPunctuationSeconds: 0.4,  // Middle ground - not too aggressive, not too slow
+        onNumberSeconds: 0.5,         // More tolerant for phone numbers
       },
-      waitSeconds: 0.25, // Reduced final wait before AI speaks (was 0.4) - saves ~150ms
+      // Custom rules for context-aware endpointing timeout
+      // These override transcriptionEndpointingPlan when assistant's last message matches
+      customEndpointingRules: [
+        // When AI asks for complaint/report - user needs more time for long responses
+        {
+          type: 'assistant',
+          regex: '(keluhan|laporan|masalah|dilaporkan|ada apa|bisa dibantu|ingin melaporkan)',
+          timeoutSeconds: 1.5,
+        },
+        // When AI asks for phone number
+        {
+          type: 'assistant',
+          regex: '(nomor|telepon|whatsapp|hp|handphone)',
+          timeoutSeconds: 2.0,
+        },
+        // When AI asks for address/location
+        {
+          type: 'assistant',
+          regex: '(alamat|lokasi|dimana|di mana|daerah mana)',
+          timeoutSeconds: 2.0,
+        },
+        // When AI asks for name
+        {
+          type: 'assistant',
+          regex: '(nama lengkap|siapa nama|boleh tahu nama)',
+          timeoutSeconds: 1.2,
+        },
+        // When AI asks for confirmation (expects short answer)
+        {
+          type: 'assistant',
+          regex: '(apakah benar|sudah benar|betul demikian|sudah betul)',
+          timeoutSeconds: 0.8,
+        },
+      ],
+      waitSeconds: 0.2, // Faster response after endpointing triggers
     },
 
     // =========================================================================
