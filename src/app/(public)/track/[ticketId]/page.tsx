@@ -35,7 +35,6 @@ import { id as idLocale } from 'date-fns/locale'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusProgress } from '@/components/StatusProgress'
 import { ImageLightbox } from '@/components/ImageLightbox'
-import { ImageCompare } from '@/components/ImageCompare'
 import { TicketStatus } from '@/types/database'
 import Image from 'next/image'
 
@@ -497,48 +496,50 @@ export default function TrackPage({ params }: { params: Promise<{ ticketId: stri
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  {ticket.resolutionPhotoBefore && ticket.resolutionPhotoAfter ? (
-                    <div className="space-y-2">
-                      <Label className="text-muted-foreground text-sm">Perbandingan</Label>
-                      <ImageCompare 
-                        beforeSrc={ticket.resolutionPhotoBefore}
-                        afterSrc={ticket.resolutionPhotoAfter}
-                      />
-                    </div>
-                  ) : (
-                    <div className="grid sm:grid-cols-2 gap-6">
-                      {ticket.resolutionPhotoBefore && (
-                        <div className="space-y-2">
-                          <Label className="text-muted-foreground text-sm">Foto Sebelum</Label>
-                          <div 
-                            className="relative aspect-video rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => setLightboxImage({ src: ticket.resolutionPhotoBefore!, alt: "Foto kondisi sebelum" })}
-                          >
-                            <img
-                              src={ticket.resolutionPhotoBefore}
-                              alt="Foto kondisi sebelum"
-                              className="w-full h-full object-cover"
-                            />
+                  <div className="grid sm:grid-cols-2 gap-6">
+                    {ticket.resolutionPhotoBefore && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-red-400" />
+                          <Label className="text-white font-medium">Sebelum</Label>
+                        </div>
+                        <div 
+                          className="relative aspect-video rounded-lg overflow-hidden border border-white/10 cursor-pointer hover:border-white/20 transition-all group"
+                          onClick={() => setLightboxImage({ src: ticket.resolutionPhotoBefore!, alt: "Foto kondisi sebelum" })}
+                        >
+                          <img
+                            src={ticket.resolutionPhotoBefore}
+                            alt="Foto kondisi sebelum"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                            <Search className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         </div>
-                      )}
-                      {ticket.resolutionPhotoAfter && (
-                        <div className="space-y-2">
-                          <Label className="text-muted-foreground text-sm">Foto Sesudah</Label>
-                          <div 
-                            className="relative aspect-video rounded-lg overflow-hidden border border-emerald-500/30 cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => setLightboxImage({ src: ticket.resolutionPhotoAfter!, alt: "Foto kondisi sesudah" })}
-                          >
-                            <img
-                              src={ticket.resolutionPhotoAfter}
-                              alt="Foto kondisi sesudah"
-                              className="w-full h-full object-cover"
-                            />
+                      </div>
+                    )}
+                    {ticket.resolutionPhotoAfter && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-emerald-400" />
+                          <Label className="text-white font-medium">Sesudah</Label>
+                        </div>
+                        <div 
+                          className="relative aspect-video rounded-lg overflow-hidden border border-emerald-500/30 cursor-pointer hover:border-emerald-500/50 transition-all group"
+                          onClick={() => setLightboxImage({ src: ticket.resolutionPhotoAfter!, alt: "Foto kondisi sesudah" })}
+                        >
+                          <img
+                            src={ticket.resolutionPhotoAfter}
+                            alt="Foto kondisi sesudah"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                            <Search className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         </div>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             )}

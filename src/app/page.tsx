@@ -180,7 +180,7 @@ export default function Home() {
             <Image src="/logo-white.svg" alt="SatuPintu" width={120} height={60} />
             
             <div className="text-sm text-muted-foreground">
-                © 2025 SatuPintu • SIAGA Teams
+                © 2025 SatuPintu • Labtek V
             </div>
 
             <div className="flex gap-6 text-sm font-medium text-muted-foreground">
