@@ -665,9 +665,9 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
         // Rumah sakit
         'Hasan Sadikin', 'Borromeus', 'Advent',
       ],
-      // Endpointing: wait time (ms) before speech considered ended
-      // Lower = faster response, may cut off; Higher = more complete, slower
-      endpointing: 300,
+      // Endpointing: wait time (seconds) before speech considered ended
+      // VAPI limit: max 10 seconds. Lower = faster response, may cut off
+      endpointing: 0.3,
     },
 
     // Konfigurasi Stop Speaking Plan

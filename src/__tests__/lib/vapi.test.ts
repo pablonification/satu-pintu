@@ -265,10 +265,11 @@ describe('getAssistantConfig', () => {
   it('should have endpointing configured for turn detection', () => {
     const config = getAssistantConfig()
     
-    // Endpointing in ms - wait time before speech considered ended
+    // Endpointing in seconds - wait time before speech considered ended
+    // VAPI limit: max 10 seconds
     expect(config.transcriber.endpointing).toBeDefined()
-    expect(config.transcriber.endpointing).toBeGreaterThanOrEqual(200)
-    expect(config.transcriber.endpointing).toBeLessThanOrEqual(500)
+    expect(config.transcriber.endpointing).toBeGreaterThanOrEqual(0.1)
+    expect(config.transcriber.endpointing).toBeLessThanOrEqual(10)
   })
 
   it('should have ElevenLabs voice configured for Indonesian', () => {
