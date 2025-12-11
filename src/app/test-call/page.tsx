@@ -280,35 +280,35 @@ export default function TestCallPage() {
 
       <LandingNavbar />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 pt-24 sm:pt-32 relative z-10">
+      <main className="flex-1 flex flex-col items-center p-4 pt-24 sm:pt-32 pb-8 relative z-10">
         
         {/* Header Section */}
-        <div className="text-center mb-8 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
-           <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-white mb-6 transition-colors">
+        <div className="text-center mb-6 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+           <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-white mb-4 transition-colors">
               <ArrowLeft className="mr-2 h-4 w-4" /> Kembali ke Beranda
            </Link>
-           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl mb-4">
+           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-5xl mb-2">
              Voice AI Demo
            </h1>
-           <p className="text-lg text-muted-foreground">
+           <p className="text-base text-muted-foreground hidden sm:block">
              Cobalah berbicara dengan AI SatuPintu. Laporkan masalah kota Anda secara natural.
            </p>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-5xl h-[600px] animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 w-full max-w-5xl animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
             
             {/* Left Panel: Call Interface */}
-            <Card className="border-white/10 bg-black/40 backdrop-blur-md flex flex-col justify-between overflow-hidden relative">
+            <Card className="border-white/10 bg-black/40 backdrop-blur-md flex flex-col overflow-hidden relative min-h-[400px] sm:min-h-[500px]">
                 {/* Config Button (Absolute) */}
-                <div className="absolute top-4 right-4 z-20">
+                <div className="absolute top-3 right-3 z-20">
                     <Dialog open={isConfigOpen} onOpenChange={setIsConfigOpen}>
                         <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white">
-                                <Settings className="h-5 w-5" />
+                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white h-8 w-8">
+                                <Settings className="h-4 w-4" />
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-zinc-950 border-white/10 text-white">
+                        <DialogContent className="bg-zinc-950 border-white/10 text-white max-w-[90vw] sm:max-w-md">
                             <DialogHeader>
                                 <DialogTitle>Konfigurasi Vapi</DialogTitle>
                             </DialogHeader>
@@ -332,28 +332,28 @@ export default function TestCallPage() {
                     </Dialog>
                 </div>
 
-                <CardContent className="flex-1 flex flex-col items-center justify-center p-6 relative">
+                <CardContent className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 relative">
                     
                     {/* Visualizer */}
                     <Orb />
 
                     {/* Error Message */}
                     {error && (
-                        <div className="absolute top-16 left-4 right-4 bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                            <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
-                            <p className="text-sm text-red-300">{error}</p>
+                        <div className="absolute top-12 left-3 right-3 sm:top-16 sm:left-4 sm:right-4 bg-red-500/10 border border-red-500/20 rounded-lg p-2 sm:p-3 flex items-center gap-2 sm:gap-3 animate-in fade-in slide-in-from-top-2">
+                            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-400 flex-shrink-0" />
+                            <p className="text-xs sm:text-sm text-red-300">{error}</p>
                         </div>
                     )}
 
                 </CardContent>
 
                 {/* Controls */}
-                <div className="p-8 border-t border-white/5 bg-white/5 flex justify-center gap-6">
+                <div className="p-4 sm:p-6 border-t border-white/5 bg-white/5 flex justify-center gap-4 sm:gap-6">
                     {callStatus === 'idle' ? (
                         <Button 
                             onClick={startCall} 
                             size="lg" 
-                            className="h-16 px-10 rounded-full bg-indigo-600 hover:bg-indigo-500 text-lg shadow-xl shadow-indigo-500/20 transition-all hover:scale-105"
+                            className="h-14 sm:h-16 px-8 sm:px-10 rounded-full bg-indigo-600 hover:bg-indigo-500 text-base sm:text-lg shadow-xl shadow-indigo-500/20 transition-all hover:scale-105"
                         >
                             <Phone className="mr-2 h-5 w-5" />
                             Mulai Panggilan
@@ -364,21 +364,21 @@ export default function TestCallPage() {
                                 onClick={toggleMute}
                                 variant="outline"
                                 size="icon"
-                                className={`h-16 w-16 rounded-full border-white/10 transition-all ${
+                                className={`h-14 w-14 sm:h-16 sm:w-16 rounded-full border-white/10 transition-all ${
                                     isMuted ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-white/5 hover:bg-white/10 text-white'
                                 }`}
                             >
-                                {isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+                                {isMuted ? <MicOff className="h-5 w-5 sm:h-6 sm:w-6" /> : <Mic className="h-5 w-5 sm:h-6 sm:w-6" />}
                             </Button>
                             
                             <Button
                                 onClick={endCall}
                                 variant="destructive"
                                 size="icon"
-                                className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 shadow-xl shadow-red-500/20 transition-all hover:scale-105"
+                                className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-red-500 hover:bg-red-600 shadow-xl shadow-red-500/20 transition-all hover:scale-105"
                                 disabled={callStatus === 'ending'}
                             >
-                                <PhoneOff className="h-6 w-6" />
+                                <PhoneOff className="h-5 w-5 sm:h-6 sm:w-6" />
                             </Button>
                         </>
                     )}
@@ -386,31 +386,31 @@ export default function TestCallPage() {
             </Card>
 
             {/* Right Panel: Transcript & Info */}
-            <div className="flex flex-col gap-6 h-full">
+            <div className="flex flex-col gap-4 sm:gap-6">
                  {/* Transcript Area */}
-                 <Card className="flex-1 border-white/10 bg-black/40 backdrop-blur-md overflow-hidden flex flex-col">
-                    <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
-                        <h3 className="font-semibold text-white flex items-center gap-2">
+                 <Card className="border-white/10 bg-black/40 backdrop-blur-md overflow-hidden flex flex-col min-h-[250px] sm:min-h-[400px]">
+                    <div className="p-3 sm:p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
+                        <h3 className="font-semibold text-white flex items-center gap-2 text-sm sm:text-base">
                             <MoreVertical className="h-4 w-4 text-indigo-400" />
                             Live Transcript
                         </h3>
                         {callStatus === 'active' && (
-                             <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/10 animate-pulse">
+                             <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/10 animate-pulse text-xs">
                                 Live
                              </Badge>
                         )}
                     </div>
-                    <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+                    <div className="flex-1 p-3 sm:p-4 overflow-y-auto">
                         {messages.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-center p-8 opacity-50">
-                                <p className="mb-2">Belum ada percakapan</p>
-                                <p className="text-sm">Mulai panggilan untuk melihat transkrip secara real-time.</p>
+                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground text-center p-4 sm:p-8 opacity-50">
+                                <p className="mb-2 text-sm">Belum ada percakapan</p>
+                                <p className="text-xs sm:text-sm">Mulai panggilan untuk melihat transkrip.</p>
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                                 {messages.map((msg, i) => (
                                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                                        <div className={`max-w-[90%] sm:max-w-[85%] rounded-2xl px-3 py-2 sm:px-4 sm:py-3 ${
                                             msg.role === 'user' 
                                                 ? 'bg-indigo-600 text-white rounded-br-sm' 
                                                 : msg.role === 'assistant'
@@ -422,7 +422,7 @@ export default function TestCallPage() {
                                                     {msg.role === 'user' ? 'You' : 'AI Assistant'}
                                                 </p>
                                             )}
-                                            <p className="text-sm leading-relaxed">{msg.content}</p>
+                                            <p className="text-xs sm:text-sm leading-relaxed">{msg.content}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -432,19 +432,19 @@ export default function TestCallPage() {
                     </div>
                  </Card>
 
-                 {/* Quick Tips */}
-                 <Card className="h-auto border-white/10 bg-indigo-950/20 backdrop-blur-md p-4">
-                    <div className="flex items-start gap-4">
+                 {/* Quick Tips - Hidden on very small screens during active call */}
+                 <Card className={`border-white/10 bg-indigo-950/20 backdrop-blur-md p-3 sm:p-4 ${callStatus === 'active' ? 'hidden sm:block' : ''}`}>
+                    <div className="flex items-start gap-3 sm:gap-4">
                         <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400 hidden sm:block">
                             <Volume2 className="h-5 w-5" />
                         </div>
                         <div>
                             <h4 className="text-sm font-medium text-white mb-1">Topik Percakapan</h4>
                             <p className="text-xs text-muted-foreground">
-                                Coba laporkan masalah seperti: 
-                                <span className="text-indigo-300"> "Lampu jalan mati di Jalan Dago"</span>, 
-                                <span className="text-indigo-300"> "Ada tumpukan sampah liar"</span>, atau 
-                                <span className="text-indigo-300"> "Lubang besar di jalan utama"</span>.
+                                Coba laporkan: 
+                                <span className="text-indigo-300"> "Lampu jalan mati"</span>, 
+                                <span className="text-indigo-300"> "Sampah menumpuk"</span>, atau 
+                                <span className="text-indigo-300"> "Jalan berlubang"</span>.
                             </p>
                         </div>
                     </div>
