@@ -626,7 +626,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // - Configurable endpointing for turn detection
     // - Custom vocabulary for domain-specific terms
     //
-    // FALLBACK OPTIONS (if Gladia doesn't work well):
+    // FALLBACK OPTIONS (if Deepgram doesn't work well):
     // 
     // Option 1: Talkscriber (Whisper-based)
     // transcriber: {
@@ -635,22 +635,35 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     //   language: 'id' as const,
     // }
     //
-    // Option 2: Deepgram Nova-3 (retry with newer model)
+    // Option 2: Gladia Solaria (if API issues fixed)
     // transcriber: {
-    //   provider: 'deepgram' as const,
-    //   model: 'nova-3' as const,
-    //   language: 'id' as const,
+    //   provider: 'gladia' as const,
+    //   model: 'solaria-1' as const,
+    //   languageBehaviour: 'manual' as const,
+    //   language: 'indonesian' as const,
     // }
     // =========================================================================
     transcriber: {
-      provider: 'gladia' as const,
-      model: 'solaria-1' as const,
-      languageBehaviour: 'manual' as const,
-      language: 'indonesian' as const,
-      // Custom vocabulary disabled - VAPI/Gladia API validation issues
-      // TODO: Re-enable when VAPI fixes customVocabularyConfig validation
-      // customVocabularyEnabled: true,
-      // customVocabularyConfig: { vocabulary: [...] },
+      provider: 'deepgram' as const,
+      model: 'nova-2' as const,
+      language: 'id' as const,
+      smartFormat: true,
+      // Keywords: single words with optional intensifier (boost recognition)
+      // Format: "word" or "word:intensity" where intensity is integer
+      keywords: [
+        'SatuPintu:5',
+        'PUPR:3', 'PDAM:3', 'Satpol:3', 'Dinsos:3', 'Dishub:3', 'Dinkes:3', 'Disdik:3', 'Perkim:3',
+        'PVJ:2', 'Ciwalk:2', 'BIP:2', 'TSM:2', 'BEC:2', 'Paskal:2',
+        'ITB:2', 'Unpad:2', 'Unpar:2', 'UPI:2',
+        'Dago:2', 'Pasteur:2', 'Cihampelas:2', 'Ciumbuleuit:2', 'Setiabudi:2', 'Sukajadi:2',
+        'Borromeus:2', 'Advent:2',
+      ],
+      // Keyterm: multi-word phrases for better recognition
+      keyterm: [
+        'Buah Batu', 'Soekarno Hatta', 'Gatot Subroto', 'Hasan Sadikin',
+        'jalan rusak', 'lampu mati', 'sampah menumpuk', 'air mati',
+        'Satu Pintu', 'lapor masalah', 'nomor tiket',
+      ],
       // Endpointing: wait time (seconds) before speech considered ended
       // VAPI limit: max 10 seconds. Lower = faster response, may cut off
       endpointing: 0.3,

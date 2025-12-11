@@ -238,28 +238,40 @@ describe('getAssistantConfig', () => {
   it('should have Gladia transcriber configured for Indonesian with real-time streaming', () => {
     const config = getAssistantConfig()
     
-    // Switched from Gemini to Gladia because Gemini batches transcriptions
-    // causing AI to "hang" and not respond to short answers
-    expect(config.transcriber.provider).toBe('gladia')
-    expect(config.transcriber.model).toBe('solaria-1')
-    expect(config.transcriber.languageBehaviour).toBe('manual')
-    expect(config.transcriber.language).toBe('indonesian')
+    // Using Deepgram Nova-2 for Indonesian with keywords support
+    // Switched from Gladia due to customVocabularyConfig API issues
+    expect(config.transcriber.provider).toBe('deepgram')
+    expect(config.transcriber.model).toBe('nova-2')
+    expect(config.transcriber.language).toBe('id')
+    expect(config.transcriber.smartFormat).toBe(true)
   })
 
-  it('should have custom vocabulary enabled for domain-specific terms', () => {
+  it('should have keywords configured for domain-specific terms', () => {
     const config = getAssistantConfig()
     
-    expect(config.transcriber.customVocabularyEnabled).toBe(true)
-    expect(config.transcriber.customVocabularyConfig).toBeDefined()
-    expect(Array.isArray(config.transcriber.customVocabularyConfig)).toBe(true)
+    expect(config.transcriber.keywords).toBeDefined()
+    expect(Array.isArray(config.transcriber.keywords)).toBe(true)
     
-    // Should include key Bandung terms
-    const vocab = config.transcriber.customVocabularyConfig as string[]
-    expect(vocab).toContain('SatuPintu')
-    expect(vocab).toContain('PUPR')
-    expect(vocab).toContain('PDAM')
-    expect(vocab).toContain('PVJ')
-    expect(vocab).toContain('Dago')
+    // Should include key Bandung terms with intensifiers
+    const keywords = config.transcriber.keywords as string[]
+    expect(keywords.some(k => k.startsWith('SatuPintu'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('PUPR'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('PDAM'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('PVJ'))).toBe(true)
+    expect(keywords.some(k => k.startsWith('Dago'))).toBe(true)
+  })
+
+  it('should have keyterm configured for multi-word phrases', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.transcriber.keyterm).toBeDefined()
+    expect(Array.isArray(config.transcriber.keyterm)).toBe(true)
+    
+    // Should include multi-word phrases
+    const keyterm = config.transcriber.keyterm as string[]
+    expect(keyterm).toContain('Buah Batu')
+    expect(keyterm).toContain('Hasan Sadikin')
+    expect(keyterm).toContain('jalan rusak')
   })
 
   it('should have endpointing configured for turn detection', () => {
