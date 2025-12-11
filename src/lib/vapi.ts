@@ -644,7 +644,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // =========================================================================
     transcriber: {
       provider: 'gladia' as const,
-      model: 'solaria' as const,
+      model: 'solaria-1' as const,
       languageBehaviour: 'manual' as const,
       language: 'indonesian' as const,
       // Custom vocabulary for better accuracy on domain-specific terms

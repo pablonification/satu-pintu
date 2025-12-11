@@ -241,7 +241,7 @@ describe('getAssistantConfig', () => {
     // Switched from Gemini to Gladia because Gemini batches transcriptions
     // causing AI to "hang" and not respond to short answers
     expect(config.transcriber.provider).toBe('gladia')
-    expect(config.transcriber.model).toBe('solaria')
+    expect(config.transcriber.model).toBe('solaria-1')
     expect(config.transcriber.languageBehaviour).toBe('manual')
     expect(config.transcriber.language).toBe('indonesian')
   })
