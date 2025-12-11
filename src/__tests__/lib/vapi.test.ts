@@ -266,11 +266,11 @@ describe('getAssistantConfig', () => {
   it('should have endpointing configured for turn detection', () => {
     const config = getAssistantConfig()
     
-    // Endpointing in seconds - wait time before speech considered ended
-    // VAPI limit: max 10 seconds
+    // Endpointing in milliseconds - wait time before speech considered ended
+    // VAPI limit: minimum 10ms
     expect(config.transcriber.endpointing).toBeDefined()
-    expect(config.transcriber.endpointing).toBeGreaterThanOrEqual(0.1)
-    expect(config.transcriber.endpointing).toBeLessThanOrEqual(10)
+    expect(config.transcriber.endpointing).toBeGreaterThanOrEqual(10)
+    expect(config.transcriber.endpointing).toBeLessThanOrEqual(5000) // Max 5 seconds reasonable
   })
 
   it('should have ElevenLabs voice configured for Indonesian', () => {
@@ -309,10 +309,12 @@ describe('getAssistantConfig', () => {
     expect(config.stopSpeakingPlan.backoffSeconds).toBe(0.8) // Wait before resuming
   })
 
-  it('should have backgroundDenoisingEnabled for noisy environments', () => {
+  it('should have backgroundSpeechDenoisingPlan with smart denoising enabled', () => {
     const config = getAssistantConfig()
     
-    expect(config.backgroundDenoisingEnabled).toBe(true)
+    expect(config.backgroundSpeechDenoisingPlan).toBeDefined()
+    expect(config.backgroundSpeechDenoisingPlan.smartDenoisingPlan).toBeDefined()
+    expect(config.backgroundSpeechDenoisingPlan.smartDenoisingPlan.enabled).toBe(true)
   })
 
   it('should have acknowledgementPhrases in stopSpeakingPlan with pure backchannels only', () => {

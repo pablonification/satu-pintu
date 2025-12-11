@@ -610,7 +610,12 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
 
     // Background Speech Denoising - filter background noise dan suara orang lain
     // Berguna untuk situasi noisy (TV, orang bicara di sekitar, dll)
-    backgroundDenoisingEnabled: true,
+    // Using Krisp AI-powered smart denoising (recommended for most use cases)
+    backgroundSpeechDenoisingPlan: {
+      smartDenoisingPlan: {
+        enabled: true,
+      },
+    },
 
     // =========================================================================
     // Konfigurasi Transkripsi - Gladia (Real-time Streaming)
@@ -659,9 +664,10 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
         'Dago:2', 'Pasteur:2', 'Cihampelas:2', 'Ciumbuleuit:2', 'Setiabudi:2', 'Sukajadi:2',
         'Borromeus:2', 'Advent:2',
       ],
-      // Endpointing: wait time (seconds) before speech considered ended
-      // VAPI limit: max 10 seconds. Lower = faster response, may cut off
-      endpointing: 0.3,
+      // Endpointing: wait time (milliseconds) before speech considered ended
+      // VAPI limit: minimum 10ms. Lower = faster response, may cut off
+      // 300ms = responsive but gives user time to pause between words
+      endpointing: 300,
     },
 
     // Konfigurasi Stop Speaking Plan
