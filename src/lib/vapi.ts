@@ -646,7 +646,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       },
       transcriptionEndpointingPlan: {
         onPunctuationSeconds: 0.05,   // Quick response after punctuation (was 0.1)
-        onNoPunctuationSeconds: 0.2,  // Aggressive: 200ms timeout for fastest response
+        onNoPunctuationSeconds: 0.45,  // Aggressive: 200ms timeout for fastest response
         onNumberSeconds: 0.4,         // Faster after numbers (was 0.5)
       },
       waitSeconds: 0.25, // Reduced final wait before AI speaks (was 0.4) - saves ~150ms
