@@ -647,24 +647,10 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       model: 'solaria-1' as const,
       languageBehaviour: 'manual' as const,
       language: 'indonesian' as const,
-      // Custom vocabulary for better accuracy on domain-specific terms
-      // Using customVocabularyConfig (not customVocabulary) per Vapi API
-      customVocabularyEnabled: true,
-      customVocabularyConfig: [
-        // Nama layanan
-        'SatuPintu',
-        // Dinas/instansi
-        'PUPR', 'PDAM', 'Satpol PP', 'Dinsos', 'Dishub', 'Dinkes', 'Disdik', 'Perkim',
-        // Mall/landmark Bandung
-        'PVJ', 'Ciwalk', 'BIP', 'TSM', 'BEC', 'Paskal',
-        // Kampus
-        'ITB', 'Unpad', 'Unpar', 'UPI',
-        // Jalan/area populer
-        'Dago', 'Pasteur', 'Cihampelas', 'Buah Batu', 'Soekarno Hatta', 'Gatot Subroto',
-        'Dipatiukur', 'Ciumbuleuit', 'Setiabudi', 'Sukajadi',
-        // Rumah sakit
-        'Hasan Sadikin', 'Borromeus', 'Advent',
-      ],
+      // Custom vocabulary disabled - VAPI/Gladia API validation issues
+      // TODO: Re-enable when VAPI fixes customVocabularyConfig validation
+      // customVocabularyEnabled: true,
+      // customVocabularyConfig: { vocabulary: [...] },
       // Endpointing: wait time (seconds) before speech considered ended
       // VAPI limit: max 10 seconds. Lower = faster response, may cut off
       endpointing: 0.3,
