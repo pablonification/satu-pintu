@@ -235,16 +235,41 @@ describe('getAssistantConfig', () => {
     expect(endCallTool).toBeDefined()
   })
 
-  it('should have Google Gemini transcriber for Indonesian', () => {
+  it('should have Gladia transcriber configured for Indonesian with real-time streaming', () => {
     const config = getAssistantConfig()
     
-    expect(config.transcriber.provider).toBe('google')
-    expect(config.transcriber.model).toBe('gemini-2.5-flash')
-    expect(config.transcriber.language).toBe('Indonesian')
+    // Switched from Gemini to Gladia because Gemini batches transcriptions
+    // causing AI to "hang" and not respond to short answers
+    expect(config.transcriber.provider).toBe('gladia')
+    expect(config.transcriber.model).toBe('solaria')
+    expect(config.transcriber.languageBehaviour).toBe('manual')
+    expect(config.transcriber.language).toBe('indonesian')
   })
 
-  // Note: Google Gemini doesn't use keywords boosting like Deepgram
-  // It relies on its training data for Indonesian language recognition
+  it('should have custom vocabulary enabled for domain-specific terms', () => {
+    const config = getAssistantConfig()
+    
+    expect(config.transcriber.customVocabularyEnabled).toBe(true)
+    expect(config.transcriber.customVocabulary).toBeDefined()
+    expect(Array.isArray(config.transcriber.customVocabulary)).toBe(true)
+    
+    // Should include key Bandung terms
+    const vocab = config.transcriber.customVocabulary as string[]
+    expect(vocab).toContain('SatuPintu')
+    expect(vocab).toContain('PUPR')
+    expect(vocab).toContain('PDAM')
+    expect(vocab).toContain('PVJ')
+    expect(vocab).toContain('Dago')
+  })
+
+  it('should have endpointing configured for turn detection', () => {
+    const config = getAssistantConfig()
+    
+    // Endpointing in ms - wait time before speech considered ended
+    expect(config.transcriber.endpointing).toBeDefined()
+    expect(config.transcriber.endpointing).toBeGreaterThanOrEqual(200)
+    expect(config.transcriber.endpointing).toBeLessThanOrEqual(500)
+  })
 
   it('should have ElevenLabs voice configured for Indonesian', () => {
     const config = getAssistantConfig()

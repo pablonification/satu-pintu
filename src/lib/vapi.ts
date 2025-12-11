@@ -612,13 +612,61 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
     // Berguna untuk situasi noisy (TV, orang bicara di sekitar, dll)
     backgroundDenoisingEnabled: true,
 
-    // Konfigurasi Transkripsi
-    // Menggunakan Google Gemini untuk akurasi yang lebih baik pada Bahasa Indonesia
-    // Google memiliki data training yang lebih banyak untuk bahasa Indonesia
+    // =========================================================================
+    // Konfigurasi Transkripsi - Gladia (Real-time Streaming)
+    // =========================================================================
+    // Switched from Google Gemini to Gladia because:
+    // - Gemini BATCHES/BUFFERS transcriptions instead of streaming real-time
+    // - This caused "AI hang" issue where AI wouldn't respond to short answers
+    // - User's confirmation ("ya", "iya", "betul") were batched with next speech
+    //
+    // Gladia benefits:
+    // - Real-time streaming (~300-600ms latency, partials ~300ms)
+    // - 110+ languages including Indonesian
+    // - Configurable endpointing for turn detection
+    // - Custom vocabulary for domain-specific terms
+    //
+    // FALLBACK OPTIONS (if Gladia doesn't work well):
+    // 
+    // Option 1: Talkscriber (Whisper-based)
+    // transcriber: {
+    //   provider: 'talkscriber' as const,
+    //   model: 'whisper' as const,
+    //   language: 'id' as const,
+    // }
+    //
+    // Option 2: Deepgram Nova-3 (retry with newer model)
+    // transcriber: {
+    //   provider: 'deepgram' as const,
+    //   model: 'nova-3' as const,
+    //   language: 'id' as const,
+    // }
+    // =========================================================================
     transcriber: {
-      provider: 'google' as const,
-      model: 'gemini-2.5-flash' as const,
-      language: 'Indonesian' as const,
+      provider: 'gladia' as const,
+      model: 'solaria' as const,
+      languageBehaviour: 'manual' as const,
+      language: 'indonesian' as const,
+      // Custom vocabulary for better accuracy on domain-specific terms
+      customVocabularyEnabled: true,
+      customVocabulary: [
+        // Nama layanan
+        'SatuPintu',
+        // Dinas/instansi
+        'PUPR', 'PDAM', 'Satpol PP', 'Dinsos', 'Dishub', 'Dinkes', 'Disdik', 'Perkim',
+        // Mall/landmark Bandung
+        'PVJ', 'Ciwalk', 'BIP', 'TSM', 'BEC', 'Paskal',
+        // Kampus
+        'ITB', 'Unpad', 'Unpar', 'UPI',
+        // Jalan/area populer
+        'Dago', 'Pasteur', 'Cihampelas', 'Buah Batu', 'Soekarno Hatta', 'Gatot Subroto',
+        'Dipatiukur', 'Ciumbuleuit', 'Setiabudi', 'Sukajadi',
+        // Rumah sakit
+        'Hasan Sadikin', 'Borromeus', 'Advent',
+      ],
+      // Endpointing: wait time (ms) before speech considered ended
+      // Lower = faster response, may cut off; Higher = more complete, slower
+      endpointing: 300,
     },
 
     // Konfigurasi Stop Speaking Plan
