@@ -37,10 +37,10 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-16 duration-1000 delay-500">
-            <Link href="tel:+19148280709" target="_blank">
+            <Link href="/test-call">
               <Button size="lg" className="h-12 px-8 bg-white text-black hover:bg-white/90 text-base rounded-full">
                 <Phone className="mr-2 h-4 w-4" />
-                Hubungi Hotline SatuPintu
+                Coba Demo Sekarang
               </Button>
             </Link>
             <Link href="/track/SP-20251203-0001">
@@ -157,11 +157,11 @@ export default function Home() {
                         jadilah bagian dari perubahan.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link href="tel:+19148280709" target="_blank" className="w-full sm:w-auto relative group">
+                        <Link href="/test-call" className="w-full sm:w-auto relative group">
                             <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full blur opacity-70 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
                              <Button size="lg" className="relative w-full h-16 px-10 bg-white text-black hover:bg-indigo-50 text-xl font-bold rounded-full shadow-2xl transition-all duration-300 hover:-translate-y-1 ring-1 ring-white/50">
                                 <span className="flex items-center gap-3">
-                                    Hubungi SatuPintu Sekarang
+                                    Coba Sekarang
                                     <ArrowRight className="h-6 w-6 transition-transform duration-300 group-hover:translate-x-1" />
                                 </span>
                             </Button>
