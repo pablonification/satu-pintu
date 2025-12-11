@@ -648,8 +648,9 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       languageBehaviour: 'manual' as const,
       language: 'indonesian' as const,
       // Custom vocabulary for better accuracy on domain-specific terms
+      // Using customVocabularyConfig (not customVocabulary) per Vapi API
       customVocabularyEnabled: true,
-      customVocabulary: [
+      customVocabularyConfig: [
         // Nama layanan
         'SatuPintu',
         // Dinas/instansi

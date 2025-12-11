@@ -250,11 +250,11 @@ describe('getAssistantConfig', () => {
     const config = getAssistantConfig()
     
     expect(config.transcriber.customVocabularyEnabled).toBe(true)
-    expect(config.transcriber.customVocabulary).toBeDefined()
-    expect(Array.isArray(config.transcriber.customVocabulary)).toBe(true)
+    expect(config.transcriber.customVocabularyConfig).toBeDefined()
+    expect(Array.isArray(config.transcriber.customVocabularyConfig)).toBe(true)
     
     // Should include key Bandung terms
-    const vocab = config.transcriber.customVocabulary as string[]
+    const vocab = config.transcriber.customVocabularyConfig as string[]
     expect(vocab).toContain('SatuPintu')
     expect(vocab).toContain('PUPR')
     expect(vocab).toContain('PDAM')
