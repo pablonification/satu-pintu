@@ -261,18 +261,7 @@ describe('getAssistantConfig', () => {
     expect(keywords.some(k => k.startsWith('Dago'))).toBe(true)
   })
 
-  it('should have keyterm configured for multi-word phrases', () => {
-    const config = getAssistantConfig()
-    
-    expect(config.transcriber.keyterm).toBeDefined()
-    expect(Array.isArray(config.transcriber.keyterm)).toBe(true)
-    
-    // Should include multi-word phrases
-    const keyterm = config.transcriber.keyterm as string[]
-    expect(keyterm).toContain('Buah Batu')
-    expect(keyterm).toContain('Hasan Sadikin')
-    expect(keyterm).toContain('jalan rusak')
-  })
+  // Note: keyterm is only available for Nova-3/Flux models, not Nova-2
 
   it('should have endpointing configured for turn detection', () => {
     const config = getAssistantConfig()

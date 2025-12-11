@@ -650,6 +650,7 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       smartFormat: true,
       // Keywords: single words with optional intensifier (boost recognition)
       // Format: "word" or "word:intensity" where intensity is integer
+      // Note: keyterm (multi-word phrases) only available for Nova-3/Flux
       keywords: [
         'SatuPintu:5',
         'PUPR:3', 'PDAM:3', 'Satpol:3', 'Dinsos:3', 'Dishub:3', 'Dinkes:3', 'Disdik:3', 'Perkim:3',
@@ -657,12 +658,6 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
         'ITB:2', 'Unpad:2', 'Unpar:2', 'UPI:2',
         'Dago:2', 'Pasteur:2', 'Cihampelas:2', 'Ciumbuleuit:2', 'Setiabudi:2', 'Sukajadi:2',
         'Borromeus:2', 'Advent:2',
-      ],
-      // Keyterm: multi-word phrases for better recognition
-      keyterm: [
-        'Buah Batu', 'Soekarno Hatta', 'Gatot Subroto', 'Hasan Sadikin',
-        'jalan rusak', 'lampu mati', 'sampah menumpuk', 'air mati',
-        'Satu Pintu', 'lapor masalah', 'nomor tiket',
       ],
       // Endpointing: wait time (seconds) before speech considered ended
       // VAPI limit: max 10 seconds. Lower = faster response, may cut off
