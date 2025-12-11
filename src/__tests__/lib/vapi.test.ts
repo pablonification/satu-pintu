@@ -288,20 +288,27 @@ describe('getAssistantConfig', () => {
     expect(config.backgroundDenoisingEnabled).toBe(true)
   })
 
-  it('should have acknowledgementPhrases in stopSpeakingPlan for Indonesian', () => {
+  it('should have acknowledgementPhrases in stopSpeakingPlan with pure backchannels only', () => {
     const config = getAssistantConfig()
     
     expect(config.stopSpeakingPlan.acknowledgementPhrases).toBeDefined()
     expect(Array.isArray(config.stopSpeakingPlan.acknowledgementPhrases)).toBe(true)
     
     const phrases = config.stopSpeakingPlan.acknowledgementPhrases as string[]
-    // Should include common Indonesian acknowledgement phrases
-    expect(phrases).toContain('iya')
-    expect(phrases).toContain('ya')
-    expect(phrases).toContain('oke')
-    expect(phrases).toContain('betul')
-    expect(phrases).toContain('bukan')
-    expect(phrases).toContain('ga')
+    // Should include ONLY pure backchannel sounds (not answer words)
+    expect(phrases).toContain('oh')
+    expect(phrases).toContain('hmm')
+    expect(phrases).toContain('he eh')
+    
+    // Should NOT include words that are valid answers to confirmation questions
+    // These words should trigger AI response, not be ignored as backchannels
+    expect(phrases).not.toContain('ya')
+    expect(phrases).not.toContain('iya')
+    expect(phrases).not.toContain('oke')
+    expect(phrases).not.toContain('betul')
+    expect(phrases).not.toContain('benar')
+    expect(phrases).not.toContain('tidak')
+    expect(phrases).not.toContain('bukan')
   })
 
   it('should have startSpeakingPlan configured for Indonesian turn detection with aggressive timing', () => {

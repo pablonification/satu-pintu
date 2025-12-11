@@ -628,12 +628,12 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
       numWords: 2,         // Stop AI after user says 2 words (lebih robust terhadap noise)
       voiceSeconds: 0.2,   // Detect user voice (200ms buffer untuk filter noise singkat)
       backoffSeconds: 0.8, // Wait 0.8s before AI resumes speaking
-      // Indonesian acknowledgement phrases - these won't trigger interruption
-      // but will be recognized as backchanneling (user showing they're listening)
+      // Indonesian acknowledgement phrases - ONLY pure backchannels
+      // These are sounds/words user makes while listening, NOT answers to questions
+      // Words like "ya", "iya", "oke", "betul" are removed because they are valid answers
+      // to confirmation questions and should trigger AI response, not be ignored
       acknowledgementPhrases: [
-        'iya', 'ya', 'oke', 'ok', 'betul', 'benar', 'siap', 'oh', 'ah', 'hmm',
-        'bukan', 'tidak', 'ga', 'nggak', 'belum', 'udah', 'sudah', 'yoi', 'yup',
-        'oh gitu', 'oke deh', 'ya ya', 'iya iya', 'he eh', 'heem', 'sip',
+        'oh', 'ah', 'hmm', 'hm', 'he eh', 'heem', 'mm',
       ],
     },
 
@@ -677,11 +677,11 @@ export const getAssistantConfig = (webhookUrl?: string, customerPhone?: string) 
           regex: '(nama lengkap|siapa nama|boleh tahu nama)',
           timeoutSeconds: 1.2,
         },
-        // When AI asks for confirmation (expects short answer)
+        // When AI asks for confirmation (expects short answer ya/tidak)
         {
           type: 'assistant',
-          regex: '(apakah benar|sudah benar|betul demikian|sudah betul)',
-          timeoutSeconds: 0.8,
+          regex: '(apakah benar|sudah benar|betul demikian|sudah betul|benar demikian|sudah sesuai|apakah sudah|sudah betul|sudah tepat)',
+          timeoutSeconds: 0.5,
         },
       ],
       waitSeconds: 0.2, // Faster response after endpointing triggers
