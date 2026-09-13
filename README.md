@@ -1,326 +1,149 @@
 # SatuPintu
 
-**Satu Pintu untuk Semua Keluhan Kota**
+[Live demo](https://satu-pintu.vercel.app)
 
-AI-powered centralized call center untuk smart city. Warga cukup menelepon satu nomor, AI memahami keluhan dan meneruskan ke dinas terkait dengan tracking otomatis.
+SatuPintu is an AI-powered smart-city call center prototype for Bandung. Citizens can report a problem through one voice channel, while the system validates the location, creates a ticket, routes it to the relevant city department, and provides status tracking.
 
-## Tech Stack
+Built for the Ekraf Tech Summit 2025 hackathon.
 
-- **Framework**: Next.js 16 (App Router + Turbopack)
-- **Database**: Supabase PostgreSQL
-- **Voice AI**: Vapi.ai (Conversational AI Platform)
-- **STT/TTS**: Deepgram + ElevenLabs (via Vapi)
-- **Address Validation**: Nominatim (OpenStreetMap) + Gemini fallback
-- **SMS**: Twilio SMS (optional)
-- **WhatsApp**: Fonnte (untuk notifikasi & OTP)
-- **UI**: Tailwind CSS + shadcn/ui
-- **Hosting**: Vercel
+## The problem
 
-## Quick Start
+City complaints are often spread across different phone numbers and departments. Citizens may not know where to report an issue, and they may have no reliable way to follow up.
 
-### 1. Install dependencies
+SatuPintu provides one intake flow and a shared ticket lifecycle for citizens and city departments.
 
-```bash
-cd app
-npm install
+## Core flow
+
+```text
+Citizen voice report
+          |
+          v
+Vapi voice assistant
+  Indonesian speech understanding
+          |
+          +-- extract category, location, urgency, and details
+          +-- validate the address with Nominatim and Gemini fallback
+          +-- create a ticket through the webhook API
+          v
+Supabase ticket database
+          |
+          +-- route to the relevant department
+          +-- send WhatsApp or SMS updates
+          +-- expose a public tracking page
+          v
+Department dashboard and citizen follow-up
 ```
-
-### 2. Setup Supabase (Database) - GRATIS
-
-1. Buka [supabase.com](https://supabase.com) dan buat akun/login
-2. Klik **New Project** → pilih region **Singapore** (terdekat ke Indonesia)
-3. Tunggu project selesai dibuat (~2 menit)
-4. Buka **Project Settings** → **API** dan catat:
-   - `Project URL` → untuk `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon public` key → untuk `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `service_role` key → untuk `SUPABASE_SERVICE_ROLE_KEY`
-5. Buka **SQL Editor** → klik **New Query**
-6. Copy-paste seluruh isi file `supabase/migrations/001_initial_schema.sql` → klik **Run**
-
-### 3. Setup Google AI / Gemini - GRATIS
-
-1. Buka [aistudio.google.com](https://aistudio.google.com)
-2. Login dengan akun Google
-3. Klik **Get API Key** → **Create API key in new project**
-4. Copy API key → untuk `GOOGLE_AI_API_KEY`
-
-### 4. Setup Vapi.ai (Voice AI) - $10 FREE CREDIT
-
-1. Buka [vapi.ai](https://vapi.ai) dan buat akun
-2. Di dashboard, buka **Assistants** → **Create Assistant**
-3. Konfigurasi Assistant:
-   - **Name**: SatuPintu Assistant
-   - **First Message**: `Selamat datang di SatuPintu, layanan pengaduan terpadu Kota Bandung. Ada yang bisa saya bantu hari ini?`
-   - **System Prompt**: (lihat file `src/lib/vapi.ts` untuk contoh lengkap)
-   - **Voice**: Pilih ElevenLabs Indonesian voice
-   - **Model**: GPT-4 Turbo
-4. Tambahkan **Functions**:
-   - `validateAddress` - untuk validasi alamat
-   - `createTicket` - untuk membuat tiket
-5. Set **Server URL** (webhook): `https://your-domain.vercel.app/api/vapi/webhook`
-6. Catat **Assistant ID** dan **Public Key** (dari Account Settings)
-
-### 5. Setup Twilio (SMS Notifikasi) - OPTIONAL, $15 FREE TRIAL
-
-1. Buka [twilio.com](https://twilio.com) dan buat akun
-2. Verifikasi nomor HP Anda (wajib untuk trial)
-3. Di dashboard, catat:
-   - `Account SID` → untuk `TWILIO_ACCOUNT_SID`
-   - `Auth Token` → untuk `TWILIO_AUTH_TOKEN`
-4. Buka **Phone Numbers** → **Buy a Number** → pilih nomor US (gratis di trial)
-5. Catat nomor telepon → untuk `TWILIO_PHONE_NUMBER` (format: `+1234567890`)
-
-> **Note**: Twilio hanya digunakan untuk SMS notifikasi. Voice call sekarang menggunakan Vapi.ai
-
-### 5b. Setup Fonnte (WhatsApp Notifikasi) - GRATIS 100 msg/hari
-
-1. Buka [fonnte.com](https://fonnte.com) dan buat akun
-2. Connect nomor WhatsApp Anda (scan QR code)
-3. Di dashboard, copy **API Token**
-4. Catat token → untuk `FONNTE_TOKEN`
-
-> **Note**: Fonnte digunakan untuk notifikasi WhatsApp (ticket created, resolved, OTP rating)
-
-### 6. Setup Environment Variables
-
-```bash
-cp .env.example .env.local
-```
-
-Edit `.env.local` dengan credentials yang sudah didapat:
-
-```env
-# Supabase (dari langkah 2)
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# Google AI (dari langkah 3) - untuk validasi alamat fallback
-GOOGLE_AI_API_KEY=AIzaSy...
-
-# Twilio (dari langkah 5) - OPTIONAL, untuk SMS
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxx
-TWILIO_PHONE_NUMBER=+1234567890
-
-# Fonnte (dari langkah 5b) - untuk WhatsApp
-FONNTE_TOKEN=xxxxxxxxxxxxxxxx
-
-# App Config (generate random string di terminal dengan: openssl rand -hex 16)
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-INTERNAL_API_KEY=<hasil_openssl_rand_hex_16>
-JWT_SECRET=<hasil_openssl_rand_hex_16>
-```
-
-> **Note**: Vapi Public Key dan Assistant ID diinput langsung di halaman `/test-call`
-
-> **Tip**: Generate random string dengan menjalankan `openssl rand -hex 16` di terminal
-
-### 7. Run Database Migrations
-
-Jalankan migration di Supabase SQL Editor secara berurutan:
-
-```sql
--- Di Supabase SQL Editor, jalankan file-file berikut:
--- 1. supabase/migrations/001_initial_schema.sql (sudah di langkah 2)
--- 2. supabase/migrations/002_add_reporter_fields.sql
--- 3. supabase/migrations/003_add_photo_rating.sql
--- 4. supabase/migrations/004_add_rating_otp.sql
--- 5. supabase/migrations/005_add_performance_indexes.sql
--- 6. supabase/migrations/006_setup_storage_policies.sql
--- 7. supabase/migrations/007_add_more_dinas.sql (tambah 7 dinas baru)
-```
-
-### 8. Run Development Server
-
-```bash
-npm run dev
-```
-
-Buka [http://localhost:3000](http://localhost:3000)
 
 ## Features
 
-### Untuk Warga
-- **Telepon AI**: Lapor keluhan via telepon, AI memahami dan mencatat
-- **WhatsApp Notifikasi**: Notifikasi otomatis saat tiket dibuat & selesai
-- **Rating**: Beri rating setelah keluhan selesai (OTP via WhatsApp)
-- **SMS Tracking**: Kirim `CEK SP-XXXXXXXX-XXXX` untuk cek status
-- **Web Tracking**: Lacak status di `/track/[ticketId]`
+### Citizen experience
 
-### Untuk Dinas
-- **Dashboard**: Lihat dan kelola tiket di `/dashboard`
-- **Filter & Search**: Filter by status, urgency, kategori
-- **Update Status**: Update status + kirim notifikasi ke warga
-- **Statistik**: Lihat statistik tiket realtime
+- Report an issue through an Indonesian voice conversation.
+- Receive a ticket ID and notifications through WhatsApp or SMS.
+- Track ticket status and timeline on the web.
+- Rate a resolved ticket with OTP verification.
 
-## API Endpoints
+### Department operations
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/vapi/webhook` | POST | Vapi function calls (validateAddress, createTicket) |
-| `/api/address/validate` | POST | Validate address using Nominatim + Gemini |
-| `/api/voice/incoming` | POST | Twilio voice webhook (legacy) |
-| `/api/voice/process` | POST | Process recorded audio (legacy) |
-| `/api/sms/incoming` | POST | Twilio SMS webhook |
-| `/api/track/[ticketId]` | GET | Public ticket tracking |
-| `/api/tickets` | GET | List tickets (auth required) |
-| `/api/tickets/[id]` | GET/PATCH | Ticket detail/update |
-| `/api/stats` | GET | Dashboard statistics |
-| `/api/auth/login` | POST | Dinas login |
-| `/api/auth/logout` | POST | Dinas logout |
-| `/api/auth/me` | GET | Get current user |
+- View, filter, search, and update assigned tickets.
+- Track status, urgency, category, location, and notes.
+- View statistics and export operational data.
+- Route reports across 13 city departments, including public works, environment, transportation, health, education, social services, fire services, ambulance, and police.
 
-## Demo Login
+## Voice and AI system
 
-Untuk testing dashboard, gunakan:
-- **ID**: `admin` (atau dinas ID di bawah)
-- **Password**: `demo2025`
+- **Voice orchestration:** Vapi
+- **Speech recognition:** Deepgram via Vapi, configured for Indonesian speech
+- **Speech synthesis:** ElevenLabs via Vapi
+- **Address validation:** Nominatim with Google Gemini fallback
+- **Ticket actions:** Vapi function calls invoke address validation and ticket creation
+- **Conversation handling:** Context-aware endpointing for addresses, phone numbers, confirmations, and longer complaint descriptions
 
-## Dinas yang Terintegrasi
+## Main API routes
 
-| ID | Nama Dinas | Kategori Keluhan |
-|----|------------|------------------|
-| `pupr` | Dinas PUPR | Jalan rusak, trotoar, drainase, jembatan |
-| `dlh` | Dinas Lingkungan Hidup | Sampah, polusi, pohon tumbang, limbah |
-| `dishub` | Dinas Perhubungan | Lampu lalu lintas, rambu, parkir liar, kemacetan |
-| `dinkes` | Dinas Kesehatan | Puskesmas, wabah penyakit, sanitasi |
-| `disperkimtan` | Dinas Perkim & Pertanahan | Bangunan liar, sengketa tanah, rusun |
-| `satpolpp` | Satpol PP | PKL, ketertiban umum, bangunan melanggar |
-| `disdik` | Dinas Pendidikan | Sekolah, fasilitas pendidikan |
-| `pdam` | PDAM Tirtawening | Air mati, pipa bocor, kualitas air |
-| `dispangtan` | Dinas Pangan & Pertanian | Harga pangan, pertanian kota |
-| `dinsos` | Dinas Sosial | Tunawisma, PMKS, bantuan sosial |
-| `damkar` | Dinas Pemadam Kebakaran | Kebakaran, penyelamatan |
-| `ambulans` | Layanan Ambulans | Darurat medis |
-| `polisi` | Kepolisian | Kriminalitas, keamanan |
+| Method | Route | Purpose |
+| --- | --- | --- |
+| POST | `/api/vapi/webhook` | Handle Vapi function calls and create tickets |
+| POST | `/api/address/validate` | Validate and normalize reported locations |
+| POST | `/api/sms/incoming` | Process SMS tracking requests |
+| GET | `/api/track/[ticketId]` | Return public ticket status and timeline |
+| GET, PATCH | `/api/tickets/[id]` | Read and update a ticket |
+| GET | `/api/stats` | Return dashboard statistics |
+| GET, POST | `/api/export` | Export operational data |
 
-## Project Structure
+## Technology
 
-```
-app/
-├── src/
-│   ├── app/
-│   │   ├── api/           # API routes
-│   │   ├── (public)/      # Public pages (tracking)
-│   │   ├── (dashboard)/   # Dashboard pages
-│   │   ├── login/         # Login page
-│   │   └── page.tsx       # Landing page
-│   ├── components/ui/     # shadcn/ui components
-│   ├── lib/               # Utilities (supabase, twilio, gemini)
-│   └── types/             # TypeScript types
-├── supabase/
-│   └── migrations/        # SQL migrations
-└── scripts/               # Helper scripts
-```
+- **Application:** Next.js 16, React 19, TypeScript, Tailwind CSS, shadcn/ui
+- **Voice AI:** Vapi, Deepgram, ElevenLabs
+- **AI services:** Google Gemini
+- **Data:** Supabase PostgreSQL, SQL migrations, Supabase Storage
+- **Notifications:** Fonnte WhatsApp and Twilio SMS
+- **Maps and address data:** Nominatim and Leaflet
+- **Validation and testing:** Zod, Vitest, Testing Library
+- **Deployment:** Vercel
 
-## Deployment ke Vercel
+## Run locally
 
-### 1. Push ke GitHub
+Requirements:
+
+- Node.js 20 or newer
+- npm
+- A Supabase project
+- Vapi credentials for voice testing
+
+Install dependencies and start the development server:
 
 ```bash
-# Buat repo baru di github.com, lalu:
-git remote add origin https://github.com/USERNAME/satupintu.git
-git push -u origin main
+npm install
+npm run dev
 ```
 
-### 2. Deploy ke Vercel
+Open `http://localhost:3000`.
 
-1. Buka [vercel.com](https://vercel.com) dan login dengan GitHub
-2. Klik **Add New** → **Project**
-3. Pilih repo `satupintu` → klik **Import**
-4. Di bagian **Environment Variables**, tambahkan semua variable dari `.env.local`:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `GOOGLE_AI_API_KEY`
-   - `TWILIO_ACCOUNT_SID`
-   - `TWILIO_AUTH_TOKEN`
-   - `TWILIO_PHONE_NUMBER`
-   - `FONNTE_TOKEN`
-   - `NEXT_PUBLIC_APP_URL` → ganti ke `https://your-app.vercel.app`
-   - `INTERNAL_API_KEY`
-   - `JWT_SECRET`
-5. Klik **Deploy** dan tunggu selesai
+Create `.env.local` with the credentials required for the features you use:
 
-### 3. Setup Vapi Webhook (Setelah Deploy)
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+GOOGLE_AI_API_KEY=your-google-ai-key
+FONNTE_TOKEN=your-fonnte-token
+TWILIO_ACCOUNT_SID=your-twilio-sid
+TWILIO_AUTH_TOKEN=your-twilio-token
+TWILIO_PHONE_NUMBER=your-twilio-number
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+INTERNAL_API_KEY=generate-a-local-random-value
+```
 
-1. Buka [dashboard.vapi.ai](https://dashboard.vapi.ai)
-2. Buka Assistant yang sudah dibuat
-3. Di bagian **Server URL**, masukkan: `https://your-app.vercel.app/api/vapi/webhook`
-4. Save changes
+Run the SQL files in `supabase/migrations` in order before using ticket and dashboard features. Vapi public key and assistant ID are entered on the `/test-call` page for browser-based voice testing.
 
-### 4. Setup Twilio SMS Webhook (Optional)
+## Useful commands
 
-1. Buka [console.twilio.com](https://console.twilio.com)
-2. Buka **Phone Numbers** → **Manage** → **Active Numbers**
-3. Klik nomor telepon Anda
-4. Di bagian **Messaging Configuration**:
-   - A MESSAGE COMES IN: **Webhook**
-   - URL: `https://your-app.vercel.app/api/sms/incoming`
-   - HTTP: **POST**
-5. Klik **Save configuration**
+```bash
+npm run dev
+npm run lint
+npm run test:run
+npm run build
+```
 
-## Testing
+## Project structure
 
-### Test Voice AI (Web)
-1. Buka `https://your-app.vercel.app/test-call`
-2. Masukkan Vapi **Public Key** dan **Assistant ID**
-3. Klik **Mulai Panggilan** dan izinkan akses mikrofon
-4. AI akan menyapa: "Selamat datang di SatuPintu..."
-5. Sampaikan keluhan seperti: "Ada jalan rusak di depan rumah saya di Jalan Cihampelas"
-6. AI akan memandu untuk melengkapi data (nama, alamat, konfirmasi)
-7. Setelah konfirmasi, tiket akan dibuat dan Anda akan mendapat nomor tiket
+```text
+src/app/api/       API routes and integrations
+src/app/(public)/  public tracking pages
+src/app/(dashboard)/ department dashboard
+src/components/    dashboard, map, status, and UI components
+src/lib/           Supabase, Vapi, Gemini, Twilio, Fonnte, and validation helpers
+supabase/          database migrations and storage policies
+src/__tests__/     unit and integration tests
+docs/              product, flow, API, and handoff documentation
+```
 
-### Test Voice AI (Phone - via Vapi)
-1. Di Vapi dashboard, beli nomor telepon atau connect ke Twilio
-2. Telepon nomor tersebut
-3. Flow sama seperti web test
+## Prototype notes
 
-### Test Dashboard
-1. Buka `https://your-app.vercel.app/login`
-2. Login dengan ID: `admin`, Password: `demo2025`
-3. Anda akan melihat dashboard dengan tiket contoh
+- Notification integrations require provider credentials and webhook configuration.
+- Address validation falls back to Gemini when Nominatim cannot resolve a location.
+- Voice and notification providers should be configured with managed secrets in production.
+- Citizen contact details, locations, and complaint data require appropriate access control and retention policies.
 
-### Test SMS Tracking
-1. Kirim SMS ke nomor Twilio: `CEK SP-XXXXXXXX-XXXX`
-2. Anda akan menerima balasan status tiket
-
-### Test Web Tracking
-1. Buka `https://your-app.vercel.app/track/SP-XXXXXXXX-XXXX`
-2. Lihat status dan timeline tiket
-
-## Troubleshooting
-
-### Error "Invalid API Key" (Gemini)
-- Pastikan `GOOGLE_AI_API_KEY` sudah benar dan aktif
-- Cek di [aistudio.google.com](https://aistudio.google.com) apakah API key masih valid
-
-### Vapi call tidak berfungsi
-- Pastikan Public Key dan Assistant ID sudah benar
-- Cek apakah Server URL (webhook) sudah di-set di Vapi dashboard
-- Lihat logs di Vapi dashboard untuk debug
-- Pastikan browser mengizinkan akses mikrofon
-
-### Error "Database connection failed"
-- Pastikan URL Supabase menggunakan format `https://xxxxx.supabase.co`
-- Pastikan `service_role` key digunakan (bukan `anon` key) untuk `SUPABASE_SERVICE_ROLE_KEY`
-
-### Alamat tidak tervalidasi
-- Nominatim mungkin tidak menemukan alamat - coba dengan alamat yang lebih spesifik
-- Fallback ke Gemini akan digunakan otomatis
-- Pastikan alamat berada di Kota Bandung
-
-### SMS tidak terkirim
-- Pastikan kredensial Twilio sudah benar
-- Cek saldo Twilio trial credit
-- Lihat logs di Twilio Console → Monitor → Logs
-
-## License
-
-MIT
-
----
-
-**SatuPintu** - Ekraf Tech Summit 2025 Hackathon
-*AI-powered Smart City Call Center untuk Kota Bandung*
+The repository does not currently declare a license file.
