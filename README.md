@@ -4,8 +4,6 @@
 
 SatuPintu is an AI-powered smart-city call center prototype for Bandung. Citizens can report a problem through one voice channel, while the system validates the location, creates a ticket, routes it to the relevant city department, and provides status tracking.
 
-Built for the Ekraf Tech Summit 2025 hackathon.
-
 ## The problem
 
 City complaints are often spread across different phone numbers and departments. Citizens may not know where to report an issue, and they may have no reliable way to follow up.
